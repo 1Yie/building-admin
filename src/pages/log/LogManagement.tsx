@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { useQuery } from "@tanstack/react-query";
-import { Table } from "antd";
+import { Table, Button } from "antd";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import dayjs from "dayjs";
@@ -11,7 +11,6 @@ import { useForm } from "react-hook-form";
 import z from "zod";
 import { getLogList, getLogTypeList } from "@/request/log";
 import { cn } from "@/shadcn/lib/utils";
-import { Button } from "@/shadcn/ui/button";
 import { Calendar } from "@/shadcn/ui/calendar";
 import {
 	Form,
@@ -144,7 +143,7 @@ export default function LogManagement() {
 												<PopoverTrigger asChild>
 													<FormControl>
 														<Button
-															variant={"outline"}
+															type="default"
 															className={cn(
 																"pl-3 w-[240px] font-normal text-left cursor-pointer",
 																!field.value && "text-muted-foreground",
@@ -235,14 +234,14 @@ export default function LogManagement() {
 								)}
 							/>
 							<Button
-								type="submit"
-								className="cursor-pointer"
+								type="primary"
+								htmlType="submit"
 							>
 								查询
 							</Button>
 							<Button
-								type="button"
-								className="cursor-pointer"
+								type="primary"
+								htmlType="reset"
 								onClick={() => searchForm.reset()}
 							>
 								清空

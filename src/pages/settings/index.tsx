@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
 import { getTaskInterVal, setTaskInterVal } from "@/request/settings";
-import { Button } from "@/shadcn/ui/button";
 import {
 	Form,
 	FormControl,
@@ -13,7 +12,7 @@ import {
 	FormItem,
 	FormMessage,
 } from "@/shadcn/ui/form";
-import { Input } from "@/shadcn/ui/input";
+import { Button, Input } from "antd";
 
 export default function SettingsPage() {
 	// 获取任务间隔
@@ -38,6 +37,7 @@ export default function SettingsPage() {
 			.int({ message: "请输入整数" })
 			.min(1, "请输入大于0的整数"),
 	});
+	
 	const settingsForm = useForm<z.infer<typeof settingsFormSchema>>({
 		resolver: zodResolver(settingsFormSchema),
 		defaultValues: {
@@ -85,7 +85,7 @@ export default function SettingsPage() {
 								<FormItem className="relative flex items-center">
 									<div className="flex flex-col">
 										<FormControl>
-											<Input {...field} type="number" className="bg-white" />
+											<Input {...field} type="number" />
 										</FormControl>
 										<FormMessage className="bottom-0 absolute translate-y-full" />
 									</div>
@@ -99,7 +99,7 @@ export default function SettingsPage() {
 				</span>
 			</div>
 			<div className="mt-5">
-				<Button className="cursor-pointer" onClick={handleOK}>
+				<Button type="primary" className="cursor-pointer" onClick={handleOK}>
 					保存
 				</Button>
 			</div>

@@ -15,7 +15,7 @@ import {
 } from "@/request/log";
 import { getBindPropertyList } from "@/request/property";
 import { Badge } from "@/shadcn/ui/badge";
-import { Button } from "@/shadcn/ui/button";
+import { Button } from "antd";
 import {
   Dialog,
   DialogClose,
@@ -101,6 +101,7 @@ export default function ThresholdRule() {
       render: (_, record: any) => (
         <Button
           variant="link"
+          type="text"
           className="text-blue-500 cursor-pointer"
           onClick={() => handleOpenEditDialog(record)}
         >

@@ -18,7 +18,7 @@ import {
 	updateProperty,
 } from "@/request/property";
 import { Badge } from "@/shadcn/ui/badge";
-import { Button } from "@/shadcn/ui/button";
+import { Button } from "antd";
 import {
 	Dialog,
 	DialogClose,
@@ -790,18 +790,19 @@ export default function PropertyPage() {
 								</FormItem>
 							)}
 						/>
-						<Button type="submit" className="cursor-pointer">
+						<Button type="primary" htmlType="submit" className="cursor-pointer">
 							查询
 						</Button>
 						<Button
-							type="button"
+							type="primary"
+							htmlType="reset"
 							className="cursor-pointer"
 							onClick={() => searchForm.reset()}
 						>
 							清空
 						</Button>
 						<Button
-							type="button"
+							type="primary"
 							className="cursor-pointer"
 							onClick={exportProperty}
 						>
@@ -982,8 +983,9 @@ export default function PropertyPage() {
 					</div>
 				</form>
 			</Form>
-			<div className="mt-10">
+			<div className="mt-5">
 				<Button
+					type="primary"
 					className="cursor-pointer"
 					onClick={handleOpenAddDialog}
 				>
@@ -1553,11 +1555,11 @@ export default function PropertyPage() {
 					</div>
 					<DialogFooter className="mt-10">
 						<DialogClose asChild>
-							<Button variant="outline" className="cursor-pointer">
+							<Button type="default" className="cursor-pointer">
 								取消
 							</Button>
 						</DialogClose>
-						<Button type="button" className="cursor-pointer" onClick={handleOK}>
+						<Button type="default" className="cursor-pointer" onClick={handleOK}>
 							确定
 						</Button>
 					</DialogFooter>

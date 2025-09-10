@@ -23,7 +23,7 @@ import {
 	updateRegulation,
 } from "@/request/control";
 import { Badge } from "@/shadcn/ui/badge";
-import { Button } from "@/shadcn/ui/button";
+
 import {
 	Dialog,
 	DialogClose,
@@ -41,6 +41,7 @@ import {
 	FormMessage,
 } from "@/shadcn/ui/form";
 import { Input } from "@/shadcn/ui/input";
+import { Button } from "antd";
 import {
 	Select,
 	SelectContent,
@@ -380,6 +381,7 @@ export default function RuleLinkageControl() {
 		<div>
 			<div>
 				<Button
+					type="primary"
 					className="cursor-pointer"
 					onClick={handleOpenAddDialog}
 				>

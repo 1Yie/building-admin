@@ -18,7 +18,7 @@ import {
 } from "@/request/account";
 import type { RoleUser } from "@/request/role";
 import { Badge } from "@/shadcn/ui/badge";
-import { Button } from "@/shadcn/ui/button";
+import { Button, Tag } from "antd";
 import {
 	Dialog,
 	DialogClose,
@@ -70,9 +70,9 @@ export default function AccountPage() {
 				const roleUserList = userRoleMap[record.username];
 				if (roleUserList) {
 					return (
-						<div className="flex justify-center gap-5">
+						<div className="flex gap-2">
 							{roleUserList.map((roleUser: RoleUser) => (
-								<Badge key={roleUser.roleName}>{roleUser.roleName}</Badge>
+								<Tag color="blue"  key={roleUser.roleName}>{roleUser.roleName}</Tag>
 							))}
 						</div>
 					);
@@ -86,7 +86,7 @@ export default function AccountPage() {
 			key: "action",
 			align: "center",
 			render: (_: any, record: any) => (
-				<div>
+				<div className="space-x-2">
 					<Button
 						variant="link"
 						onClick={() => handleOpenResetPasswordDialog(record.username)}
@@ -303,7 +303,7 @@ export default function AccountPage() {
 	return (
 		<div className="p-5">
 			<div className="mt-5">
-				<Button className="cursor-pointer" onClick={handleOpenAddDialog}>
+				<Button type="primary" className="cursor-pointer" onClick={handleOpenAddDialog}>
 					新增
 				</Button>
 			</div>
