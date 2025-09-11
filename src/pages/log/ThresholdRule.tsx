@@ -15,15 +15,8 @@ import {
 } from "@/request/log";
 import { getBindPropertyList } from "@/request/property";
 import { Badge } from "@/shadcn/ui/badge";
-import { Button } from "antd";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shadcn/ui/dialog";
+import { Button, Modal, Input, Select } from "antd";
+
 import {
   Form,
   FormControl,
@@ -32,9 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/shadcn/ui/form";
-import { Input } from "@/shadcn/ui/input";
 import {
-  Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
@@ -101,7 +92,7 @@ export default function ThresholdRule() {
       render: (_, record: any) => (
         <Button
           variant="link"
-          type="text"
+          type="default"
           className="text-blue-500 cursor-pointer"
           onClick={() => handleOpenEditDialog(record)}
         >
@@ -244,6 +235,7 @@ export default function ThresholdRule() {
     <div className="p-5">
       <div>
         <Button
+          type="primary"
           className="cursor-pointer"
           onClick={handleOpenAddDialog}
         >
@@ -263,187 +255,141 @@ export default function ThresholdRule() {
           loading={isPending}
         />
       </div>
-      <Dialog open={dialogOpen} onOpenChange={onDialogOpenChange}>
-        <DialogContent className="max-w-180!" showCloseButton={false}>
-          <DialogClose className="top-3 right-3 absolute flex justify-center items-center bg-gray-200 hover:bg-gray-300 p-1 rounded-full cursor-pointer">
-            <X className="w-4 h-4" />
-          </DialogClose>
-          <DialogHeader>
-            {addOrUpdate === "add" ? (
-              <DialogTitle>新增规则</DialogTitle>
-            ) : (
-              <DialogTitle>更新规则</DialogTitle>
-            )}
-          </DialogHeader>
-          <div className="mt-5">
-            <Form {...thresholdRuleForm}>
-              <form className="space-y-7">
-                {
-                  addOrUpdate === "edit" && (
-                    <FormField
-                      control={thresholdRuleForm.control}
-                      name="rule_id"
-                      render={({ field }) => (
-                        <FormItem className="relative flex items-center gap-5">
-                          <FormLabel>规则ID</FormLabel>
-                          <div className="flex flex-col">
-                            <FormControl>
-                              <Input
-                                {...field}
-                                className="w-80 h-8"
-                                disabled
-                              />
-                            </FormControl>
-                            <FormMessage className="bottom-0 absolute translate-y-full" />
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-                  )
-                }
-                <FormField
-                  control={thresholdRuleForm.control}
-                  name="sensor_property_id"
-                  render={({ field }) => (
-                    <FormItem className="relative flex items-center gap-5">
-                      <FormLabel>传感器ID</FormLabel>
-                      <div className="flex flex-col">
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="bg-white w-50 cursor-pointer">
-                              <SelectValue placeholder="传感器ID" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {sensorPropertySelectOption?.map((option) => (
-                              <SelectItem
-                                key={option.property_id}
-                                value={option.property_id}
-                              >
-                                {option.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={thresholdRuleForm.control}
-                  name="field"
-                  render={({ field }) => (
-                    <FormItem className="relative flex items-center gap-5">
-                      <FormLabel>传感器字段</FormLabel>
-                      <div className="flex flex-col">
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="bg-white w-50 cursor-pointer">
-                              <SelectValue placeholder="传感器字段" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {fieldSelectOption?.map((option) => (
-                              <SelectItem key={option.type} value={option.type}>
-                                {option.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={thresholdRuleForm.control}
-                  name="is_used"
-                  render={({ field }) => (
-                    <FormItem className="relative flex items-center gap-5">
-                      <FormLabel>使用状态</FormLabel>
-                      <div className="flex flex-col">
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="bg-white w-50 cursor-pointer">
-                              <SelectValue placeholder="使用状态" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {isUsedSelectOption?.map((option) => (
-                              <SelectItem
-                                key={option.value}
-                                value={option.value}
-                              >
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={thresholdRuleForm.control}
-                  name="max"
-                  render={({ field }) => (
-                    <FormItem className="relative flex items-center gap-5">
-                      <FormLabel>触发上线</FormLabel>
-                      <div className="flex flex-col">
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="number"
-                            className="w-80 h-8"
-                          />
-                        </FormControl>
-                        <FormMessage className="bottom-0 absolute translate-y-full" />
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={thresholdRuleForm.control}
-                  name="min"
-                  render={({ field }) => (
-                    <FormItem className="relative flex items-center gap-5">
-                      <FormLabel>触发下线</FormLabel>
-                      <div className="flex flex-col">
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="number"
-                            className="w-80 h-8"
-                          />
-                        </FormControl>
-                        <FormMessage className="bottom-0 absolute translate-y-full" />
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              </form>
-            </Form>
-          </div>
-          <DialogFooter className="mt-10">
-            <DialogClose asChild>
-              <Button variant="outline" className="cursor-pointer">
-                取消
-              </Button>
-            </DialogClose>
-            <Button type="button" className="cursor-pointer" onClick={handleOK}>
+
+      <Modal
+        open={dialogOpen}
+        title={addOrUpdate === "add" ? "新增规则" : "更新规则"}
+        onCancel={() => setDialogOpen(false)}
+        footer={
+          <div className="flex justify-end gap-4">
+            <Button type="default" onClick={() => setDialogOpen(false)}>
+              取消
+            </Button>
+            <Button type="primary" onClick={handleOK}>
               确定
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        }
+        width={720}
+        centered
+      >
+        <div className="mt-5">
+          <Form {...thresholdRuleForm}>
+            <form className="space-y-7">
+              {addOrUpdate === "edit" && (
+                <FormField
+                  control={thresholdRuleForm.control}
+                  name="rule_id"
+                  render={({ field }) => (
+                    <FormItem className="relative flex items-center gap-5">
+                      <FormLabel>规则ID</FormLabel>
+                      <div className="flex flex-col">
+                        <FormControl>
+                          <Input {...field} className="w-80 h-8" disabled />
+                        </FormControl>
+                        <FormMessage className="bottom-0 absolute translate-y-full" />
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              )}
+              <FormField
+                control={thresholdRuleForm.control}
+                name="sensor_property_id"
+                render={({ field }) => (
+                  <FormItem className="relative flex items-center gap-5">
+                    <FormLabel>传感器ID</FormLabel>
+                    <div className="flex flex-col">
+                      <Select
+                        onChange={field.onChange}
+                        value={field.value}
+                        placeholder="传感器ID"
+                        style={{ width: 200 }}
+                      >
+                        {sensorPropertySelectOption?.map((option) => (
+                          <Select.Option
+                            key={option.property_id}
+                            value={option.property_id}
+                          >
+                            {option.name}
+                          </Select.Option>
+                        ))}
+                      </Select>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={thresholdRuleForm.control}
+                name="field"
+                render={({ field }) => (
+                  <FormItem className="relative flex items-center gap-5">
+                    <FormLabel>传感器字段</FormLabel>
+                    <div className="flex flex-col">
+                      <Select onChange={field.onChange} value={field.value} placeholder="传感器字段" style={{ width: 200 }}>
+                        {fieldSelectOption?.map((option) => (
+                          <Select.Option key={option.type} value={option.type}>
+                            {option.name}
+                          </Select.Option>
+                        ))}
+                      </Select>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={thresholdRuleForm.control}
+                name="is_used"
+                render={({ field }) => (
+                  <FormItem className="relative flex items-center gap-5">
+                    <FormLabel>使用状态</FormLabel>
+                    <div className="flex flex-col">
+                      <Select onChange={field.onChange} value={field.value} placeholder="使用状态" style={{ width: 200 }}>
+                        {isUsedSelectOption?.map((option) => (
+                          <Select.Option key={option.value} value={option.value}>
+                            {option.label}
+                          </Select.Option>
+                        ))}
+                      </Select>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={thresholdRuleForm.control}
+                name="max"
+                render={({ field }) => (
+                  <FormItem className="relative flex items-center gap-5">
+                    <FormLabel>触发上线</FormLabel>
+                    <div className="flex flex-col">
+                      <FormControl>
+                        <Input {...field} type="number" className="w-80 h-8" />
+                      </FormControl>
+                      <FormMessage className="bottom-0 absolute translate-y-full" />
+                    </div>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={thresholdRuleForm.control}
+                name="min"
+                render={({ field }) => (
+                  <FormItem className="relative flex items-center gap-5">
+                    <FormLabel>触发下线</FormLabel>
+                    <div className="flex flex-col">
+                      <FormControl>
+                        <Input {...field} type="number" className="w-80 h-8" />
+                      </FormControl>
+                      <FormMessage className="bottom-0 absolute translate-y-full" />
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </form>
+          </Form>
+        </div>
+      </Modal>  
+
     </div>
   );
 }

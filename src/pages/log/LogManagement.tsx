@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { useQuery } from "@tanstack/react-query";
-import { Table, Button } from "antd";
+import { Table, Button, Select } from "antd";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import dayjs from "dayjs";
@@ -21,7 +21,7 @@ import {
 } from "@/shadcn/ui/form";
 import { Popover, PopoverContent } from "@/shadcn/ui/popover";
 import {
-	Select,
+
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
@@ -185,21 +185,16 @@ export default function LogManagement() {
 										<FormLabel>日志类型</FormLabel>
 										<div className="flex flex-col">
 											<Select
-												onValueChange={field.onChange}
+												onChange={field.onChange}
 												value={field.value}
+												placeholder="日志类型"
+												style={{ width: 180 }}
 											>
-												<FormControl>
-													<SelectTrigger className="bg-white w-50 cursor-pointer">
-														<SelectValue placeholder="日志类型" />
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													{logTypeSelectOption?.map((option) => (
-														<SelectItem key={option.type} value={option.type}>
-															{option.name}
-														</SelectItem>
-													))}
-												</SelectContent>
+												{logTypeSelectOption?.map((option) => (
+													<Select.Option key={option.type} value={option.type}>
+														{option.name}
+													</Select.Option>
+												))}
 											</Select>
 										</div>
 									</FormItem>
@@ -213,21 +208,16 @@ export default function LogManagement() {
 										<FormLabel>操作人</FormLabel>
 										<div className="flex flex-col">
 											<Select
-												onValueChange={field.onChange}
+												onChange={field.onChange}
 												value={field.value}
+												placeholder="操作人"
+												style={{ width: 180 }}
 											>
-												<FormControl>
-													<SelectTrigger className="bg-white w-50 cursor-pointer">
-														<SelectValue placeholder="操作人" />
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													{operateSelectOption?.map((option) => (
-														<SelectItem key={option.value} value={option.value}>
-															{option.name}
-														</SelectItem>
-													))}
-												</SelectContent>
+												{operateSelectOption?.map((option) => (
+													<Select.Option key={option.value} value={option.value}>
+														{option.name}
+													</Select.Option>
+												))}
 											</Select>
 										</div>
 									</FormItem>

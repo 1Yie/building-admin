@@ -11,7 +11,7 @@ import {
 	getSensorTypeList,
 } from "@/request/property";
 import { getOutlineInfo, getSensorList } from "@/request/realtime";
-import { Button } from "antd";
+import { Button, Select, Input } from "antd";
 import { Card, CardContent } from "@/shadcn/ui/card";
 import {
 	Form,
@@ -21,7 +21,7 @@ import {
 	FormLabel,
 } from "@/shadcn/ui/form";
 import {
-	Select,
+
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
@@ -306,21 +306,16 @@ export default function RealtimePage() {
 										<FormLabel>统计范围</FormLabel>
 										<div className="flex flex-col">
 											<Select
-												onValueChange={field.onChange}
+												onChange={field.onChange}
 												value={field.value}
+
+												style={{ width: 120 }}
 											>
-												<FormControl>
-													<SelectTrigger className="bg-white w-50">
-														<SelectValue placeholder="统计范围" />
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													{timeUnitSelectOption.map((option) => (
-														<SelectItem key={option.value} value={option.value}>
-															{option.label}
-														</SelectItem>
-													))}
-												</SelectContent>
+												{timeUnitSelectOption.map((option) => (
+													<Select.Option key={option.value} value={option.value}>
+														{option.label}
+													</Select.Option>
+												))}
 											</Select>
 										</div>
 									</FormItem>
@@ -352,26 +347,18 @@ export default function RealtimePage() {
 										<FormLabel>楼宇</FormLabel>
 										<div className="flex flex-col">
 											<Select
-												onValueChange={(value) =>
+												onChange={(value) =>
 													onPropertyBuildingIdChange(value, field)
 												}
 												value={field.value}
+												placeholder="请选择楼宇"
+												style={{ width: 200 }}
 											>
-												<FormControl>
-													<SelectTrigger className="bg-white w-50">
-														<SelectValue placeholder="请选择楼宇" />
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													{buildingSelectOption?.map((option) => (
-														<SelectItem
-															key={option.property_id}
-															value={option.property_id}
-														>
-															{option.name}
-														</SelectItem>
-													))}
-												</SelectContent>
+												{buildingSelectOption?.map((option) => (
+													<Select.Option key={option.property_id} value={option.property_id}>
+														{option.name}
+													</Select.Option>
+												))}
 											</Select>
 										</div>
 									</FormItem>
@@ -385,26 +372,18 @@ export default function RealtimePage() {
 										<FormLabel>空间</FormLabel>
 										<div className="flex flex-col">
 											<Select
-												onValueChange={(value) =>
+												onChange={(value) =>
 													onPropertySpaceIdChange(value, field)
 												}
 												value={field.value}
+												placeholder="请选择空间"
+												style={{ width: 200 }}
 											>
-												<FormControl>
-													<SelectTrigger className="bg-white w-50">
-														<SelectValue placeholder="请选择空间" />
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													{spaceSelectOption?.map((option) => (
-														<SelectItem
-															key={option.property_id}
-															value={option.property_id}
-														>
-															{option.name}
-														</SelectItem>
-													))}
-												</SelectContent>
+												{spaceSelectOption?.map((option) => (
+													<Select.Option key={option.property_id} value={option.property_id}>
+														{option.name}
+													</Select.Option>
+												))}
 											</Select>
 										</div>
 									</FormItem>
@@ -418,26 +397,16 @@ export default function RealtimePage() {
 										<FormLabel>网关（智能箱）</FormLabel>
 										<div className="flex flex-col">
 											<Select
-												onValueChange={(value) =>
-													onPropertyTerminalIdChange(value, field)
-												}
+												onChange={(value) => onPropertyTerminalIdChange(value, field)}
 												value={field.value}
+												placeholder="请选择网关（智能箱）"
+												style={{ width: 200 }}
 											>
-												<FormControl>
-													<SelectTrigger className="bg-white w-50">
-														<SelectValue placeholder="请选择网关（智能箱）" />
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													{terminalSelectOption?.map((option) => (
-														<SelectItem
-															key={option.property_id}
-															value={option.property_id}
-														>
-															{option.name}
-														</SelectItem>
-													))}
-												</SelectContent>
+												{terminalSelectOption?.map((option) => (
+													<Select.Option key={option.property_id} value={option.property_id}>
+														{option.name}
+													</Select.Option>
+												))}
 											</Select>
 										</div>
 									</FormItem>
@@ -451,26 +420,18 @@ export default function RealtimePage() {
 										<FormLabel>传感器</FormLabel>
 										<div className="flex flex-col">
 											<Select
-												onValueChange={(value) =>
+												onChange={(value) =>
 													onPropertySensorIdChange(value, field)
 												}
 												value={field.value}
+												placeholder="请选择传感器"
+												style={{ width: 200 }}
 											>
-												<FormControl>
-													<SelectTrigger className="bg-white w-50">
-														<SelectValue placeholder="请选择传感器" />
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													{sensorSelectOption?.map((option) => (
-														<SelectItem
-															key={option.property_id}
-															value={option.property_id}
-														>
-															{option.name}
-														</SelectItem>
-													))}
-												</SelectContent>
+												{sensorSelectOption?.map((option) => (
+													<Select.Option key={option.property_id} value={option.property_id}>
+														{option.name}
+													</Select.Option>
+												))}
 											</Select>
 										</div>
 									</FormItem>
@@ -486,21 +447,16 @@ export default function RealtimePage() {
 										<FormLabel>传感器大类</FormLabel>
 										<div className="flex flex-col">
 											<Select
-												onValueChange={field.onChange}
+												onChange={field.onChange}
 												value={field.value}
+												placeholder="请选择传感器大类"
+												style={{ width: 120 }}
 											>
-												<FormControl>
-													<SelectTrigger className="bg-white w-50">
-														<SelectValue placeholder="请选择传感器大类" />
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													{sensorKindSelectOption?.map((option) => (
-														<SelectItem key={option.kind} value={option.kind}>
-															{option.name}
-														</SelectItem>
-													))}
-												</SelectContent>
+												{sensorKindSelectOption?.map((option) => (
+													<Select.Option key={option.kind} value={option.kind}>
+														{option.name}
+													</Select.Option>
+												))}
 											</Select>
 										</div>
 									</FormItem>
@@ -514,21 +470,16 @@ export default function RealtimePage() {
 										<FormLabel>传感器小类</FormLabel>
 										<div className="flex flex-col">
 											<Select
-												onValueChange={field.onChange}
+												onChange={field.onChange}
 												value={field.value}
+												placeholder="请选择传感器小类"
+												style={{ width: 180 }}
 											>
-												<FormControl>
-													<SelectTrigger className="bg-white w-50">
-														<SelectValue placeholder="请选择传感器小类" />
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													{sensorTypeSelectOption?.map((option) => (
-														<SelectItem key={option.type} value={option.type}>
-															{option.name}
-														</SelectItem>
-													))}
-												</SelectContent>
+												{sensorTypeSelectOption?.map((option) => (
+													<Select.Option key={option.type} value={option.type}>
+														{option.name}
+													</Select.Option>
+												))}
 											</Select>
 										</div>
 									</FormItem>

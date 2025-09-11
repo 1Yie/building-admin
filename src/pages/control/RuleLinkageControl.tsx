@@ -25,14 +25,6 @@ import {
 import { Badge } from "@/shadcn/ui/badge";
 
 import {
-	Dialog,
-	DialogClose,
-	DialogContent,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/shadcn/ui/dialog";
-import {
 	Form,
 	FormControl,
 	FormField,
@@ -40,15 +32,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/shadcn/ui/form";
-import { Input } from "@/shadcn/ui/input";
-import { Button, Modal } from "antd";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/shadcn/ui/select";
+import { Button, Modal, Select, Input } from "antd";
 import type { PaginationType } from "@/types";
 
 const roleFormSchema = z.object({
@@ -450,31 +434,25 @@ export default function RuleLinkageControl() {
 										<FormLabel>触发传感器资产编号</FormLabel>
 										<div className="flex flex-col">
 											<Select
-												onValueChange={(value) => tSensorPropertyIdChange(value, field)}
+												onChange={(value) => tSensorPropertyIdChange(value, field)}
 												value={field.value}
+												placeholder="请选择触发传感器资产编号"
+												style={{ width: 320 }}
 											>
-												<FormControl>
-													<SelectTrigger className="bg-white w-80">
-														<SelectValue placeholder="请选择触发传感器资产编号" />
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													{monitorPropertySelectOption.map((option) => (
-														<SelectItem
-															key={option.property_id}
-															value={option.property_id}
-														>
-															{option.name}
-														</SelectItem>
-													))}
-												</SelectContent>
+												{monitorPropertySelectOption.map((option) => (
+													<Select.Option
+														key={option.property_id}
+														value={option.property_id}
+													>
+														{option.name}
+													</Select.Option>
+												))}
 											</Select>
 											<FormMessage className="bottom-0 absolute translate-y-full" />
 										</div>
 									</FormItem>
 								)}
 							/>
-
 							<FormField
 								control={roleForm.control}
 								name="c_sensor_property_id"
@@ -483,24 +461,19 @@ export default function RuleLinkageControl() {
 										<FormLabel>被控传感器资产编号</FormLabel>
 										<div className="flex flex-col">
 											<Select
-												onValueChange={(value) => cSensorPropertyIdChange(value, field)}
+												onChange={(value) => cSensorPropertyIdChange(value, field)}
 												value={field.value}
+												placeholder="请选择被控传感器资产编号"
+												style={{ width: 320 }}
 											>
-												<FormControl>
-													<SelectTrigger className="bg-white w-80">
-														<SelectValue placeholder="请选择被控传感器资产编号" />
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													{controlPropertySelectOption.map((option) => (
-														<SelectItem
-															key={option.property_id}
-															value={option.property_id}
-														>
-															{option.name}
-														</SelectItem>
-													))}
-												</SelectContent>
+												{controlPropertySelectOption.map((option) => (
+													<Select.Option
+														key={option.property_id}
+														value={option.property_id}
+													>
+														{option.name}
+													</Select.Option>
+												))}
 											</Select>
 											<FormMessage className="bottom-0 absolute translate-y-full" />
 										</div>
@@ -515,26 +488,23 @@ export default function RuleLinkageControl() {
 									<FormItem className="relative flex items-center gap-5">
 										<FormLabel>触发项</FormLabel>
 										<div className="flex flex-col">
-											<Select onValueChange={field.onChange} value={field.value}>
-												<FormControl>
-													<SelectTrigger className="bg-white w-80">
-														<SelectValue placeholder="请选择触发项" />
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													{fieldSelectOption.map((option) => (
-														<SelectItem key={option.type} value={option.type}>
-															{option.name}
-														</SelectItem>
-													))}
-												</SelectContent>
+											<Select
+												value={field.value}
+												style={{ width: 120 }}
+												placeholder="请选择触发项"
+												onChange={(value) => field.onChange(value)}
+											>
+												{fieldSelectOption.map((option) => (
+													<Select.Option key={option.type} value={option.type}>
+														{option.name}
+													</Select.Option>
+												))}
 											</Select>
 											<FormMessage className="bottom-0 absolute translate-y-full" />
 										</div>
 									</FormItem>
 								)}
 							/>
-
 							<FormField
 								control={roleForm.control}
 								name="control"
@@ -542,19 +512,17 @@ export default function RuleLinkageControl() {
 									<FormItem className="relative flex items-center gap-5">
 										<FormLabel>控制操作</FormLabel>
 										<div className="flex flex-col">
-											<Select onValueChange={field.onChange} value={field.value}>
-												<FormControl>
-													<SelectTrigger className="bg-white w-80">
-														<SelectValue placeholder="请选择控制操作" />
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													{controlSelectOption.map((option) => (
-														<SelectItem key={option.type} value={option.type}>
-															{option.name}
-														</SelectItem>
-													))}
-												</SelectContent>
+											<Select 
+												value={field.value}
+												style={{ width: 120 }}
+												placeholder="请选择控制操作"
+												onChange={(value) => field.onChange(value)}
+											>
+												{controlSelectOption.map((option) => (
+													<Select.Option key={option.type} value={option.type}>
+														{option.name}
+													</Select.Option>
+												))}
 											</Select>
 											<FormMessage className="bottom-0 absolute translate-y-full" />
 										</div>
@@ -569,25 +537,24 @@ export default function RuleLinkageControl() {
 									<FormItem className="relative flex items-center gap-5">
 										<FormLabel>触发条件</FormLabel>
 										<div className="flex flex-col">
-											<Select onValueChange={field.onChange} value={field.value}>
-												<FormControl>
-													<SelectTrigger className="bg-white w-80">
-														<SelectValue placeholder="请选择触发条件" />
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													{triggerSelectOption.map((option) => (
-														<SelectItem key={option.type} value={option.type}>
-															{option.name}
-														</SelectItem>
-													))}
-												</SelectContent>
+											<Select
+												value={field.value}
+												style={{ width: 120 }}
+												placeholder="请选择触发条件"
+												onChange={(value) => field.onChange(value)}
+											>
+												{triggerSelectOption.map((option) => (
+													<Select.Option key={option.type} value={option.type}>
+														{option.name}
+													</Select.Option>
+												))}
 											</Select>
 											<FormMessage className="bottom-0 absolute translate-y-full" />
 										</div>
 									</FormItem>
 								)}
 							/>
+
 
 							<FormField
 								control={roleForm.control}
@@ -617,19 +584,17 @@ export default function RuleLinkageControl() {
 									<FormItem className="relative flex items-center gap-5">
 										<FormLabel>规则使用状态</FormLabel>
 										<div className="flex flex-col">
-											<Select onValueChange={field.onChange} value={field.value}>
-												<FormControl>
-													<SelectTrigger className="bg-white w-80">
-														<SelectValue placeholder="请选择规则使用状态" />
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													{RoleIsUsedSelectOptions.map((option) => (
-														<SelectItem key={option.value} value={option.value}>
-															{option.label}
-														</SelectItem>
-													))}
-												</SelectContent>
+											<Select
+												value={field.value}
+												style={{ width: 120 }}
+												placeholder="请选择规则使用状态"
+												onChange={(value) => field.onChange(value)}
+											>
+												{RoleIsUsedSelectOptions.map((option) => (
+													<Select.Option key={option.value} value={option.value}>
+														{option.label}
+													</Select.Option>
+												))}
 											</Select>
 											<FormMessage className="bottom-0 absolute translate-y-full" />
 										</div>
