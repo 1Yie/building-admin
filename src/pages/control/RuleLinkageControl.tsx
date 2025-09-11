@@ -41,7 +41,7 @@ import {
 	FormMessage,
 } from "@/shadcn/ui/form";
 import { Input } from "@/shadcn/ui/input";
-import { Button } from "antd";
+import { Button, Modal } from "antd";
 import {
 	Select,
 	SelectContent,
@@ -396,261 +396,251 @@ export default function RuleLinkageControl() {
 				loading={isLoading}
 				className="mt-2"
 			/>
-			<Dialog open={dialogOpen} onOpenChange={onDialogOpenChange}>
-				<DialogContent className="max-w-180!" showCloseButton={false}>
-					<DialogClose className="top-3 right-3 absolute flex justify-center items-center bg-gray-200 hover:bg-gray-300 p-1 rounded-full cursor-pointer">
-						<X className="w-4 h-4" />
-					</DialogClose>
-					<DialogHeader>
-						{addOrUpdate === "add" ? (
-							<DialogTitle>新增规则</DialogTitle>
-						) : (
-							<DialogTitle>更新规则</DialogTitle>
-						)}
-					</DialogHeader>
-					<div className="mt-5">
-						<Form {...roleForm}>
-							<form className="space-y-7">
-								{addOrUpdate === "update" ? (
-									<FormField
-										control={roleForm.control}
-										name="rule_id"
-										render={({ field }) => (
-											<FormItem className="relative flex items-center gap-5">
-												<FormLabel>规则编号</FormLabel>
-												<div className="flex flex-col">
-													<FormControl>
-														<Input {...field} className="w-80 h-8" />
-													</FormControl>
-													<FormMessage className="bottom-0 absolute translate-y-full" />
-												</div>
-											</FormItem>
-										)}
-									/>
-								) : null}
+			<Modal
+				open={dialogOpen}
+				title={addOrUpdate === "add" ? "新增规则" : "更新规则"}
+				onCancel={() => onDialogOpenChange(false)}
+				footer={
+					<div className="mt-10 flex justify-end gap-4">
+						<Button
+							type="default"
+							className="cursor-pointer"
+							onClick={() => onDialogOpenChange(false)}
+						>
+							取消
+						</Button>
+						<Button
+							type="primary"
+							htmlType="button"
+							className="cursor-pointer"
+							onClick={handleOK}
+						>
+							确定
+						</Button>
+					</div>
+				}
+				width={720}
+			>
+				<div className="mt-5">
+					<Form {...roleForm}>
+						<form className="space-y-7">
+							{addOrUpdate === "update" ? (
 								<FormField
 									control={roleForm.control}
-									name="t_sensor_property_id"
+									name="rule_id"
 									render={({ field }) => (
 										<FormItem className="relative flex items-center gap-5">
-											<FormLabel>触发传感器资产编号</FormLabel>
-											<div className="flex flex-col">
-												<Select
-													onValueChange={(value) =>
-														tSensorPropertyIdChange(value, field)
-													}
-													value={field.value}
-												>
-													<FormControl>
-														<SelectTrigger className="bg-white w-80">
-															<SelectValue placeholder="请选择触发传感器资产编号" />
-														</SelectTrigger>
-													</FormControl>
-													<SelectContent>
-														{monitorPropertySelectOption.map((option) => (
-															<SelectItem
-																key={option.property_id}
-																value={option.property_id}
-															>
-																{option.name}
-															</SelectItem>
-														))}
-													</SelectContent>
-												</Select>
-												<FormMessage className="bottom-0 absolute translate-y-full" />
-											</div>
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={roleForm.control}
-									name="c_sensor_property_id"
-									render={({ field }) => (
-										<FormItem className="relative flex items-center gap-5">
-											<FormLabel>被控传感器资产编号</FormLabel>
-											<div className="flex flex-col">
-												<Select
-													onValueChange={(value) =>
-														cSensorPropertyIdChange(value, field)
-													}
-													value={field.value}
-												>
-													<FormControl>
-														<SelectTrigger className="bg-white w-80">
-															<SelectValue placeholder="请选择被控传感器资产编号" />
-														</SelectTrigger>
-													</FormControl>
-													<SelectContent>
-														{controlPropertySelectOption.map((option) => (
-															<SelectItem
-																key={option.property_id}
-																value={option.property_id}
-															>
-																{option.name}
-															</SelectItem>
-														))}
-													</SelectContent>
-												</Select>
-												<FormMessage className="bottom-0 absolute translate-y-full" />
-											</div>
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={roleForm.control}
-									name="field"
-									render={({ field }) => (
-										<FormItem className="relative flex items-center gap-5">
-											<FormLabel>触发项</FormLabel>
-											<div className="flex flex-col">
-												<Select
-													onValueChange={field.onChange}
-													value={field.value}
-												>
-													<FormControl>
-														<SelectTrigger className="bg-white w-80">
-															<SelectValue placeholder="请选择触发项" />
-														</SelectTrigger>
-													</FormControl>
-													<SelectContent>
-														{fieldSelectOption.map((option) => (
-															<SelectItem key={option.type} value={option.type}>
-																{option.name}
-															</SelectItem>
-														))}
-													</SelectContent>
-												</Select>
-												<FormMessage className="bottom-0 absolute translate-y-full" />
-											</div>
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={roleForm.control}
-									name="control"
-									render={({ field }) => (
-										<FormItem className="relative flex items-center gap-5">
-											<FormLabel>控制操作</FormLabel>
-											<div className="flex flex-col">
-												<Select
-													onValueChange={field.onChange}
-													value={field.value}
-												>
-													<FormControl>
-														<SelectTrigger className="bg-white w-80">
-															<SelectValue placeholder="请选择控制操作" />
-														</SelectTrigger>
-													</FormControl>
-													<SelectContent>
-														{controlSelectOption.map((option) => (
-															<SelectItem key={option.type} value={option.type}>
-																{option.name}
-															</SelectItem>
-														))}
-													</SelectContent>
-												</Select>
-												<FormMessage className="bottom-0 absolute translate-y-full" />
-											</div>
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={roleForm.control}
-									name="trigger"
-									render={({ field }) => (
-										<FormItem className="relative flex items-center gap-5">
-											<FormLabel>触发条件</FormLabel>
-											<div className="flex flex-col">
-												<Select
-													onValueChange={field.onChange}
-													value={field.value}
-												>
-													<FormControl>
-														<SelectTrigger className="bg-white w-80">
-															<SelectValue placeholder="请选择触发条件" />
-														</SelectTrigger>
-													</FormControl>
-													<SelectContent>
-														{triggerSelectOption.map((option) => (
-															<SelectItem key={option.type} value={option.type}>
-																{option.name}
-															</SelectItem>
-														))}
-													</SelectContent>
-												</Select>
-												<FormMessage className="bottom-0 absolute translate-y-full" />
-											</div>
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={roleForm.control}
-									name="value"
-									render={({ field }) => (
-										<FormItem className="relative flex items-center gap-5">
-											<FormLabel>触发阈值</FormLabel>
+											<FormLabel>规则编号</FormLabel>
 											<div className="flex flex-col">
 												<FormControl>
-													<Input
-														{...field}
-														type="number"
-														placeholder="请输入触发阈值"
-														className="w-80 h-8"
-													/>
+													<Input {...field} className="w-80 h-8" />
 												</FormControl>
 												<FormMessage className="bottom-0 absolute translate-y-full" />
 											</div>
 										</FormItem>
 									)}
 								/>
-								<FormField
-									control={roleForm.control}
-									name="is_used"
-									render={({ field }) => (
-										<FormItem className="relative flex items-center gap-5">
-											<FormLabel>规则使用状态</FormLabel>
-											<div className="flex flex-col">
-												<Select
-													onValueChange={field.onChange}
-													value={field.value}
-												>
-													<FormControl>
-														<SelectTrigger className="bg-white w-80">
-															<SelectValue placeholder="请选择规则使用状态" />
-														</SelectTrigger>
-													</FormControl>
-													<SelectContent>
-														{RoleIsUsedSelectOptions.map((option) => (
-															<SelectItem
-																key={option.value}
-																value={option.value}
-															>
-																{option.label}
-															</SelectItem>
-														))}
-													</SelectContent>
-												</Select>
-												<FormMessage className="bottom-0 absolute translate-y-full" />
-											</div>
-										</FormItem>
-									)}
-								/>
+							) : null}
 
-							</form>
-						</Form>
-					</div>
-					<DialogFooter className="mt-10">
-						<DialogClose asChild>
-							<Button variant="outline" className="cursor-pointer">
-								取消
-							</Button>
-						</DialogClose>
-						<Button type="button" className="cursor-pointer" onClick={handleOK}>
-							确定
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
+							<FormField
+								control={roleForm.control}
+								name="t_sensor_property_id"
+								render={({ field }) => (
+									<FormItem className="relative flex items-center gap-5">
+										<FormLabel>触发传感器资产编号</FormLabel>
+										<div className="flex flex-col">
+											<Select
+												onValueChange={(value) => tSensorPropertyIdChange(value, field)}
+												value={field.value}
+											>
+												<FormControl>
+													<SelectTrigger className="bg-white w-80">
+														<SelectValue placeholder="请选择触发传感器资产编号" />
+													</SelectTrigger>
+												</FormControl>
+												<SelectContent>
+													{monitorPropertySelectOption.map((option) => (
+														<SelectItem
+															key={option.property_id}
+															value={option.property_id}
+														>
+															{option.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+											<FormMessage className="bottom-0 absolute translate-y-full" />
+										</div>
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								control={roleForm.control}
+								name="c_sensor_property_id"
+								render={({ field }) => (
+									<FormItem className="relative flex items-center gap-5">
+										<FormLabel>被控传感器资产编号</FormLabel>
+										<div className="flex flex-col">
+											<Select
+												onValueChange={(value) => cSensorPropertyIdChange(value, field)}
+												value={field.value}
+											>
+												<FormControl>
+													<SelectTrigger className="bg-white w-80">
+														<SelectValue placeholder="请选择被控传感器资产编号" />
+													</SelectTrigger>
+												</FormControl>
+												<SelectContent>
+													{controlPropertySelectOption.map((option) => (
+														<SelectItem
+															key={option.property_id}
+															value={option.property_id}
+														>
+															{option.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+											<FormMessage className="bottom-0 absolute translate-y-full" />
+										</div>
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								control={roleForm.control}
+								name="field"
+								render={({ field }) => (
+									<FormItem className="relative flex items-center gap-5">
+										<FormLabel>触发项</FormLabel>
+										<div className="flex flex-col">
+											<Select onValueChange={field.onChange} value={field.value}>
+												<FormControl>
+													<SelectTrigger className="bg-white w-80">
+														<SelectValue placeholder="请选择触发项" />
+													</SelectTrigger>
+												</FormControl>
+												<SelectContent>
+													{fieldSelectOption.map((option) => (
+														<SelectItem key={option.type} value={option.type}>
+															{option.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+											<FormMessage className="bottom-0 absolute translate-y-full" />
+										</div>
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								control={roleForm.control}
+								name="control"
+								render={({ field }) => (
+									<FormItem className="relative flex items-center gap-5">
+										<FormLabel>控制操作</FormLabel>
+										<div className="flex flex-col">
+											<Select onValueChange={field.onChange} value={field.value}>
+												<FormControl>
+													<SelectTrigger className="bg-white w-80">
+														<SelectValue placeholder="请选择控制操作" />
+													</SelectTrigger>
+												</FormControl>
+												<SelectContent>
+													{controlSelectOption.map((option) => (
+														<SelectItem key={option.type} value={option.type}>
+															{option.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+											<FormMessage className="bottom-0 absolute translate-y-full" />
+										</div>
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								control={roleForm.control}
+								name="trigger"
+								render={({ field }) => (
+									<FormItem className="relative flex items-center gap-5">
+										<FormLabel>触发条件</FormLabel>
+										<div className="flex flex-col">
+											<Select onValueChange={field.onChange} value={field.value}>
+												<FormControl>
+													<SelectTrigger className="bg-white w-80">
+														<SelectValue placeholder="请选择触发条件" />
+													</SelectTrigger>
+												</FormControl>
+												<SelectContent>
+													{triggerSelectOption.map((option) => (
+														<SelectItem key={option.type} value={option.type}>
+															{option.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+											<FormMessage className="bottom-0 absolute translate-y-full" />
+										</div>
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								control={roleForm.control}
+								name="value"
+								render={({ field }) => (
+									<FormItem className="relative flex items-center gap-5">
+										<FormLabel>触发阈值</FormLabel>
+										<div className="flex flex-col">
+											<FormControl>
+												<Input
+													{...field}
+													type="number"
+													placeholder="请输入触发阈值"
+													className="w-80 h-8"
+												/>
+											</FormControl>
+											<FormMessage className="bottom-0 absolute translate-y-full" />
+										</div>
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								control={roleForm.control}
+								name="is_used"
+								render={({ field }) => (
+									<FormItem className="relative flex items-center gap-5">
+										<FormLabel>规则使用状态</FormLabel>
+										<div className="flex flex-col">
+											<Select onValueChange={field.onChange} value={field.value}>
+												<FormControl>
+													<SelectTrigger className="bg-white w-80">
+														<SelectValue placeholder="请选择规则使用状态" />
+													</SelectTrigger>
+												</FormControl>
+												<SelectContent>
+													{RoleIsUsedSelectOptions.map((option) => (
+														<SelectItem key={option.value} value={option.value}>
+															{option.label}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+											<FormMessage className="bottom-0 absolute translate-y-full" />
+										</div>
+									</FormItem>
+								)}
+							/>
+						</form>
+					</Form>
+				</div>
+			</Modal>
+
 		</div>
 	);
 }

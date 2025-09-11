@@ -8,6 +8,7 @@ import Realtime from "@/pages/realtime";
 import Role from "@/pages/role";
 import Settings from "@/pages/settings";
 import Teaching from "@/pages/teaching";
+import Evaluation from "@/pages/evaluation";
 
 const sidebarItems = [
 	{
@@ -39,6 +40,18 @@ const sidebarItems = [
 		path: "/log",
 		icon: "file-text",
 		element: <Log />,
+	},
+	{
+		title: "教学科研",
+		path: "/teaching",
+		icon: "graduation-cap",	
+		element: <Teaching />,
+	},
+	{
+		title: "智能评估",
+		path: "/evaluation",
+		icon: "key-square",
+		element: <Evaluation />,
 	},
 	{
 		title: "角色管理",

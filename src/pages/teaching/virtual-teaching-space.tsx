@@ -1,4 +1,4 @@
-export default function VirtualTeachingSpacePage() {
+export default function TeachingSpacePage() {
 	return (
 		<div>
 			<h1>Virtual Teaching Space</h1>

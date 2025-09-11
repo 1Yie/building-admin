@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Table } from "antd";
 import { X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { Modal } from "antd";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
@@ -18,7 +19,7 @@ import {
 	updateProperty,
 } from "@/request/property";
 import { Badge } from "@/shadcn/ui/badge";
-import { Button } from "antd";
+import { Button, Modal } from "antd";
 import {
 	Dialog,
 	DialogClose,
@@ -1000,6 +1001,10 @@ export default function PropertyPage() {
 				onChange={handlePaginationChange}
 				className="mt-2"
 			/>
+
+
+
+
 			<Dialog open={propertyDialogOpen} onOpenChange={onDialogOpenChange}>
 				<DialogContent className="max-w-180!" showCloseButton={false}>
 					<DialogClose className="top-3 right-3 absolute flex justify-center items-center bg-gray-200 hover:bg-gray-300 p-1 rounded-full cursor-pointer">

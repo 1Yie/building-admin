@@ -11,7 +11,7 @@ import {
 	getSensorTypeList,
 } from "@/request/property";
 import { getOutlineInfo, getSensorList } from "@/request/realtime";
-import { Button } from "@/shadcn/ui/button";
+import { Button } from "antd";
 import { Card, CardContent } from "@/shadcn/ui/card";
 import {
 	Form,
@@ -327,14 +327,16 @@ export default function RealtimePage() {
 								)}
 							/>
 							<Button
-								type="button"
+								type="primary"
+								htmlType="button"
 								className="cursor-pointer"
 								onClick={searchForm.handleSubmit(onSearchFormSubmit)}
 							>
 								查询
 							</Button>
 							<Button
-								type="button"
+								type="primary"
+								htmlType="reset"
 								className="cursor-pointer"
 								onClick={resetForm}
 							>

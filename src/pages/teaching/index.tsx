@@ -1,4 +1,5 @@
 import { Tabs } from "antd";
+import { TeachingSpacePage } from "./teaching-space";
 import VirtualTeachingSpacePage from "./virtual-teaching-space";
 
 export default function TeachingPage() {
@@ -9,7 +10,7 @@ export default function TeachingPage() {
 					{
 						key: "1",
 						label: "虚拟教学空间",
-						children: <VirtualTeachingSpacePage />,
+						children: <TeachingSpacePage />,
 					},
 					{
 						key: "2",

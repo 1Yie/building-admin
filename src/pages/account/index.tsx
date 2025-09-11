@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Popconfirm, Table } from "antd";
+import { Popconfirm, Table, Modal } from "antd";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -10,15 +10,17 @@ import type { AccountTableListResponse } from "@/request/account";
 import {
 	accountCreate,
 	accountDelete,
+	accountEdit,
 	accountPasswordReset,
 	accountRoleUpdate,
 	getAccountTableList,
 	getRoleList,
 	getRoleUserList,
+	permissionList,
 } from "@/request/account";
 import type { RoleUser } from "@/request/role";
-import { Badge } from "@/shadcn/ui/badge";
-import { Button, Tag } from "antd";
+import { Button, Tag, Tree } from "antd";
+import type { TreeDataNode, TreeProps } from 'antd';
 import {
 	Dialog,
 	DialogClose,
@@ -43,6 +45,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/shadcn/ui/select";
+
 import type { PaginationType } from "@/types";
 
 export default function AccountPage() {
@@ -72,7 +75,7 @@ export default function AccountPage() {
 					return (
 						<div className="flex gap-2">
 							{roleUserList.map((roleUser: RoleUser) => (
-								<Tag color="blue"  key={roleUser.roleName}>{roleUser.roleName}</Tag>
+								<Tag color="blue" key={roleUser.roleName}>{roleUser.roleName}</Tag>
 							))}
 						</div>
 					);
@@ -97,6 +100,7 @@ export default function AccountPage() {
 					<Button
 						variant="link"
 						className="text-blue-500 cursor-pointer"
+						onClick={() => handleOpenEditDialog(record)}
 					>
 						编辑
 					</Button>
@@ -205,9 +209,20 @@ export default function AccountPage() {
 		},
 	});
 
+
 	function handleOpenResetPasswordDialog(username: string) {
 		passwordForm.setValue("username", username);
 		setPasswordDialogOpen(true);
+	}
+
+	function handleOpenEditDialog(record: any) {
+		setEditOpen(true);
+		editAccountForm.reset({
+			username: record.username,
+			remarkName: record.remarkName,
+			phone: record.phone,
+			auditUser: record.auditUser || '',
+		});
 	}
 
 	const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
@@ -251,8 +266,29 @@ export default function AccountPage() {
 		},
 	});
 
+	const editAccountFormSchema = z.object({
+		username: z.string().min(1, "账号名称不能为空"),
+		remarkName: z.string().min(1, "账号别名不能为空"),
+		phone: z.string().optional(),
+		auditUser: z.string().optional(),
+	});
+	const editAccountForm = useForm<z.infer<typeof editAccountFormSchema>>({
+		resolver: zodResolver(editAccountFormSchema),
+		defaultValues: {
+			username: "",
+			remarkName: "",
+			phone: "",
+			auditUser: "",
+		},
+	});
+	function onEditSubmit() {
+		editAccountForm.handleSubmit(onSubmitForEdit)();
+	}
+
+
 	// 打开Dialog
 	const [addOrUpdate, setAddOrUpdate] = useState("add");
+	const [editOpen, setEditOpen] = useState(false);
 	const [dialogOpen, setDialogOpen] = useState(false);
 
 	function onDialogOpenChange(open: boolean) {
@@ -261,6 +297,7 @@ export default function AccountPage() {
 			accountForm.reset();
 		}
 	}
+
 
 	// 角色列表
 	const { data: roleListOption } = useQuery({
@@ -277,6 +314,11 @@ export default function AccountPage() {
 		setDialogOpen(true);
 	}
 
+	// 编辑账号
+	const { mutateAsync: accountEditMutate } = useMutation({
+		mutationFn: accountEdit,
+	});
+
 	// 绑定账号
 	const { mutateAsync: accountRoleUpdateMutate } = useMutation({
 		mutationFn: accountRoleUpdate,
@@ -285,7 +327,9 @@ export default function AccountPage() {
 	// 提交表单
 	function handleOK() {
 		accountForm.handleSubmit(onSubmit)();
+
 	}
+
 	async function onSubmit(values: z.infer<typeof accountFormSchema>) {
 		if (addOrUpdate === "add") {
 			await accountCreateMutate(values);
@@ -299,6 +343,19 @@ export default function AccountPage() {
 			tableRefetch();
 		}
 	}
+
+	async function onSubmitForEdit(values: z.infer<typeof editAccountFormSchema>) {
+		await accountEditMutate({
+			username: values.username,
+			remarkName: values.remarkName,
+			phone: values.phone,
+			auditUser: values.auditUser ?? 'admin',
+		});
+		toast.success("修改成功");
+		setEditOpen(false);
+		tableRefetch();
+	}
+
 
 	return (
 		<div className="p-5">
@@ -316,221 +373,280 @@ export default function AccountPage() {
 				onChange={handlePaginationChange}
 			/>
 
-			<Dialog
+			<Modal
 				open={passwordDialogOpen}
-				onOpenChange={(open) => setPasswordDialogOpen(open)}
-			>
-				<DialogContent className="max-w-180!" showCloseButton={false}>
-					<DialogClose className="top-3 right-3 absolute flex justify-center items-center bg-gray-200 hover:bg-gray-300 p-1 rounded-full cursor-pointer">
-						<X className="w-4 h-4" />
-					</DialogClose>
-					<DialogHeader>
-						<DialogTitle>修改密码</DialogTitle>
-					</DialogHeader>
-					<div className="mt-5">
-						<Form {...passwordForm}>
-							<form className="space-y-7">
-								<FormField
-									control={passwordForm.control}
-									name="username"
-									render={({ field }) => (
-										<FormItem className="relative flex items-center gap-5">
-											<FormLabel>账号名称</FormLabel>
-											<div className="flex flex-col">
-												<FormControl>
-													<Input
-														{...field}
-														type="text"
-														disabled
-														className="w-80 h-8"
-													/>
-												</FormControl>
-												<FormMessage className="bottom-0 absolute translate-y-full" />
-											</div>
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={passwordForm.control}
-									name="password-new"
-									render={({ field }) => (
-										<FormItem className="relative flex items-center gap-5">
-											<FormLabel>新密码</FormLabel>
-											<div className="flex flex-col">
-												<FormControl>
-													<Input
-														{...field}
-														type="password"
-														placeholder="请输入新密码"
-														className="w-80 h-8"
-													/>
-												</FormControl>
-												<FormMessage className="bottom-0 absolute translate-y-full" />
-											</div>
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={passwordForm.control}
-									name="password-new-confirm"
-									render={({ field }) => (
-										<FormItem className="relative flex items-center gap-5">
-											<FormLabel>确认新密码</FormLabel>
-											<div className="flex flex-col">
-												<FormControl>
-													<Input
-														{...field}
-														type="password"
-														placeholder="确认新密码"
-														className="w-80 h-8"
-													/>
-												</FormControl>
-												<FormMessage className="bottom-0 absolute translate-y-full" />
-											</div>
-										</FormItem>
-									)}
-								/>
-							</form>
-						</Form>
-					</div>
-					<DialogFooter className="mt-10">
-						<DialogClose asChild>
-							<Button variant="outline" className="cursor-pointer">
-								取消
-							</Button>
-						</DialogClose>
+				title="修改密码"
+				onCancel={() => setPasswordDialogOpen(false)}
+				footer={
+					<div className="mt-10 flex justify-end gap-4">
 						<Button
-							type="button"
+							type="default"
+							className="cursor-pointer"
+							onClick={() => setPasswordDialogOpen(false)}
+						>
+							取消
+						</Button>
+						<Button
+							htmlType="button"
+							type="primary"
 							className="cursor-pointer"
 							onClick={handleResetPassword}
 						>
 							确定
 						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
-
-			<Dialog open={dialogOpen} onOpenChange={onDialogOpenChange}>
-				<DialogContent className="max-w-180!" showCloseButton={false}>
-					<DialogClose className="top-3 right-3 absolute flex justify-center items-center bg-gray-200 hover:bg-gray-300 p-1 rounded-full cursor-pointer">
-						<X className="w-4 h-4" />
-					</DialogClose>
-					<DialogHeader>
-						{addOrUpdate === "add" ? (
-							<DialogTitle>新增账号</DialogTitle>
-						) : (
-							<DialogTitle>更新账号</DialogTitle>
-						)}
-					</DialogHeader>
-					<div className="mt-5">
-						<Form {...accountForm}>
-							<form className="space-y-7">
-								<FormField
-									control={accountForm.control}
-									name="username"
-									render={({ field }) => (
-										<FormItem className="relative flex items-center gap-5">
-											<FormLabel>账号名称</FormLabel>
-											<div className="flex flex-col">
-												<FormControl>
-													<Input {...field} className="w-80 h-8" />
-												</FormControl>
-												<FormMessage className="bottom-0 absolute translate-y-full" />
-											</div>
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={accountForm.control}
-									name="remarkName"
-									render={({ field }) => (
-										<FormItem className="relative flex items-center gap-5">
-											<FormLabel>账号别名</FormLabel>
-											<div className="flex flex-col">
-												<FormControl>
-													<Input {...field} className="w-80 h-8" />
-												</FormControl>
-												<FormMessage className="bottom-0 absolute translate-y-full" />
-											</div>
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={accountForm.control}
-									name="password"
-									render={({ field }) => (
-										<FormItem className="relative flex items-center gap-5">
-											<FormLabel>密码</FormLabel>
-											<div className="flex flex-col">
-												<FormControl>
-													<Input {...field} className="w-80 h-8" />
-												</FormControl>
-												<FormMessage className="bottom-0 absolute translate-y-full" />
-											</div>
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={accountForm.control}
-									name="phone"
-									render={({ field }) => (
-										<FormItem className="relative flex items-center gap-5">
-											<FormLabel>手机号</FormLabel>
-											<div className="flex flex-col">
-												<FormControl>
-													<Input {...field} className="w-80 h-8" />
-												</FormControl>
-												<FormMessage className="bottom-0 absolute translate-y-full" />
-											</div>
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={accountForm.control}
-									name="role"
-									render={({ field }) => (
-										<FormItem className="relative flex items-center gap-5">
-											<FormLabel>角色</FormLabel>
-											<div className="flex flex-col">
-												<Select
-													onValueChange={field.onChange}
-													value={field.value}
-												>
-													<FormControl>
-														<SelectTrigger className="bg-white w-50 cursor-pointer">
-															<SelectValue placeholder="选择角色" />
-														</SelectTrigger>
-													</FormControl>
-													<SelectContent>
-														{roleListOption?.map((option) => (
-															<SelectItem
-																key={option.roleName}
-																value={option.roleName}
-															>
-																{option.roleName}
-															</SelectItem>
-														))}
-													</SelectContent>
-												</Select>
-											</div>
-										</FormItem>
-									)}
-								/>
-							</form>
-						</Form>
 					</div>
-					<DialogFooter className="mt-10">
-						<DialogClose asChild>
-							<Button variant="outline" className="cursor-pointer">
-								取消
-							</Button>
-						</DialogClose>
-						<Button type="button" className="cursor-pointer" onClick={handleOK}>
+				}
+				width={720}
+			>
+				<div className="mt-5">
+					<Form {...passwordForm}>
+						<form className="space-y-7">
+							<FormField
+								control={passwordForm.control}
+								name="username"
+								render={({ field }) => (
+									<FormItem className="relative flex items-center gap-5">
+										<FormLabel>账号名称</FormLabel>
+										<div className="flex flex-col">
+											<FormControl>
+												<Input {...field} type="text" disabled className="w-80 h-8" />
+											</FormControl>
+											<FormMessage className="bottom-0 absolute translate-y-full" />
+										</div>
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={passwordForm.control}
+								name="password-new"
+								render={({ field }) => (
+									<FormItem className="relative flex items-center gap-5">
+										<FormLabel>新密码</FormLabel>
+										<div className="flex flex-col">
+											<FormControl>
+												<Input
+													{...field}
+													type="password"
+													placeholder="请输入新密码"
+													className="w-80 h-8"
+												/>
+											</FormControl>
+											<FormMessage className="bottom-0 absolute translate-y-full" />
+										</div>
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={passwordForm.control}
+								name="password-new-confirm"
+								render={({ field }) => (
+									<FormItem className="relative flex items-center gap-5">
+										<FormLabel>确认新密码</FormLabel>
+										<div className="flex flex-col">
+											<FormControl>
+												<Input
+													{...field}
+													type="password"
+													placeholder="确认新密码"
+													className="w-80 h-8"
+												/>
+											</FormControl>
+											<FormMessage className="bottom-0 absolute translate-y-full" />
+										</div>
+									</FormItem>
+								)}
+							/>
+						</form>
+					</Form>
+				</div>
+			</Modal>
+
+
+			<Modal
+			open={editOpen}
+			title="编辑"
+			onCancel={() => setEditOpen(false)}
+			footer={
+				<div className="mt-10 flex justify-end gap-4">
+					<Button type="default" className="cursor-pointer" onClick={() => setEditOpen(false)}>
+						取消
+					</Button>
+					<Button
+						htmlType="button"
+						type="primary"
+						className="cursor-pointer"
+						onClick={onEditSubmit}
+					>
+						确定
+					</Button>
+				</div>
+			}
+			width={720}
+		>
+				<div className="mt-5">
+					<Form {...editAccountForm}>
+						<form className="space-y-2">
+							<FormField name="username" render={({ field }) => (
+								<FormItem className="flex items-center gap-5">
+									<FormLabel>账号编号</FormLabel>
+									<FormControl>
+										<Input {...field} className="w-80 h-8" disabled />
+									</FormControl>
+								</FormItem>
+							)} />
+							<FormField name="remarkName" render={({ field }) => (
+								<FormItem className="relative flex items-center gap-5">
+									<FormLabel>账号名称</FormLabel>
+									<div className="flex flex-col">
+										<FormControl>
+											<Input {...field} className="w-80 h-8" />
+										</FormControl>
+										<FormMessage className="bottom-0 absolute translate-y-full" />
+									</div>
+								</FormItem>
+							)} />
+							<FormField name="phone" render={({ field }) => (
+								<FormItem className="relative flex items-center gap-5">
+									<FormLabel>登录手机</FormLabel>
+									<div className="flex flex-col">
+										<FormControl>
+											<Input {...field} className="w-80 h-8" />
+										</FormControl>
+										<FormMessage className="bottom-0 absolute translate-y-full" />
+									</div>
+								</FormItem>
+							)} />
+							<FormField name="auditUser" render={({ field }) => (
+								<FormItem className="relative flex items-center gap-5">
+									<FormLabel>“教学科研”上级管理/审核人员</FormLabel>
+									<div className="flex flex-col">
+										<FormControl>
+											<Input {...field} className="w-80 h-8" />
+										</FormControl>
+										<FormMessage className="bottom-0 absolute translate-y-full" />
+									</div>
+								</FormItem>
+							)} />
+						</form>
+
+					</Form>
+				</div>
+			</Modal>
+
+			<Modal
+				open={dialogOpen}
+				title={addOrUpdate === "add" ? "新增账号" : "更新账号"}
+				onCancel={() => onDialogOpenChange(false)}
+				footer={
+					<div className="mt-10 flex justify-end gap-4">
+						<Button type="default" className="cursor-pointer" onClick={() => onDialogOpenChange(false)}>
+							取消
+						</Button>
+						<Button
+							htmlType="button"
+							type="primary"
+							className="cursor-pointer"
+							onClick={handleOK}
+						>
 							确定
 						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
+					</div>
+				}
+				width={720}
+			>
+				<div className="mt-5">
+					<Form {...accountForm}>
+						<form className="space-y-7">
+							<FormField
+								control={accountForm.control}
+								name="username"
+								render={({ field }) => (
+									<FormItem className="relative flex items-center gap-5">
+										<FormLabel>账号名称</FormLabel>
+										<div className="flex flex-col">
+											<FormControl>
+												<Input {...field} className="w-80 h-8" />
+											</FormControl>
+											<FormMessage className="bottom-0 absolute translate-y-full" />
+										</div>
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={accountForm.control}
+								name="remarkName"
+								render={({ field }) => (
+									<FormItem className="relative flex items-center gap-5">
+										<FormLabel>账号别名</FormLabel>
+										<div className="flex flex-col">
+											<FormControl>
+												<Input {...field} className="w-80 h-8" />
+											</FormControl>
+											<FormMessage className="bottom-0 absolute translate-y-full" />
+										</div>
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={accountForm.control}
+								name="password"
+								render={({ field }) => (
+									<FormItem className="relative flex items-center gap-5">
+										<FormLabel>密码</FormLabel>
+										<div className="flex flex-col">
+											<FormControl>
+												<Input {...field} className="w-80 h-8" />
+											</FormControl>
+											<FormMessage className="bottom-0 absolute translate-y-full" />
+										</div>
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={accountForm.control}
+								name="phone"
+								render={({ field }) => (
+									<FormItem className="relative flex items-center gap-5">
+										<FormLabel>手机号</FormLabel>
+										<div className="flex flex-col">
+											<FormControl>
+												<Input {...field} className="w-80 h-8" />
+											</FormControl>
+											<FormMessage className="bottom-0 absolute translate-y-full" />
+										</div>
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={accountForm.control}
+								name="role"
+								render={({ field }) => (
+									<FormItem className="relative flex items-center gap-5">
+										<FormLabel>角色</FormLabel>
+										<div className="flex flex-col">
+											<Select onValueChange={field.onChange} value={field.value}>
+												<FormControl>
+													<SelectTrigger className="bg-white w-50 cursor-pointer">
+														<SelectValue placeholder="选择角色" />
+													</SelectTrigger>
+												</FormControl>
+												<SelectContent>
+													{roleListOption?.map((option) => (
+														<SelectItem key={option.roleName} value={option.roleName}>
+															{option.roleName}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</div>
+									</FormItem>
+								)}
+							/>
+						</form>
+					</Form>
+				</div>
+			</Modal>
+
 		</div>
 	);
 }

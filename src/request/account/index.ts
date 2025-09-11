@@ -106,3 +106,44 @@ export function accountRoleUpdate({
 		},
 	});
 }
+
+// 编辑用户
+export function accountEdit({
+	username,
+	remarkName,
+	phone,
+	auditUser
+}: {
+	username: string;
+	remarkName: string;
+	phone?: string;
+	auditUser?: string;
+}) {
+	return request({
+		method: "post",
+		url: urls.account.accountEdit,
+		data: {
+			username,
+			remarkName,
+			phone,
+			auditUser,
+		},
+	});
+}
+
+export function permissionList({
+	department,
+	username
+}: {
+	department?: string;
+	username?: string;
+}) {
+	return request({
+		method: "post",
+		url: urls.account.accountPermission,
+		data: {
+			department,
+			username,
+		},
+	});
+}

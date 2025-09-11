@@ -28,6 +28,8 @@ export const urls = {
 		accountRoleUpdate: combineAuthorityUrl(
 			"/authority/manager/role/user/update",
 		),
+
+		accountEdit: combineAuthorityUrl("/authority/user/update"),
 	},
 
 	// 角色
@@ -42,7 +44,7 @@ export const urls = {
 		),
 		rolePermissionUpdate: combineAuthorityUrl(
 			"/authority/manager/permission/role/update",
-		),
+		)
 	},
 
 	// 首页
@@ -70,7 +72,7 @@ export const urls = {
 		getMonitorPropertyList: combineUrl(
 			"/controlpage/regulation/get_monitor_property_list",
 		),
-		getControlPropertyList: combineUrl(
+		getControlPropertyList: combineUrl(	
 			"/controlpage/regulation/get_control_property_list",
 		),
 		getFieldSelectList: combineUrl("/property/get_param_list"),
