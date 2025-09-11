@@ -330,7 +330,7 @@ export default function RealtimePage() {
 								查询
 							</Button>
 							<Button
-								type="primary"
+								type="default"
 								htmlType="reset"
 								className="cursor-pointer"
 								onClick={resetForm}

@@ -28,6 +28,13 @@ import {
 	FormMessage,
 } from "@/shadcn/ui/form";
 import { Input, Select } from "antd";
+import {
+
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/shadcn/ui/select";
 import type { PaginationType } from "@/types";
 
 const searchFormSchema = z.object({
@@ -766,7 +773,7 @@ export default function PropertyPage() {
 							查询
 						</Button>
 						<Button
-							type="primary"
+							type="default"
 							htmlType="reset"
 							className="cursor-pointer"
 							onClick={() => searchForm.reset()}
@@ -774,7 +781,7 @@ export default function PropertyPage() {
 							清空
 						</Button>
 						<Button
-							type="primary"
+							type="default"
 							className="cursor-pointer"
 							onClick={exportProperty}
 						>
@@ -1068,7 +1075,7 @@ export default function PropertyPage() {
 														value={field.value}
 														options={buildingIsUsedSelectOptions}
 														defaultValue="请选择楼宇使用状态"
-														style={{ width: 320 }}
+														style={{ width: 80 }}
 													>
 													</Select>
 													<FormMessage className="bottom-0 absolute translate-y-full" />
@@ -1198,7 +1205,7 @@ export default function PropertyPage() {
 														value={field.value}
 														placeholder="请选择空间使用状态"
 														options={buildingIsUsedSelectOptions}
-														style={{ width: 320 }}
+														style={{ width: 80 }}
 													/>
 													<FormMessage className="bottom-0 absolute translate-y-full" />
 												</div>
@@ -1307,7 +1314,7 @@ export default function PropertyPage() {
 														onChange={field.onChange}
 														value={field.value}
 														options={buildingIsUsedSelectOptions}
-														style={{ width: 320 }}
+														style={{ width: 80 }}
 														placeholder="请选择网关（智能箱）状态"
 													/>
 													<FormMessage className="bottom-0 absolute translate-y-full" />
@@ -1417,7 +1424,7 @@ export default function PropertyPage() {
 														onChange={field.onChange}
 														value={field.value}
 														options={buildingIsUsedSelectOptions}
-														style={{ width: 320 }}
+														style={{ width: 80 }}
 														placeholder="请选择传感器使用状态"
 													/>
 													<FormMessage className="bottom-0 absolute translate-y-full" />
