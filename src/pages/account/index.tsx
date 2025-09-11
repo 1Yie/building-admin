@@ -12,6 +12,7 @@ import {
 	accountDelete,
 	accountEdit,
 	accountPasswordReset,
+	accountPermissionUpdate,
 	accountRoleUpdate,
 	getAccountTableList,
 	getRoleList,
@@ -19,7 +20,7 @@ import {
 	permissionList,
 } from "@/request/account";
 import type { RoleUser } from "@/request/role";
-import { Button, Tag, Tree, Input } from "antd";
+import { Button, Tag, Tree, Input, Switch, Spin } from "antd";
 import type { TreeDataNode } from 'antd';
 import type { TreeProps } from 'antd';
 import {
@@ -40,17 +41,12 @@ import {
 
 import type { PaginationType } from "@/types";
 
-// 定义权限数据类型
-interface PermissionNode {
-	title: string;
-	key: string;
-	children?: PermissionNode[];
-	item: null;
-}
-
 export default function AccountPage() {
+	// 权限keyMap状态管理
+	const [permissionKeyMap, setPermissionKeyMap] = useState<Record<string, string>>({});
+
 	// 转换权限数据格式为Tree组件所需格式
-	const transformPermissionData = (data: any): TreeDataNode[] => {
+	const transformPermissionData = (data: any, keyMap?: Record<string, string>): TreeDataNode[] => {
 		// 首先检查数据是否存在
 		if (!data) {
 			console.warn('权限数据为空');
@@ -66,13 +62,14 @@ export default function AccountPage() {
 		const transformedData = dataArray.map((item: any, index: number) => {
 			// 创建基础节点
 			const node: TreeDataNode = {
-				key: item.key || `permission-${index}`,
-				title: item.title || '未命名权限',
+				key: item.permissionKey,
+				// 如果有keyMap，使用映射的名称，否则使用原title
+				title: keyMap?.[item.permissionKey] || item.title,
 			};
 
 			// 处理子节点
 			if (item.children && Array.isArray(item.children) && item.children.length > 0) {
-				node.children = transformPermissionData(item.children);
+				node.children = transformPermissionData(item.children, keyMap);
 			}
 
 			return node;
@@ -84,8 +81,7 @@ export default function AccountPage() {
 
 	// 楼宇权限相关状态
 	const [permissionData, setPermissionData] = useState<TreeDataNode[]>([]);
-	// 添加一个额外的状态用于强制刷新
-	const [refreshKey, setRefreshKey] = useState(0);
+	const [_, setRefreshKey] = useState(0);
 	const forceRefresh = () => {
 		console.log('强制刷新Tree组件');
 		setRefreshKey(prev => prev + 1);
@@ -105,24 +101,25 @@ export default function AccountPage() {
 			setPermissionData([]);
 		},
 		onSuccess: (data) => {
-			console.log('API返回完整数据:', data);
-			const result = data?.data?.result || {};
-			const rawData = result?.data || [];
-			console.log('原始权限数据:', rawData);
-			console.log('原始权限数据类型:', Array.isArray(rawData) ? 'array' : typeof rawData);
-			console.log('原始权限数据长度:', Array.isArray(rawData) ? rawData.length : 0);
-			// 转换数据格式以兼容Tree组件
-			const transformedData = transformPermissionData(rawData);
-			console.log('转换后的权限数据:', transformedData);
-			console.log('转换后数据长度:', transformedData.length);
-			// 强制更新权限数据状态
+			// 设置权限key到名称的映射
+			setPermissionKeyMap(data?.keyMap || {});
+
+			const rawData = data?.data || [];
+			// 传入keyMap进行转换
+			const transformedData = transformPermissionData(rawData, data?.keyMap);
+
 			setPermissionData(transformedData);
-			setCheckedKeys(result?.check || []);
-			// 默认展开第一层节点
+
+			const checked = data?.check || [];
+			setCheckedKeys(checked);
+
+			// 同步到表单
+			editAccountForm.setValue("permissionKeys", checked);
+
 			if (transformedData.length > 0) {
-				const firstLevelKeys = transformedData.map(node => node.key);
-				setExpandedKeys(firstLevelKeys.map(key => String(key)));
+				setExpandedKeys(transformedData.map(node => String(node.key)));
 			}
+
 			forceRefresh();
 		},
 		onError: (error) => {
@@ -133,6 +130,31 @@ export default function AccountPage() {
 			setPermissionLoading(false);
 		},
 	});
+
+	// 统一的获取权限keyMap和权限树的函数
+	function getPermissionKeyMapAndTree() {
+		getPermissionMutate("", {
+			onSuccess: (res) => {
+				// 设置权限key到名称的映射
+				setPermissionKeyMap(res.keyMap || {});
+
+				// 设置权限树数据
+				const transformedData = transformPermissionData(res.data, res.keyMap);
+				setPermissionData(transformedData);
+
+				// 设置默认展开的keys
+				if (transformedData.length > 0) {
+					setExpandedKeys(transformedData.map(node => String(node.key)));
+				}
+
+				forceRefresh();
+			},
+			onError: (error) => {
+				setPermissionError('获取权限失败，请重试');
+				console.error('获取权限失败:', error);
+			}
+		});
+	}
 
 	// 表格列
 	const columns = [
@@ -227,6 +249,7 @@ export default function AccountPage() {
 				username: "",
 			}),
 	});
+
 	useEffect(() => {
 		if (tableData) {
 			setPageParams({
@@ -236,6 +259,11 @@ export default function AccountPage() {
 			getUserRoleMap(tableData);
 		}
 	}, [tableData]);
+
+	// 页面初始化时获取权限keyMap和树结构
+	useEffect(() => {
+		getPermissionKeyMapAndTree();
+	}, []);
 
 	// 获取用户角色列表
 	const { mutateAsync: roleUserMutateAsync } = useMutation({
@@ -293,7 +321,6 @@ export default function AccountPage() {
 		},
 	});
 
-
 	function handleOpenResetPasswordDialog(username: string) {
 		passwordForm.setValue("username", username);
 		setPasswordDialogOpen(true);
@@ -302,8 +329,10 @@ export default function AccountPage() {
 	function handleOpenEditDialog(record: any) {
 		setEditOpen(true);
 		setCurrentUsername(record.username);
-		// 获取当前用户的楼宇权限
+
+		// 获取当前用户的楼宇权限（包含keyMap）
 		getPermissionMutate({ username: record.username });
+
 		editAccountForm.reset({
 			username: record.username,
 			remarkName: record.remarkName,
@@ -312,9 +341,15 @@ export default function AccountPage() {
 		});
 	}
 
+	const { mutateAsync: updatePermissionsMutate } = useMutation({
+		mutationFn: accountPermissionUpdate,
+	});
+
 	// 处理权限选择变化
 	const onCheck = (checkedKeysValue: TreeProps['checkedKeys']) => {
-		setCheckedKeys(checkedKeysValue as string[]);
+		const keyArray = checkedKeysValue as string[];
+		setCheckedKeys(keyArray);
+		editAccountForm.setValue("permissionKeys", keyArray);
 	};
 
 	// 处理展开/折叠变化
@@ -368,6 +403,7 @@ export default function AccountPage() {
 		remarkName: z.string().min(1, "账号别名不能为空"),
 		phone: z.string().optional(),
 		auditUser: z.string().optional(),
+		permissionKeys: z.array(z.string()).optional(),
 	});
 	const editAccountForm = useForm<z.infer<typeof editAccountFormSchema>>({
 		resolver: zodResolver(editAccountFormSchema),
@@ -376,12 +412,12 @@ export default function AccountPage() {
 			remarkName: "",
 			phone: "",
 			auditUser: "",
+			permissionKeys: [],
 		},
 	});
 	function onEditSubmit() {
 		editAccountForm.handleSubmit(onSubmitForEdit)();
 	}
-
 
 	// 打开Dialog
 	const [addOrUpdate, setAddOrUpdate] = useState("add");
@@ -394,7 +430,6 @@ export default function AccountPage() {
 			accountForm.reset();
 		}
 	}
-
 
 	// 角色列表
 	const { data: roleListOption } = useQuery({
@@ -424,7 +459,6 @@ export default function AccountPage() {
 	// 提交表单
 	function handleOK() {
 		accountForm.handleSubmit(onSubmit)();
-
 	}
 
 	async function onSubmit(values: z.infer<typeof accountFormSchema>) {
@@ -448,11 +482,50 @@ export default function AccountPage() {
 			phone: values.phone,
 			auditUser: values.auditUser ?? 'admin',
 		});
+		await updatePermissionsMutate({
+			username: currentUsername,
+			permissionKeys: checkedKeys,
+			permissionData,
+		});
+
 		toast.success("修改成功");
 		setEditOpen(false);
 		tableRefetch();
 	}
 
+	// 权限树渲染函数
+	const renderPermissionTree = () => {
+		if (permissionLoading) {
+			return <Spin wrapperClassName="flex justify-center items-center" />;
+		}
+
+		if (permissionError) {
+			return (
+				<div className="text-red-500 text-center py-10">
+					{permissionError}
+					<Button
+						type="link"
+						onClick={() => getPermissionKeyMapAndTree()}
+						className="ml-2"
+					>
+						重试
+					</Button>
+				</div>
+			);
+		}
+
+		return (
+			<Tree
+				checkable
+				checkedKeys={checkedKeys}
+				expandedKeys={expandedKeys}
+				onCheck={onCheck}
+				onExpand={onExpand}
+				treeData={permissionData}
+				className="permission-tree"
+			/>
+		);
+	};
 
 	return (
 		<div className="p-5">
@@ -558,7 +631,6 @@ export default function AccountPage() {
 				</div>
 			</Modal>
 
-
 			<Modal
 				open={editOpen}
 				title="编辑"
@@ -613,9 +685,12 @@ export default function AccountPage() {
 									</div>
 								</FormItem>
 							)} />
+							<FormItem>
+								<FormLabel>所属角色</FormLabel>
+							</FormItem>
 							<FormField name="auditUser" render={({ field }) => (
 								<FormItem className="relative flex items-center gap-5">
-									<FormLabel>“教学科研”上级管理/审核人员</FormLabel>
+									<FormLabel>"教学科研"上级管理/审核人员</FormLabel>
 									<div className="flex flex-col">
 										<FormControl>
 											<Input {...field} className="w-80 h-8" />
@@ -624,44 +699,25 @@ export default function AccountPage() {
 									</div>
 								</FormItem>
 							)} />
-
-							<FormItem className="relative flex flex-col gap-2 mt-6">
-								<FormLabel className="text-base font-medium">楼宇权限</FormLabel>
-								<div className="mt-2 p-4 border rounded-lg max-h-96 overflow-auto">
-									{permissionLoading ? (
-										<div className="text-gray-500 text-center py-10">
-											加载权限中...
-										</div>
-									) : permissionError ? (
-										<div className="text-red-500 text-center py-10">
-											{permissionError}
-										</div>
-									) : (
-										// 确保权限数据格式正确并兼容Tree组件
-										<div key={refreshKey}>
-											{console.log('渲染时的权限数据:', permissionData)}
-											{console.log('权限数据长度:', permissionData?.length || 0)}
-											{permissionData && permissionData.length > 0 ? (
-												<Tree
-													checkable
-													checkedKeys={checkedKeys}
-													expandedKeys={expandedKeys}
-													onCheck={onCheck}
-													onExpand={onExpand}
-													treeData={permissionData}
-													style={{ fontSize: '14px' }}
-												/>
-											) : (
-												<div className="text-gray-500 text-center py-10">
-													权限数据: {JSON.stringify(permissionData)}
-												</div>
-											)}
-										</div>
-									)}
-								</div>
+							<FormItem>
+								<FormItem className="flex items-center gap-5">
+									<FormLabel>"教学科研-虚拟教学空间"模块权限</FormLabel>
+									<Switch className="h-8 w-8" />
+								</FormItem>
 							</FormItem>
+							<FormField
+								name="permissionKeys"
+								control={editAccountForm.control}
+								render={({ field }) => (
+									<FormItem className="relative flex flex-col gap-2 mt-6">
+										<FormLabel className="text-base font-medium">楼宇权限</FormLabel>
+										<div className="mt-2 p-4 border rounded-lg max-h-96 overflow-auto">
+											{renderPermissionTree()}
+										</div>
+									</FormItem>
+								)}
+							/>
 						</form>
-
 					</Form>
 				</div>
 			</Modal>
@@ -779,7 +835,6 @@ export default function AccountPage() {
 					</Form>
 				</div>
 			</Modal>
-
 		</div>
 	);
 }

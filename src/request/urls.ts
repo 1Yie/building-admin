@@ -25,6 +25,9 @@ export const urls = {
 		accountPermission: combineAuthorityUrl(
 			"/authority/manager/permission/builder/list/task/all",
 		),
+		accountPermissionUpdate: combineAuthorityUrl(
+			"/authority/manager/permission/user/update",
+		),
 		accountRoleUpdate: combineAuthorityUrl(
 			"/authority/manager/role/user/update",
 		),

@@ -1,6 +1,7 @@
 import request from "@/request";
 import type { RoleUser } from "@/request/role";
 import { urls } from "@/request/urls";
+import type { TreeDataNode } from "antd";
 
 // 账号表格
 interface AccountTableListParams {
@@ -144,6 +145,56 @@ export function permissionList({
 		data: {
 			department,
 			username,
+		},
+	});
+}
+
+export function accountPermissionUpdate({
+	username,
+	permissionKeys,
+	permissionData,
+}: {
+	username: string;
+	permissionKeys: string[];
+	permissionData: TreeDataNode[];
+}) {
+	// 将 Tree 选中的 key 映射成后端所需的 buildingPermissions
+	const generateBuildingPermissions = (checkedKeys: string[], nodes: TreeDataNode[]): any[] => {
+		const result: any[] = [];
+
+		const traverse = (nodes: TreeDataNode[]) => {
+			nodes.forEach(node => {
+				if (checkedKeys.includes(String(node.key))) {
+					result.push({
+						resourceType: (node as any).resourceType || 'building', // 每层节点需有 resourceType
+						permissionName: node.key,
+						action: (node as any).action || 'read,update',
+						department: (node as any).department || 'test',
+					});
+				}
+				if (node.children) traverse(node.children);
+			});
+		};
+
+		traverse(nodes);
+		return result;
+	};
+
+	const buildingPermissions = generateBuildingPermissions(permissionKeys, permissionData);
+
+	return request({
+		method: "post",
+		url: urls.account.accountPermissionUpdate,
+		data: {
+			username,
+			dataPermissions: [],
+			applicationPermissions: [],
+			etlPermissions: [],
+			tablePermissions: [],
+			equipPermissions: [],
+			filePermissions: [],
+			menuPermissions: [],
+			buildingPermissions,
 		},
 	});
 }
