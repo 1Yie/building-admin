@@ -20,7 +20,7 @@ import {
 	permissionList,
 } from "@/request/account";
 import type { RoleUser } from "@/request/role";
-import { Button, Tag, Tree, Input } from "antd";
+import { Button, Tag, Tree, Input, Select, Switch } from "antd";
 import type { TreeDataNode } from 'antd';
 import type { TreeProps } from 'antd';
 import {
@@ -31,13 +31,6 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/shadcn/ui/form";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/shadcn/ui/select";
 
 import type { PaginationType } from "@/types";
 
@@ -52,14 +45,12 @@ export default function AccountPage() {
 
 		// 确保数据是数组
 		const dataArray = Array.isArray(data) ? data : [data];
-		console.log('处理权限数据数组:', dataArray);
-		console.log('原始权限数据长度:', dataArray.length);
 
 		// 转换为TreeDataNode格式
 		const transformedData = dataArray.map((item: any, index: number) => {
 			// 创建基础节点
 			const node: TreeDataNode = {
-				key: item.key,   // 后端就是 key
+				key: item.key,
 				title: item.title,
 				children: item.children ? transformPermissionData(item.children) : [],
 			};
@@ -72,50 +63,36 @@ export default function AccountPage() {
 			return node;
 		});
 
-		console.log('转换后的权限数据长度:', transformedData.length);
 		return transformedData;
 	}
 
 	// 楼宇权限相关状态
 	const [permissionData, setPermissionData] = useState<TreeDataNode[]>([]);
-	// 添加一个额外的状态用于强制刷新
-	const [_, setRefreshKey] = useState(0);
-	const forceRefresh = () => {
-		console.log('强制刷新Tree组件');
-		setRefreshKey(prev => prev + 1);
-	};
+	const [permissionKeyMap, setPermissionKeyMap] = useState<Record<string, string>>({});
 	const [checkedKeys, setCheckedKeys] = useState<string[]>([]);
-	const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
 	const [currentUsername, setCurrentUsername] = useState<string>('');
 	const [permissionLoading, setPermissionLoading] = useState<boolean>(false);
 	const [permissionError, setPermissionError] = useState<string>('');
 
-
 	// 获取权限列表
-	const { mutate: getPermissionMutate } = useMutation({
+	const { mutate: getPermissionMutate, mutateAsync: getPermissionMutateAsync } = useMutation({
 		mutationFn: permissionList,
 		onMutate: () => {
 			setPermissionLoading(true);
 			setPermissionError('');
 			setPermissionData([]);
+			setPermissionKeyMap({});
+			setCheckedKeys([]);
 		},
 		onSuccess: (data) => {
 			const rawData = data?.data || [];
 			const transformedData = transformPermissionData(rawData);
 
 			setPermissionData(transformedData);
+			setPermissionKeyMap(data?.keyMap || {});
 
-			const checked = data?.data?.check || [];
+			const checked = data?.check || [];
 			setCheckedKeys(checked);
-
-			// 同步到表单
-			editAccountForm.setValue("permissionKeys", checked);
-
-			if (transformedData.length > 0) {
-				setExpandedKeys(transformedData.map(node => String(node.key)));
-			}
-
-			forceRefresh();
 		},
 		onError: (error) => {
 			setPermissionError('获取权限失败，请重试');
@@ -125,6 +102,16 @@ export default function AccountPage() {
 			setPermissionLoading(false);
 		},
 	});
+
+	// 获取权限keyMap和权限树
+	function getPermissionKeyMap() {
+		getPermissionMutate({ department: "test" });
+	}
+
+	// 初始化时获取权限树数据
+	useEffect(() => {
+		getPermissionKeyMap();
+	}, []);
 
 	// 表格列
 	const columns = [
@@ -292,10 +279,10 @@ export default function AccountPage() {
 	}
 
 	function handleOpenEditDialog(record: any) {
-		setEditOpen(true);
 		setCurrentUsername(record.username);
 		// 获取当前用户的楼宇权限
-		getPermissionMutate({ username: record.username });
+		getPermissionMutate({ department: "test", username: record.username });
+		setEditOpen(true);
 		editAccountForm.reset({
 			username: record.username,
 			remarkName: record.remarkName,
@@ -313,10 +300,14 @@ export default function AccountPage() {
 		setCheckedKeys(checkedKeysValue as string[]);
 	};
 
-	// 处理展开/折叠变化
-	const onExpand = (expandedKeysValue: TreeProps['expandedKeys']) => {
-		setExpandedKeys(expandedKeysValue as string[]);
-	};
+	// 权限树
+	const [expandedKeys, setExpandedKeys] = useState<string[]>(["menu_building"]);
+	const [autoExpandParent, setAutoExpandParent] = useState<boolean>(true);
+
+	function onExpand(expandedKeysValue: string[]) {
+		setExpandedKeys(expandedKeysValue);
+		setAutoExpandParent(false);
+	}
 
 	const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
 	function handleResetPassword() {
@@ -364,7 +355,6 @@ export default function AccountPage() {
 		remarkName: z.string().min(1, "账号别名不能为空"),
 		phone: z.string().optional(),
 		auditUser: z.string().optional(),
-		permissionKeys: z.array(z.string()).optional(),
 	});
 	const editAccountForm = useForm<z.infer<typeof editAccountFormSchema>>({
 		resolver: zodResolver(editAccountFormSchema),
@@ -373,7 +363,6 @@ export default function AccountPage() {
 			remarkName: "",
 			phone: "",
 			auditUser: "",
-			permissionKeys: [],
 		},
 	});
 	function onEditSubmit() {
@@ -446,10 +435,26 @@ export default function AccountPage() {
 			phone: values.phone,
 			auditUser: values.auditUser ?? 'admin',
 		});
+		
+		// 构建权限数据，与角色管理页面保持一致
+		const buildingPermissions = checkedKeys.map((value) => {
+			return {
+				resourceType: "menu_building",
+				permissionName: permissionKeyMap[value],
+				department: "test",
+			};
+		});
+		
 		await updatePermissionsMutate({
 			username: currentUsername,
-			permissionKeys: checkedKeys,
-			permissionData,
+			buildingPermissions,
+			dataPermissions: [],
+			applicationPermissions: [],
+			etlPermissions: [],
+			tablePermissions: [],
+			equipPermissions: [],
+			filePermissions: [],
+			menuPermissions: [],
 		});
 
 		toast.success("修改成功");
@@ -562,7 +567,6 @@ export default function AccountPage() {
 				</div>
 			</Modal>
 
-
 			<Modal
 				open={editOpen}
 				title="编辑"
@@ -617,53 +621,69 @@ export default function AccountPage() {
 									</div>
 								</FormItem>
 							)} />
-							<FormField name="auditUser" render={({ field }) => (
+							<FormField name="roleName" render={({ field }) => (
 								<FormItem className="relative flex items-center gap-5">
-									<FormLabel>“教学科研”上级管理/审核人员</FormLabel>
+									<FormLabel>所属角色</FormLabel>
 									<div className="flex flex-col">
 										<FormControl>
-											<Input {...field} className="w-80 h-8" />
+											<Select
+												mode="tags"
+												placeholder="选择角色"
+												onChange={field.onChange}
+												style={{ minWidth: 320 }}
+											>
+												{roleListOption?.map((option) => (
+													<Select.Option key={option.roleName} value={option.roleName}>
+														{option.roleName}
+													</Select.Option>
+												))}
+											</Select>
 										</FormControl>
 										<FormMessage className="bottom-0 absolute translate-y-full" />
 									</div>
 								</FormItem>
 							)} />
 
-							<FormField
-								name="permissionKeys"
-								control={editAccountForm.control}
+							<FormField name=""
 								render={({ field }) => (
-									<FormItem className="relative flex flex-col gap-2 mt-6">
-										<FormLabel className="text-base font-medium">楼宇权限</FormLabel>
-										<div className="mt-2 p-4 border rounded-lg max-h-96 overflow-auto">
-											{permissionLoading ? (
-												<div className="text-gray-500 text-center py-10">加载权限中...</div>
-											) : permissionError ? (
-												<div className="text-red-500 text-center py-10">{permissionError}</div>
-											) : (
-												<Tree
-													checkable
-													checkedKeys={field.value || []}  // 用表单字段
-													expandedKeys={expandedKeys}
-													onCheck={(keys) => {
-														field.onChange(keys);        // 同步表单值
-														setCheckedKeys(keys as string[]); // 同步本地状态（提交权限用）
-													}}
-													onExpand={onExpand}
-													treeData={permissionData}
-												/>
-											)}
-										</div>
+									<FormItem className="flex items-center gap-5 ">
+										<FormLabel>
+											“教学科研-虚拟教学空间”模块管理权限
+										</FormLabel>
+										<FormControl>
+											<Switch/>
+										</FormControl>
 									</FormItem>
 								)}
 							/>
+
+							<FormItem className="relative flex flex-col gap-2 mt-6">
+								<FormLabel className="font-medium">楼宇权限</FormLabel>
+								<div className="mt-2 p-4 border rounded-lg max-h-96 overflow-auto">
+									{permissionLoading ? (
+										<div className="text-gray-500 text-center py-10">加载权限中...</div>
+									) : permissionError ? (
+										<div className="text-red-500 text-center py-10">{permissionError}</div>
+									) : (
+										<Tree
+											checkable
+											checkedKeys={checkedKeys}
+											expandedKeys={expandedKeys}
+											autoExpandParent={autoExpandParent}
+											onCheck={onCheck}
+											onExpand={onExpand}
+											treeData={permissionData}
+										/>
+									)}
+								</div>
+							</FormItem>
 
 
 						</form>
 
 					</Form>
 				</div>
-			</Modal>
+			</Modal >
 
 			<Modal
 				open={dialogOpen}
@@ -756,19 +776,19 @@ export default function AccountPage() {
 									<FormItem className="relative flex items-center gap-5">
 										<FormLabel>角色</FormLabel>
 										<div className="flex flex-col">
-											<Select onValueChange={field.onChange} value={field.value}>
-												<FormControl>
-													<SelectTrigger className="bg-white w-50 cursor-pointer">
-														<SelectValue placeholder="选择角色" />
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													{roleListOption?.map((option) => (
-														<SelectItem key={option.roleName} value={option.roleName}>
-															{option.roleName}
-														</SelectItem>
-													))}
-												</SelectContent>
+											<Select
+												// 移除多选模式，只能选一个
+												onChange={field.onChange}
+												// 确保初始值与表单模式匹配
+												value={field.value}
+												placeholder="选择角色"
+												style={{ width: 200 }}
+											>
+												{roleListOption?.map((option) => (
+													<Select.Option key={option.roleName} value={option.roleName}>
+														{option.roleName}
+													</Select.Option>
+												))}
 											</Select>
 										</div>
 									</FormItem>
@@ -779,6 +799,6 @@ export default function AccountPage() {
 				</div>
 			</Modal>
 
-		</div>
+		</div >
 	);
 }

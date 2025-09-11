@@ -11,7 +11,7 @@ import {
 	getSensorTypeList,
 } from "@/request/property";
 import { getOutlineInfo, getSensorList } from "@/request/realtime";
-import { Button, Select, Input } from "antd";
+import { Button, Select, Input, ConfigProvider } from "antd";
 import { Card, CardContent } from "@/shadcn/ui/card";
 import {
 	Form,
@@ -20,13 +20,11 @@ import {
 	FormItem,
 	FormLabel,
 } from "@/shadcn/ui/form";
-import {
 
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/shadcn/ui/select";
+import zhCN from 'antd/locale/zh_CN';
+import dayjs from "dayjs";
+import "dayjs/locale/zh-cn";
+
 import { Skeleton } from "@/shadcn/ui/skeleton";
 import type { PaginationType } from "@/types";
 import ChartLine from "./chart-line";
@@ -516,14 +514,16 @@ export default function RealtimePage() {
 				}
 			</div>
 			<div className="mt-5">
-				<Pagination
-					current={pageParams.current}
-					pageSize={pageParams.pageSize}
-					total={pageParams.total}
-					showSizeChanger={false}
-					onChange={onPageChange}
-					showQuickJumper={true}
-				/>
+				<ConfigProvider locale={zhCN}>
+					<Pagination
+						current={pageParams.current}
+						pageSize={pageParams.pageSize}
+						total={pageParams.total}
+						showSizeChanger={false}
+						onChange={onPageChange}
+						showQuickJumper={true}
+					/>
+				</ConfigProvider>
 			</div>
 		</div>
 	);

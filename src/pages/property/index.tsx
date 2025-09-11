@@ -909,7 +909,7 @@ export default function PropertyPage() {
 											<FormLabel>传感器大类</FormLabel>
 											<div className="flex flex-col">
 												<Select
-													onValueChange={field.onChange}
+													onChange={field.onChange}
 													value={field.value}
 												>
 													<FormControl>
@@ -937,7 +937,7 @@ export default function PropertyPage() {
 											<FormLabel>传感器小类</FormLabel>
 											<div className="flex flex-col">
 												<Select
-													onValueChange={field.onChange}
+													onChange={field.onChange}
 													value={field.value}
 												>
 													<FormControl>

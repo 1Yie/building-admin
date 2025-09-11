@@ -143,7 +143,7 @@ export default function LogManagement() {
 													}}
 													placeholder="请选择日期"
 													style={{ width: 240 }}
-													
+													format="YYYY-MM-DD"
 												/>
 											</FormControl>
 											</ConfigProvider>
@@ -204,7 +204,7 @@ export default function LogManagement() {
 								查询
 							</Button>
 							<Button
-								type="primary"
+								type="default"
 								htmlType="reset"
 								onClick={() => searchForm.reset()}
 							>
