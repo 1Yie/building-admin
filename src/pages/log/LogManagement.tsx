@@ -1,17 +1,16 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PopoverTrigger } from "@radix-ui/react-popover";
+
 import { useQuery } from "@tanstack/react-query";
-import { Table, Button, Select } from "antd";
+import { Table, Button, Select, DatePicker, ConfigProvider } from "antd";
 import { format } from "date-fns";
-import { zhCN } from "date-fns/locale";
+import zhCN from 'antd/locale/zh_CN';
 import dayjs from "dayjs";
+import "dayjs/locale/zh-cn";
 import { CalendarIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import { getLogList, getLogTypeList } from "@/request/log";
-import { cn } from "@/shadcn/lib/utils";
-import { Calendar } from "@/shadcn/ui/calendar";
 import {
 	Form,
 	FormControl,
@@ -19,15 +18,8 @@ import {
 	FormItem,
 	FormLabel,
 } from "@/shadcn/ui/form";
-import { Popover, PopoverContent } from "@/shadcn/ui/popover";
-import {
-
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/shadcn/ui/select";
 import type { PaginationType } from "@/types";
+
 
 export default function LogManagement() {
 	const columns = [
@@ -139,40 +131,22 @@ export default function LogManagement() {
 									<FormItem className="flex items-center gap-3">
 										<FormLabel>时间</FormLabel>
 										<div className="flex flex-col">
-											<Popover>
-												<PopoverTrigger asChild>
-													<FormControl>
-														<Button
-															type="default"
-															className={cn(
-																"pl-3 w-[240px] font-normal text-left cursor-pointer",
-																!field.value && "text-muted-foreground",
-															)}
-														>
-															{field.value ? (
-																format(field.value, "PPP", { locale: zhCN })
-															) : (
-																<span>请选择日期</span>
-															)}
-															<CalendarIcon className="opacity-50 ml-auto w-4 h-4" />
-														</Button>
-													</FormControl>
-												</PopoverTrigger>
-												<PopoverContent className="p-0 w-auto" align="start">
-													<Calendar
-														mode="single"
-														selected={field.value ? new Date(field.value) : undefined}
-														onSelect={(date) => {
-															field.onChange(date ? dayjs(date).format("YYYY-MM-DD") : "");
-														}}
-														disabled={(date) =>
-															date > new Date() || date < new Date("1900-01-01")
-														}
-														captionLayout="dropdown"
-														locale={zhCN}
-													/>
-												</PopoverContent>
-											</Popover>
+											<ConfigProvider locale={ zhCN }>
+											<FormControl>
+												<DatePicker
+													value={field.value ? dayjs(field.value) : undefined}
+													onChange={(date) => {
+														field.onChange(date ? date.format("YYYY-MM-DD") : "");
+													}}
+													disabledDate={(current) => {
+														return current > dayjs() || current < dayjs("1900-01-01");
+													}}
+													placeholder="请选择日期"
+													style={{ width: 240 }}
+													
+												/>
+											</FormControl>
+											</ConfigProvider>
 										</div>
 									</FormItem>
 								)}
