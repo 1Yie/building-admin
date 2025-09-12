@@ -20,7 +20,7 @@ import {
 	permissionList,
 } from "@/request/account";
 import type { RoleUser } from "@/request/role";
-import { Button, Tag, Tree, Input, Select, Switch, Form } from "antd";
+import { Button, Tag, Tree, Input, Select, Switch, Form, Spin  } from "antd";
 import type { TreeDataNode } from 'antd';
 import type { TreeProps } from 'antd';
 import {
@@ -505,65 +505,6 @@ export default function AccountPage() {
 				width={720}
 			>
 				<div className="mt-5">
-					{/* <Form {...passwordForm}>
-						<form className="space-y-7">
-							<FormField
-								control={passwordForm.control}
-								name="username"
-								render={({ field }) => (
-									<FormItem className="relative flex items-center gap-5">
-										<FormLabel>账号名称</FormLabel>
-										<div className="flex flex-col">
-											<FormControl>
-												<Input {...field} type="text" disabled className="w-80 h-8" />
-											</FormControl>
-											<FormMessage className="bottom-0 absolute translate-y-full" />
-										</div>
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={passwordForm.control}
-								name="password-new"
-								render={({ field }) => (
-									<FormItem className="relative flex items-center gap-5">
-										<FormLabel>新密码</FormLabel>
-										<div className="flex flex-col">
-											<FormControl>
-												<Input
-													{...field}
-													type="password"
-													placeholder="请输入新密码"
-													className="w-80 h-8"
-												/>
-											</FormControl>
-											<FormMessage className="bottom-0 absolute translate-y-full" />
-										</div>
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={passwordForm.control}
-								name="password-new-confirm"
-								render={({ field }) => (
-									<FormItem className="relative flex items-center gap-5">
-										<FormLabel>确认新密码</FormLabel>
-										<div className="flex flex-col">
-											<FormControl>
-												<Input
-													{...field}
-													type="password"
-													placeholder="确认新密码"
-													className="w-80 h-8"
-												/>
-											</FormControl>
-											<FormMessage className="bottom-0 absolute translate-y-full" />
-										</div>
-									</FormItem>
-								)}
-							/>
-						</form>
-					</Form> */}
 
 					<Form layout="horizontal" className="space-y-7">
 						<Controller
@@ -678,6 +619,16 @@ export default function AccountPage() {
 							)}
 						/>
 
+						<Controller 
+							control={editAccountForm.control}
+							name=""
+							render={( {field} ) => (
+								<Form.Item label="模块权限">
+									<Switch />
+								</Form.Item>
+							)}
+						/>
+
 						<Controller
 							control={editAccountForm.control}
 							name="roleName"
@@ -703,101 +654,21 @@ export default function AccountPage() {
 							)}
 						/>
 
+						<Form.Item label="楼宇权限">
+							<Spin spinning={permissionLoading}>
+								<Tree
+									checkable
+									onCheck={onCheck}
+									checkedKeys={checkedKeys}
+									expandedKeys={expandedKeys}
+									onExpand={(expandedKeys: any[]) => onExpand(expandedKeys.map(key => String(key)))}
+									autoExpandParent={autoExpandParent}
+									treeData={permissionData}
+								/>
+							</Spin>
+						</Form.Item>
+
 					</Form>
-
-					{/* <Form {...editAccountForm}>
-						<form className="space-y-2">
-							<FormField name="username" render={({ field }) => (
-								<FormItem className="flex items-center gap-5">
-									<FormLabel>账号编号</FormLabel>
-									<FormControl>
-										<span className="break-words">{field.value}</span>
-									</FormControl>
-								</FormItem>
-							)} />
-							<FormField name="remarkName" render={({ field }) => (
-								<FormItem className="relative flex items-center gap-5">
-									<FormLabel>账号名称</FormLabel>
-									<div className="flex flex-col">
-										<FormControl>
-											<Input {...field} className="w-80 h-8" />
-										</FormControl>
-										<FormMessage className="bottom-0 absolute translate-y-full" />
-									</div>
-								</FormItem>
-							)} />
-							<FormField name="phone" render={({ field }) => (
-								<FormItem className="relative flex items-center gap-5">
-									<FormLabel>登录手机</FormLabel>
-									<div className="flex flex-col">
-										<FormControl>
-											<Input {...field} className="w-80 h-8" />
-										</FormControl>
-										<FormMessage className="bottom-0 absolute translate-y-full" />
-									</div>
-								</FormItem>
-							)} />
-							<FormField name="roleName" render={({ field }) => (
-								<FormItem className="relative flex items-center gap-5">
-									<FormLabel>所属角色</FormLabel>
-									<div className="flex flex-col">
-										<FormControl>
-											<Select
-												mode="tags"
-												placeholder="选择角色"
-												onChange={field.onChange}
-												style={{ minWidth: 320 }}
-											>
-												{roleListOption?.map((option) => (
-													<Select.Option key={option.roleName} value={option.roleName}>
-														{option.roleName}
-													</Select.Option>
-												))}
-											</Select>
-										</FormControl>
-										<FormMessage className="bottom-0 absolute translate-y-full" />
-									</div>
-								</FormItem>
-							)} />
-
-							<FormField name=""
-								render={({ field }) => (
-									<FormItem className="flex items-center gap-5 ">
-										<FormLabel>
-											“教学科研-虚拟教学空间”模块管理权限
-										</FormLabel>
-										<FormControl>
-											<Switch/>
-										</FormControl>
-									</FormItem>
-								)}
-							/>
-
-							<FormItem className="relative flex flex-col gap-2 mt-6">
-								<FormLabel className="font-medium">楼宇权限</FormLabel>
-								<div className="mt-2 p-4 border rounded-lg max-h-96 overflow-auto">
-									{permissionLoading ? (
-										<div className="text-gray-500 text-center py-10">加载权限中...</div>
-									) : permissionError ? (
-										<div className="text-red-500 text-center py-10">{permissionError}</div>
-									) : (
-										<Tree
-											checkable
-											checkedKeys={checkedKeys}
-											expandedKeys={expandedKeys}
-											autoExpandParent={autoExpandParent}
-											onCheck={onCheck}
-											onExpand={onExpand}
-											treeData={permissionData}
-										/>
-									)}
-								</div>
-							</FormItem>
-
-
-						</form>
-
-					</Form> */}
 				</div>
 			</Modal >
 
