@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Popconfirm, Table, Modal } from "antd";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
 import type { AccountTableListResponse } from "@/request/account";
@@ -20,11 +20,11 @@ import {
 	permissionList,
 } from "@/request/account";
 import type { RoleUser } from "@/request/role";
-import { Button, Tag, Tree, Input, Select, Switch } from "antd";
+import { Button, Tag, Tree, Input, Select, Switch, Form } from "antd";
 import type { TreeDataNode } from 'antd';
 import type { TreeProps } from 'antd';
 import {
-	Form,
+	// Form,
 	FormControl,
 	FormField,
 	FormItem,
@@ -435,7 +435,7 @@ export default function AccountPage() {
 			phone: values.phone,
 			auditUser: values.auditUser ?? 'admin',
 		});
-		
+
 		// 构建权限数据，与角色管理页面保持一致
 		const buildingPermissions = checkedKeys.map((value) => {
 			return {
@@ -444,7 +444,7 @@ export default function AccountPage() {
 				department: "test",
 			};
 		});
-		
+
 		await updatePermissionsMutate({
 			username: currentUsername,
 			buildingPermissions,
@@ -505,7 +505,7 @@ export default function AccountPage() {
 				width={720}
 			>
 				<div className="mt-5">
-					<Form {...passwordForm}>
+					{/* <Form {...passwordForm}>
 						<form className="space-y-7">
 							<FormField
 								control={passwordForm.control}
@@ -563,6 +563,52 @@ export default function AccountPage() {
 								)}
 							/>
 						</form>
+					</Form> */}
+
+					<Form layout="horizontal" className="space-y-7">
+						<Controller
+							control={passwordForm.control}
+							name="username"
+							render={({ field }) => (
+								<Form.Item
+									label="账号名称"
+									validateStatus={passwordForm.formState.errors.username?.message ? 'error' : ''}
+									help={passwordForm.formState.errors.username?.message}
+								>
+									<Input {...field} type="text" disabled className="w-80 h-8" />
+								</Form.Item>
+							)}
+						/>
+
+						<Controller
+							control={passwordForm.control}
+							name="password-new"
+							render={({ field }) => (
+								<Form.Item
+									label="新密码"
+									required
+									validateStatus={passwordForm.formState.errors['password-new']?.message ? 'error' : ''}
+									help={passwordForm.formState.errors['password-new']?.message}
+								>
+									<Input {...field} type="password" className="w-80 h-8" />
+								</Form.Item>
+							)}
+						/>
+
+						<Controller
+							control={passwordForm.control}
+							name="password-new-confirm"
+							render={({ field }) => (
+								<Form.Item
+									label="确认新密码"
+									required
+									validateStatus={passwordForm.formState.errors['password-new-confirm']?.message ? 'error' : ''}
+									help={passwordForm.formState.errors['password-new-confirm']?.message}
+								>
+									<Input {...field} type="password" className="w-80 h-8" />
+								</Form.Item>
+							)}
+						/>
 					</Form>
 				</div>
 			</Modal>
@@ -589,7 +635,77 @@ export default function AccountPage() {
 				width={720}
 			>
 				<div className="mt-5">
-					<Form {...editAccountForm}>
+					<Form layout="horizontal" className="space-y-7">
+						<Controller
+							control={editAccountForm.control}
+							name="username"
+							render={({ field }) => (
+								<Form.Item
+									label="账号编号"
+									validateStatus={editAccountForm.formState.errors.username?.message ? 'error' : ''}
+									help={editAccountForm.formState.errors.username?.message}
+								>
+									<Input {...field} type="text" disabled className="w-80 h-8" />
+								</Form.Item>
+							)}
+						/>
+
+						<Controller
+							control={editAccountForm.control}
+							name="remarkName"
+							render={({ field }) => (
+								<Form.Item
+									label="账号名称"
+									validateStatus={editAccountForm.formState.errors.remarkName?.message ? 'error' : ''}
+									help={editAccountForm.formState.errors.remarkName?.message}
+								>
+									<Input {...field} type="text" className="w-80 h-8" />
+								</Form.Item>
+							)}
+						/>
+
+						<Controller
+							control={editAccountForm.control}
+							name="phone"
+							render={({ field }) => (
+								<Form.Item
+									label="登录手机"
+									validateStatus={editAccountForm.formState.errors.phone?.message ? 'error' : ''}
+									help={editAccountForm.formState.errors.phone?.message}
+								>
+									<Input {...field} type="text" className="w-80 h-8" />
+								</Form.Item>
+							)}
+						/>
+
+						<Controller
+							control={editAccountForm.control}
+							name="roleName"
+							render={({ field }) => (
+								<Form.Item
+									label="所属角色"
+									validateStatus={editAccountForm.formState.errors.roleName?.message ? 'error' : ''}
+									help={editAccountForm.formState.errors.roleName?.message}
+								>
+									<Select
+										mode="tags"
+										placeholder="选择角色"
+										onChange={field.onChange}
+										style={{ minWidth: 320 }}
+									>
+										{roleListOption?.map((option) => (
+											<Select.Option key={option.roleName} value={option.roleName}>
+												{option.roleName}
+											</Select.Option>
+										))}
+									</Select>
+								</Form.Item>
+							)}
+						/>
+
+					</Form>
+
+					{/* <Form {...editAccountForm}>
 						<form className="space-y-2">
 							<FormField name="username" render={({ field }) => (
 								<FormItem className="flex items-center gap-5">
@@ -681,7 +797,7 @@ export default function AccountPage() {
 
 						</form>
 
-					</Form>
+					</Form> */}
 				</div>
 			</Modal >
 
@@ -707,94 +823,90 @@ export default function AccountPage() {
 				width={720}
 			>
 				<div className="mt-5">
-					<Form {...accountForm}>
-						<form className="space-y-7">
-							<FormField
-								control={accountForm.control}
-								name="username"
-								render={({ field }) => (
-									<FormItem className="relative flex items-center gap-5">
-										<FormLabel>账号名称</FormLabel>
-										<div className="flex flex-col">
-											<FormControl>
-												<Input {...field} className="w-80 h-8" />
-											</FormControl>
-											<FormMessage className="bottom-0 absolute translate-y-full" />
-										</div>
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={accountForm.control}
-								name="remarkName"
-								render={({ field }) => (
-									<FormItem className="relative flex items-center gap-5">
-										<FormLabel>账号别名</FormLabel>
-										<div className="flex flex-col">
-											<FormControl>
-												<Input {...field} className="w-80 h-8" />
-											</FormControl>
-											<FormMessage className="bottom-0 absolute translate-y-full" />
-										</div>
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={accountForm.control}
-								name="password"
-								render={({ field }) => (
-									<FormItem className="relative flex items-center gap-5">
-										<FormLabel>密码</FormLabel>
-										<div className="flex flex-col">
-											<FormControl>
-												<Input {...field} className="w-80 h-8" />
-											</FormControl>
-											<FormMessage className="bottom-0 absolute translate-y-full" />
-										</div>
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={accountForm.control}
-								name="phone"
-								render={({ field }) => (
-									<FormItem className="relative flex items-center gap-5">
-										<FormLabel>手机号</FormLabel>
-										<div className="flex flex-col">
-											<FormControl>
-												<Input {...field} className="w-80 h-8" />
-											</FormControl>
-											<FormMessage className="bottom-0 absolute translate-y-full" />
-										</div>
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={accountForm.control}
-								name="role"
-								render={({ field }) => (
-									<FormItem className="relative flex items-center gap-5">
-										<FormLabel>角色</FormLabel>
-										<div className="flex flex-col">
-											<Select
-												// 移除多选模式，只能选一个
-												onChange={field.onChange}
-												// 确保初始值与表单模式匹配
-												value={field.value}
-												placeholder="选择角色"
-												style={{ width: 200 }}
-											>
-												{roleListOption?.map((option) => (
-													<Select.Option key={option.roleName} value={option.roleName}>
-														{option.roleName}
-													</Select.Option>
-												))}
-											</Select>
-										</div>
-									</FormItem>
-								)}
-							/>
-						</form>
+					<Form layout="horizontal" className="space-y-7" onFinish={accountForm.handleSubmit(onSubmit)}>
+						<Controller
+							control={accountForm.control}
+							name="username"
+							render={({ field, fieldState }) => (
+								<Form.Item
+									label="账号名称"
+									required
+									validateStatus={fieldState.error ? "error" : ""}
+									help={fieldState.error?.message}
+								>
+									<Input {...field} className="w-80 h-8" />
+								</Form.Item>
+							)}
+						/>
+
+						<Controller
+							control={accountForm.control}
+							name="remarkName"
+							render={({ field, fieldState }) => (
+								<Form.Item
+									label="账号别名"
+									required
+									validateStatus={fieldState.error ? "error" : ""}
+									help={fieldState.error?.message}
+								>
+									<Input {...field} className="w-80 h-8" />
+								</Form.Item>
+							)}
+						/>
+
+						<Controller
+							control={accountForm.control}
+							name="password"
+							render={({ field, fieldState }) => (
+								<Form.Item
+									label="密码"
+									required
+									validateStatus={fieldState.error ? "error" : ""}
+									help={fieldState.error?.message}
+								>
+									<Input.Password {...field} className="w-80 h-8" />
+								</Form.Item>
+							)}
+						/>
+
+						<Controller
+							control={accountForm.control}
+							name="phone"
+							render={({ field }) => (
+								<Form.Item
+									label="手机号"
+									validateStatus={accountForm.formState.errors.phone ? "error" : ""}
+									help={accountForm.formState.errors.phone?.message}
+								>
+									<Input {...field} className="w-80 h-8" />
+								</Form.Item>
+							)}
+						/>
+
+						<Controller
+							control={accountForm.control}
+							name="role"
+							render={({ field }) => (
+								<Form.Item
+									label="角色"
+									validateStatus={accountForm.formState.errors.role ? "error" : ""}
+									help={accountForm.formState.errors.role?.message}
+								>
+									<Select
+										onChange={field.onChange}
+										value={field.value}
+										placeholder="选择角色"
+										style={{ width: 200 }}
+									>
+										{roleListOption?.map((option) => (
+											<Select.Option key={option.roleName} value={option.roleName}>
+												{option.roleName}
+											</Select.Option>
+										))}
+									</Select>
+								</Form.Item>
+							)}
+						/>
 					</Form>
 				</div>
 			</Modal>
