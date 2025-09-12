@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Pagination } from "antd";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
 import {
@@ -11,15 +11,8 @@ import {
 	getSensorTypeList,
 } from "@/request/property";
 import { getOutlineInfo, getSensorList } from "@/request/realtime";
-import { Button, Select, Input, ConfigProvider } from "antd";
+import { Button, Select, Input, ConfigProvider, Form } from "antd";
 import { Card, CardContent } from "@/shadcn/ui/card";
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-} from "@/shadcn/ui/form";
 
 import zhCN from 'antd/locale/zh_CN';
 import dayjs from "dayjs";
@@ -28,6 +21,7 @@ import "dayjs/locale/zh-cn";
 import { Skeleton } from "@/shadcn/ui/skeleton";
 import type { PaginationType } from "@/types";
 import ChartLine from "./chart-line";
+import { Key } from "lucide-react";
 
 export default function RealtimePage() {
 	// 数据总揽
@@ -293,198 +287,151 @@ export default function RealtimePage() {
 				</Card>
 			</div>
 			<div className="mt-10">
-				<Form {...searchForm}>
-					<form className="space-y-8">
-						<div className="flex gap-5">
-							<FormField
-								control={searchForm.control}
-								name="time_unit"
-								render={({ field }) => (
-									<FormItem className="flex items-center gap-3">
-										<FormLabel>统计范围</FormLabel>
-										<div className="flex flex-col">
-											<Select
-												onChange={field.onChange}
-												value={field.value}
+				<Form layout="inline" className="flex gap-2">
+					<Controller
+						control={searchForm.control}
+						name="time_unit"
+						render={({ field }) => (
+							<Form.Item label="统计范围">
+								<div className="flex flex-col">
+									<Select style={{ width: 120 }} onChange={field.onChange} value={field.value}
+										options={timeUnitSelectOption.map((item) => ({
+											value: item.value,
+										}))}
+									/>
+								</div>
+							</Form.Item>
+						)}
+					/>
 
-												style={{ width: 120 }}
-											>
-												{timeUnitSelectOption.map((option) => (
-													<Select.Option key={option.value} value={option.value}>
-														{option.label}
-													</Select.Option>
-												))}
-											</Select>
-										</div>
-									</FormItem>
-								)}
-							/>
-							<Button
-								type="primary"
-								htmlType="button"
-								className="cursor-pointer"
-								onClick={searchForm.handleSubmit(onSearchFormSubmit)}
-							>
-								查询
-							</Button>
-							<Button
-								type="default"
-								htmlType="reset"
-								className="cursor-pointer"
-								onClick={resetForm}
-							>
-								清空
-							</Button>
-						</div>
-						<div className="flex gap-5">
-							<FormField
-								control={searchForm.control}
-								name="property_building_id"
-								render={({ field }) => (
-									<FormItem className="flex items-center gap-3">
-										<FormLabel>楼宇</FormLabel>
-										<div className="flex flex-col">
-											<Select
-												onChange={(value) =>
-													onPropertyBuildingIdChange(value, field)
-												}
-												value={field.value}
-												placeholder="请选择楼宇"
-												style={{ width: 200 }}
-											>
-												{buildingSelectOption?.map((option) => (
-													<Select.Option key={option.property_id} value={option.property_id}>
-														{option.name}
-													</Select.Option>
-												))}
-											</Select>
-										</div>
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={searchForm.control}
-								name="property_space_id"
-								render={({ field }) => (
-									<FormItem className="flex items-center gap-3">
-										<FormLabel>空间</FormLabel>
-										<div className="flex flex-col">
-											<Select
-												onChange={(value) =>
-													onPropertySpaceIdChange(value, field)
-												}
-												value={field.value}
-												placeholder="请选择空间"
-												style={{ width: 200 }}
-											>
-												{spaceSelectOption?.map((option) => (
-													<Select.Option key={option.property_id} value={option.property_id}>
-														{option.name}
-													</Select.Option>
-												))}
-											</Select>
-										</div>
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={searchForm.control}
-								name="property_terminal_id"
-								render={({ field }) => (
-									<FormItem className="flex items-center gap-3">
-										<FormLabel>网关（智能箱）</FormLabel>
-										<div className="flex flex-col">
-											<Select
-												onChange={(value) => onPropertyTerminalIdChange(value, field)}
-												value={field.value}
-												placeholder="请选择网关（智能箱）"
-												style={{ width: 200 }}
-											>
-												{terminalSelectOption?.map((option) => (
-													<Select.Option key={option.property_id} value={option.property_id}>
-														{option.name}
-													</Select.Option>
-												))}
-											</Select>
-										</div>
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={searchForm.control}
-								name="property_sensor_id"
-								render={({ field }) => (
-									<FormItem className="flex items-center gap-3">
-										<FormLabel>传感器</FormLabel>
-										<div className="flex flex-col">
-											<Select
-												onChange={(value) =>
-													onPropertySensorIdChange(value, field)
-												}
-												value={field.value}
-												placeholder="请选择传感器"
-												style={{ width: 200 }}
-											>
-												{sensorSelectOption?.map((option) => (
-													<Select.Option key={option.property_id} value={option.property_id}>
-														{option.name}
-													</Select.Option>
-												))}
-											</Select>
-										</div>
-									</FormItem>
-								)}
-							/>
-						</div>
-						<div className="flex gap-5">
-							<FormField
-								control={searchForm.control}
-								name="sensor_kind"
-								render={({ field }) => (
-									<FormItem className="flex items-center gap-3">
-										<FormLabel>传感器大类</FormLabel>
-										<div className="flex flex-col">
-											<Select
-												onChange={field.onChange}
-												value={field.value}
-												placeholder="请选择传感器大类"
-												style={{ width: 120 }}
-											>
-												{sensorKindSelectOption?.map((option) => (
-													<Select.Option key={option.kind} value={option.kind}>
-														{option.name}
-													</Select.Option>
-												))}
-											</Select>
-										</div>
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={searchForm.control}
-								name="sensor_type"
-								render={({ field }) => (
-									<FormItem className="flex items-center gap-3">
-										<FormLabel>传感器小类</FormLabel>
-										<div className="flex flex-col">
-											<Select
-												onChange={field.onChange}
-												value={field.value}
-												placeholder="请选择传感器小类"
-												style={{ width: 180 }}
-											>
-												{sensorTypeSelectOption?.map((option) => (
-													<Select.Option key={option.type} value={option.type}>
-														{option.name}
-													</Select.Option>
-												))}
-											</Select>
-										</div>
-									</FormItem>
-								)}
-							/>
-						</div>
-					</form>
+					<Controller
+						control={searchForm.control}
+						name="property_building_id"
+						render={({ field }) => (
+							<Form.Item label="楼宇">
+								<div className="flex flex-col">
+									<Select style={{ width: 120 }} onChange={(value) => onPropertyBuildingIdChange(value, field)} value={field.value}
+										options={buildingSelectOption?.map((item) => ({
+											Key: item.property_id,
+											value: item.property_id,
+										}))}
+									/>
+								</div>
+							</Form.Item>
+						)}
+					/>
+
+					<Controller
+						control={searchForm.control}
+						name="property_space_id"
+						render={({ field }) => (
+							<Form.Item label="空间">
+								<div className="flex flex-col">
+									<Select style={{ width: 120 }} onChange={(value) =>
+										onPropertySpaceIdChange(value, field)
+									} value={field.value}
+										options={spaceSelectOption?.map((item) => ({
+											Key: item.property_id,
+											value: item.property_id,
+										}))}
+									/>
+								</div>
+							</Form.Item>
+						)}
+					/>
+
+					<Controller
+						control={searchForm.control}
+						name="property_terminal_id"
+						render={({ field }) => (
+							<Form.Item label="网关（智能箱）">
+								<div className="flex flex-col">
+									<Select style={{ width: 120 }} onChange={(value) =>
+										onPropertyTerminalIdChange(value, field)
+									} value={field.value}
+										options={terminalSelectOption?.map((item) => ({
+											Key: item.property_id,
+											value: item.property_id,
+										}))}
+									/>
+								</div>
+							</Form.Item>
+						)}
+					/>
+
+					<Controller
+						control={searchForm.control}
+						name="property_sensor_id"
+						render={({ field }) => (
+							<Form.Item label="传感器">
+								<div className="flex flex-col">
+									<Select style={{ width: 120 }} onChange={(value) =>
+										onPropertySensorIdChange(value, field)
+									} value={field.value}
+										options={sensorSelectOption?.map((item) => ({
+											Key: item.property_id,
+											value: item.property_id,
+										}))}
+									/>
+								</div>
+							</Form.Item>
+						)}
+					/>
+
+					<Controller
+						control={searchForm.control}
+						name="sensor_kind"
+						render={({ field }) => (
+							<Form.Item label="传感器大类">
+								<div className="flex flex-col">
+									<Select style={{ width: 120 }} onChange={field.onChange}
+										value={field.value}
+										options={sensorKindSelectOption?.map((item) => ({
+											Key: item.kind,
+											value: item.kind,
+										}))}
+									/>
+								</div>
+							</Form.Item>
+						)}
+					/>
+
+					<Controller
+						control={searchForm.control}
+						name="sensor_type"
+						render={({ field }) => (
+							<Form.Item label="传感器小类">
+								<div className="flex flex-col">
+									<Select style={{ width: 120 }} onChange={field.onChange}
+										value={field.value}
+										options={sensorTypeSelectOption?.map((item) => ({
+											Key: item.type,
+											value: item.type,
+										}))}
+									/>
+								</div>
+							</Form.Item>
+						)}
+					/>
+
+					<div className="flex gap-2">
+						<Button
+							type="primary"
+							htmlType="submit"
+							className="cursor-pointer"
+							onClick={searchForm.handleSubmit(onSearchFormSubmit)}
+						>
+							查询
+						</Button>
+						<Button
+							type="default"
+							htmlType="reset"
+							className="cursor-pointer"
+							onClick={resetForm}
+						>
+							清空
+						</Button>
+					</div>
 				</Form>
 			</div>
 			<div className="mt-5">
