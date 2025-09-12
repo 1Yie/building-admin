@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Table } from "antd";
 import { X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
 import type { BindPropertyListItem } from "@/request/property";
@@ -18,9 +18,9 @@ import {
 	updateProperty,
 } from "@/request/property";
 import { Badge } from "@/shadcn/ui/badge";
-import { Button, Modal } from "antd";
+import { Button, Modal, Form } from "antd";
 import {
-	Form,
+	// Form,
 	FormControl,
 	FormField,
 	FormItem,
@@ -620,18 +620,20 @@ export default function PropertyPage() {
 	function handleOK() {
 		if (!addPropertySelectValue) {
 			toast.info("请选择资产类型");
+			return;
 		}
-		if (addPropertySelectValue === "building") {
-			buildingForm.handleSubmit(onPropertyFormSubmit)();
-		}
-		if (addPropertySelectValue === "space") {
-			spaceForm.handleSubmit(onPropertyFormSubmit)();
-		}
-		if (addPropertySelectValue === "terminal") {
-			terminalForm.handleSubmit(onPropertyFormSubmit)();
-		}
-		if (addPropertySelectValue === "sensor") {
-			sensorForm.handleSubmit(onPropertyFormSubmit)();
+
+		switch (addPropertySelectValue) {
+			case "building":
+				return buildingForm.handleSubmit(onPropertyFormSubmit)();
+			case "space":
+				return spaceForm.handleSubmit(onPropertyFormSubmit)();
+			case "terminal":
+				return terminalForm.handleSubmit(onPropertyFormSubmit)();
+			case "sensor":
+				return sensorForm.handleSubmit(onPropertyFormSubmit)();
+			default:
+				toast.error("未知的资产类型");
 		}
 	}
 
@@ -707,260 +709,71 @@ export default function PropertyPage() {
 
 	return (
 		<div className="p-5">
-			<Form {...searchForm}>
-				<form
-					className="space-y-8"
-					onSubmit={searchForm.handleSubmit(onSearchFormSubmit)}
-				>
-					<div className="flex gap-5">
-						<FormField
-							control={searchForm.control}
-							name="property_id"
-							render={({ field }) => (
-								<FormItem className="flex items-center gap-3">
-									<FormLabel>资产编号</FormLabel>
-									<div className="flex flex-col">
-										<FormControl>
-											<Input {...field} className="bg-white" />
-										</FormControl>
-									</div>
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={searchForm.control}
-							name="is_used"
-							render={({ field }) => (
-								<FormItem className="flex items-center gap-3">
-									<FormLabel>资产使用状态</FormLabel>
-									<div className="flex flex-col">
-										<FormControl>
-											<Select
-												onChange={field.onChange}
-												value={field.value}
-												options={propertyStatusSelectOptions}
-												style={{ width: 120 }}
-												defaultValue="请选择资产使用状态"
-											>
-											</Select>
-										</FormControl>
-									</div>
-								</FormItem>
-							)}
-						/>
+			<Form layout="inline" onFinish={searchForm.handleSubmit(onSearchFormSubmit)}>
+				<Controller
+					control={searchForm.control}
+					name="property_id"
+					render={({ field }) => (
+						<Form.Item label="资产编号" validateStatus={searchForm.formState.errors['property_id']?.message ? 'error' : ''} help={searchForm.formState.errors['property_id']?.message}>
+							<Input {...field} className="bg-white" />
+						</Form.Item>
+					)}
+				/>
 
-						<FormField
-							control={searchForm.control}
-							name="property_type"
-							render={({ field }) => (
-								<FormItem className="flex items-center gap-3">
-									<FormLabel>资产类型</FormLabel>
-									<div className="flex flex-col">
-										<FormControl>
-											<Select
-												onChange={field.onChange}
-												options={propertyTypeSelectOptions}
-												value={field.value}
-												style={{ width: 120 }}
-											>
-											</Select>
-										</FormControl>
-									</div>
-								</FormItem>
-							)}
-						/>
-						<Button type="primary" htmlType="submit" className="cursor-pointer">
-							查询
-						</Button>
-						<Button
-							type="default"
-							htmlType="reset"
-							className="cursor-pointer"
-							onClick={() => searchForm.reset()}
-						>
-							清空
-						</Button>
-						<Button
-							type="default"
-							className="cursor-pointer"
-							onClick={exportProperty}
-						>
-							导出
-						</Button>
-					</div>
-					<div>
-						{propertyType === "building" && (
-							<div className="flex gap-5">
-								<FormField
-									control={searchForm.control}
-									name="building_name"
-									render={({ field }) => (
-										<FormItem className="flex items-center gap-3">
-											<FormLabel>楼宇名称</FormLabel>
-											<div className="flex flex-col">
-												<FormControl>
-													<Input {...field} className="bg-white" />
-												</FormControl>
-											</div>
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={searchForm.control}
-									name="building_number"
-									render={({ field }) => (
-										<FormItem className="flex items-center gap-3">
-											<FormLabel>楼栋号</FormLabel>
-											<div className="flex flex-col">
-												<FormControl>
-													<Input {...field} className="bg-white" />
-												</FormControl>
-											</div>
-										</FormItem>
-									)}
-								/>
-							</div>
-						)}
-						{propertyType === "space" && (
-							<div className="flex gap-5">
-								<FormField
-									control={searchForm.control}
-									name="space_name"
-									render={({ field }) => (
-										<FormItem className="flex items-center gap-3">
-											<FormLabel>空间名称</FormLabel>
-											<div className="flex flex-col">
-												<FormControl>
-													<Input {...field} className="bg-white" />
-												</FormControl>
-											</div>
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={searchForm.control}
-									name="space_number"
-									render={({ field }) => (
-										<FormItem className="flex items-center gap-3">
-											<FormLabel>房间号</FormLabel>
-											<div className="flex flex-col">
-												<FormControl>
-													<Input {...field} className="bg-white" />
-												</FormControl>
-											</div>
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={searchForm.control}
-									name="space_type"
-									render={({ field }) => (
-										<FormItem className="flex items-center gap-3">
-											<FormLabel>房间用途</FormLabel>
-											<div className="flex flex-col">
-												<FormControl>
-													<Input {...field} className="bg-white" />
-												</FormControl>
-											</div>
-										</FormItem>
-									)}
-								/>
-							</div>
-						)}
-						{propertyType === "terminal" && (
-							<div className="flex gap-5">
-								<FormField
-									control={searchForm.control}
-									name="terminal_number"
-									render={({ field }) => (
-										<FormItem className="flex items-center gap-3">
-											<FormLabel>网关（智能箱）编号</FormLabel>
-											<div className="flex flex-col">
-												<FormControl>
-													<Input {...field} className="bg-white" />
-												</FormControl>
-											</div>
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={searchForm.control}
-									name="terminal_type"
-									render={({ field }) => (
-										<FormItem className="flex items-center gap-3">
-											<FormLabel>网关（智能箱）型号</FormLabel>
-											<div className="flex flex-col">
-												<FormControl>
-													<Input {...field} className="bg-white" />
-												</FormControl>
-											</div>
-										</FormItem>
-									)}
-								/>
-							</div>
-						)}
-						{propertyType === "sensor" && (
-							<div className="flex gap-5">
-								<FormField
-									control={searchForm.control}
-									name="sensor_kind"
-									render={({ field }) => (
-										<FormItem className="flex items-center gap-3">
-											<FormLabel>传感器大类</FormLabel>
-											<div className="flex flex-col">
-												<Select
-													onChange={field.onChange}
-													value={field.value}
-												>
-													<FormControl>
-														<SelectTrigger className="bg-white w-50">
-															<SelectValue placeholder="请选择传感器大类" />
-														</SelectTrigger>
-													</FormControl>
-													<SelectContent>
-														{sensorKindSelectOption?.map((option) => (
-															<SelectItem key={option.kind} value={option.kind}>
-																{option.name}
-															</SelectItem>
-														))}
-													</SelectContent>
-												</Select>
-											</div>
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={searchForm.control}
-									name="sensor_type"
-									render={({ field }) => (
-										<FormItem className="flex items-center gap-3">
-											<FormLabel>传感器小类</FormLabel>
-											<div className="flex flex-col">
-												<Select
-													onChange={field.onChange}
-													value={field.value}
-												>
-													<FormControl>
-														<SelectTrigger className="bg-white w-50">
-															<SelectValue placeholder="请选择传感器小类" />
-														</SelectTrigger>
-													</FormControl>
-													<SelectContent>
-														{sensorTypeSelectOption?.map((option) => (
-															<SelectItem key={option.type} value={option.type}>
-																{option.name}
-															</SelectItem>
-														))}
-													</SelectContent>
-												</Select>
-											</div>
-										</FormItem>
-									)}
-								/>
-							</div>
-						)}
-					</div>
-				</form>
+				<Controller
+					control={searchForm.control}
+					name="is_used"
+					render={({ field }) => (
+						<Form.Item label="资产使用状态" validateStatus={searchForm.formState.errors['is_used']?.message ? 'error' : ''} help={searchForm.formState.errors['is_used']?.message}>
+							<Select
+								onChange={field.onChange}
+								value={field.value}
+								options={propertyStatusSelectOptions}
+								style={{ width: 120 }}
+								defaultValue="请选择资产使用状态"
+							>
+							</Select>
+						</Form.Item>
+					)}
+				/>
+
+				<Controller
+					control={searchForm.control}
+					name="property_type"
+					render={({ field }) => (
+						<Form.Item label="资产类型" validateStatus={searchForm.formState.errors['property_type']?.message ? 'error' : ''} help={searchForm.formState.errors['property_type']?.message}>
+							<Select
+								onChange={field.onChange}
+								options={propertyTypeSelectOptions}
+								value={field.value}
+								style={{ width: 120 }}
+							>
+							</Select>
+						</Form.Item>
+					)}
+				/>
+
+				<div className="flex gap-2">
+					<Button type="primary" htmlType="submit" className="cursor-pointer">
+						查询
+					</Button>
+					<Button
+						type="default"
+						htmlType="reset"
+						className="cursor-pointer"
+						onClick={() => searchForm.reset()}
+					>
+						清空
+					</Button>
+					<Button
+						type="default"
+						className="cursor-pointer"
+						onClick={exportProperty}
+					>
+						导出
+					</Button>
+
+				</div>
 			</Form>
 			<div className="mt-5">
 				<Button
@@ -980,16 +793,12 @@ export default function PropertyPage() {
 				className="mt-2"
 			/>
 
-
-
-
 			<Modal
 				open={propertyDialogOpen}
 				onCancel={() => onDialogOpenChange(false)}
 				title={addOrEdit === "add" ? "新增资产" : "编辑资产"}
 				width={720}
 				centered
-				destroyOnClose
 				footer={[
 					<Button key="cancel" onClick={() => onDialogOpenChange(false)}>
 						取消
@@ -1002,451 +811,291 @@ export default function PropertyPage() {
 				<div className="mt-5">
 					<div>
 						{addOrEdit === "add" ? (
-							<Select
-								onChange={onAddPropertySelectValueChange}
-								value={addPropertySelectValue}
-								placeholder="请先选择资产类型"
-								style={{ width: 200 }}
-							>
-								{propertyTypeSelectOptions.map((option) => (
-									<Select.Option key={option.value} value={option.value}>
-										{option.label}
-									</Select.Option>
-								))}
-							</Select>
+							<Form.Item required label="资产类型">
+								<Select
+									onChange={onAddPropertySelectValueChange}
+									value={addPropertySelectValue}
+									placeholder="请先选择资产类型"
+									style={{ width: 200 }}
+								>
+									{propertyTypeSelectOptions.map((option) => (
+										<Select.Option key={option.value} value={option.value}>
+											{option.label}
+										</Select.Option>
+									))}
+								</Select>
+							</Form.Item>
 						) : null}
 					</div>
 					<div className="mt-10">
 						{addPropertySelectValue === "building" && (
-							<Form {...buildingForm}>
-								<form className="space-y-7">
-									<FormField
-										control={buildingForm.control}
-										name="name"
-										render={({ field }) => (
-											<FormItem className="relative flex items-center gap-5">
-												<FormLabel>楼宇名称</FormLabel>
-												<div className="flex flex-col">
-													<FormControl>
-														<Input {...field} className="w-80 h-8" />
-													</FormControl>
-													<FormMessage className="bottom-0 absolute translate-y-full" />
-												</div>
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={buildingForm.control}
-										name="number"
-										render={({ field }) => (
-											<FormItem className="flex items-center gap-5">
-												<FormLabel>楼栋号</FormLabel>
-												<div className="flex flex-col">
-													<FormControl>
-														<Input {...field} className="w-80 h-8" />
-													</FormControl>
-												</div>
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={buildingForm.control}
-										name="address"
-										render={({ field }) => (
-											<FormItem className="flex items-center gap-5">
-												<FormLabel>楼宇地址</FormLabel>
-												<div className="flex flex-col">
-													<FormControl>
-														<Input {...field} className="w-80 h-8" />
-													</FormControl>
-												</div>
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={buildingForm.control}
-										name="is_used"
-										render={({ field }) => (
-											<FormItem className="relative flex items-center gap-5">
-												<FormLabel>楼宇状态</FormLabel>
-												<div className="flex flex-col">
-													<Select
-														onChange={field.onChange}
-														value={field.value}
-														options={buildingIsUsedSelectOptions}
-														defaultValue="请选择楼宇使用状态"
-														style={{ width: 80 }}
-													>
-													</Select>
-													<FormMessage className="bottom-0 absolute translate-y-full" />
-												</div>
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={buildingForm.control}
-										name="description"
-										render={({ field }) => (
-											<FormItem className="flex items-center gap-5">
-												<FormLabel>楼宇描述</FormLabel>
-												<div className="flex flex-col">
-													<FormControl>
-														<Input {...field} className="w-80 h-8" />
-													</FormControl>
-												</div>
-											</FormItem>
-										)}
-									/>
-								</form>
+							<Form layout="horizontal" className="space-y-7">
+								<Controller
+									control={buildingForm.control}
+									name="name"
+									render={({ field }) => (
+										<Form.Item label="楼宇名称" required>
+											<Input {...field} className="w-80 h-8" />
+										</Form.Item>
+									)}
+								/>
+								<Controller
+									control={buildingForm.control}
+									name="number"
+									render={({ field }) => (
+										<Form.Item label="楼栋号">
+											<Input {...field} className="w-80 h-8" />
+										</Form.Item>
+									)}
+								/>
+								<Controller
+									control={buildingForm.control}
+									name="address"
+									render={({ field }) => (
+										<Form.Item label="楼宇地址">
+											<Input {...field} className="w-80 h-8" />
+										</Form.Item>
+									)}
+								/>
+								<Controller
+									control={buildingForm.control}
+									name="is_used"
+									render={({ field }) => (
+										<Form.Item label="楼宇状态" required>
+											<Select style={{ width: 320 }} onChange={field.onChange} value={field.value} options={buildingIsUsedSelectOptions.map((item) => ({
+												value: item.value,
+												label: item.label,
+											}))} />
+										</Form.Item>
+									)}
+								/>
+								<Controller
+									control={buildingForm.control}
+									name="description"
+									render={({ field }) => (
+										<Form.Item label="楼宇描述">
+											<Input {...field} className="w-80 h-8" />
+										</Form.Item>
+									)}
+								/>
 							</Form>
 						)}
 						{addPropertySelectValue === "space" && (
-							<Form {...spaceForm}>
-								<form className="space-y-7">
-									<FormField
-										control={spaceForm.control}
-										name="name"
-										render={({ field }) => (
-											<FormItem className="relative flex items-center gap-5">
-												<FormLabel>房间名</FormLabel>
-												<div className="flex flex-col">
-													<FormControl>
-														<Input {...field} className="w-80 h-8" />
-													</FormControl>
-													<FormMessage className="bottom-0 absolute translate-y-full" />
-												</div>
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={spaceForm.control}
-										name="number"
-										render={({ field }) => (
-											<FormItem className="relative flex items-center gap-5">
-												<FormLabel>房间号</FormLabel>
-												<div className="flex flex-col">
-													<FormControl>
-														<Input {...field} className="w-80 h-8" />
-													</FormControl>
-													<FormMessage className="bottom-0 absolute translate-y-full" />
-												</div>
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={spaceForm.control}
-										name="floor"
-										render={({ field }) => (
-											<FormItem className="relative flex items-center gap-5">
-												<FormLabel>所在楼层</FormLabel>
-												<div className="flex flex-col">
-													<FormControl>
-														<Input
-															type="number"
-															{...field}
-															className="w-80 h-8"
-														/>
-													</FormControl>
-													<FormMessage className="bottom-0 absolute translate-y-full" />
-												</div>
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={spaceForm.control}
-										name="type"
-										render={({ field }) => (
-											<FormItem className="flex items-center gap-5">
-												<FormLabel>房间用途</FormLabel>
-												<div className="flex flex-col">
-													<FormControl>
-														<Input {...field} className="w-80 h-8" />
-													</FormControl>
-												</div>
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={spaceForm.control}
-										name="property_bind_id"
-										render={({ field }) => (
-											<FormItem className="relative flex items-center gap-5">
-												<FormLabel>绑定楼宇</FormLabel>
-												<div className="flex flex-col">
-													<Select
-														onChange={field.onChange}
-														value={field.value}
-														placeholder="请选择绑定楼宇"
-														style={{ width: 320 }}
-													>
-														{bindPropertySelectOption.map((option) => (
-															<Select.Option
-																key={option.property_id}
-																value={option.property_id}
-															>
-																{option.name}
-															</Select.Option>
-														))}
-													</Select>
-													<FormMessage className="bottom-0 absolute translate-y-full" />
-												</div>
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={spaceForm.control}
-										name="is_used"
-										render={({ field }) => (
-											<FormItem className="relative flex items-center gap-5">
-												<FormLabel>空间状态</FormLabel>
-												<div className="flex flex-col">
-													<Select
-														onChange={field.onChange}
-														value={field.value}
-														placeholder="请选择空间使用状态"
-														options={buildingIsUsedSelectOptions}
-														style={{ width: 80 }}
-													/>
-													<FormMessage className="bottom-0 absolute translate-y-full" />
-												</div>
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={spaceForm.control}
-										name="ampere"
-										render={({ field }) => (
-											<FormItem className="flex items-center gap-5">
-												<FormLabel>电流大小</FormLabel>
-												<div className="flex flex-col">
-													<FormControl>
-														<Input {...field} className="w-80 h-8" />
-													</FormControl>
-												</div>
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={spaceForm.control}
-										name="description"
-										render={({ field }) => (
-											<FormItem className="flex items-center gap-5">
-												<FormLabel>空间描述</FormLabel>
-												<div className="flex flex-col">
-													<FormControl>
-														<Input {...field} className="w-80 h-8" />
-													</FormControl>
-												</div>
-											</FormItem>
-										)}
-									/>
-								</form>
+							<Form layout="horizontal" className="space-y-7">
+								<Controller
+									control={spaceForm.control}
+									name="name"
+									render={({ field }) => (
+										<Form.Item label="空间名称" required>
+											<Input {...field} className="w-80 h-8" />
+										</Form.Item>
+									)}
+								/>
+
+								<Controller
+									control={spaceForm.control}
+									name="number"
+									render={({ field }) => (
+										<Form.Item label="房间号" required>
+											<Input {...field} className="w-80 h-8" />
+										</Form.Item>
+									)}
+								/>
+
+								<Controller
+									control={spaceForm.control}
+									name="property_bind_id"
+									render={({ field }) => (
+										<Form.Item label="绑定楼宇" required>
+											<div className="flex flex-col">
+												<Select onChange={field.onChange} value={field.value} placeholder="请选择绑定楼宇" options={bindPropertySelectOption?.map((option) => ({
+													value: option.property_id,
+													label: option.property_id,
+												})) || []} style={{ width: 320 }} />
+											</div>
+										</Form.Item>
+									)}
+								/>
+
+								<Controller
+									control={spaceForm.control}
+									name="floor"
+									render={({ field }) => (
+										<Form.Item label="楼层">
+											<Input {...field} className="w-80 h-8" />
+										</Form.Item>
+									)}
+								/>
+
+								<Controller
+									control={spaceForm.control}
+									name="type"
+									render={({ field }) => (
+										<Form.Item label="房间用途">
+											<Input {...field} className="w-80 h-8" />
+										</Form.Item>
+									)}
+								/>
+
+								<Controller
+									control={spaceForm.control}
+									name="ampere"
+									render={({ field }) => (
+										<Form.Item label="安培">
+											<Input {...field} className="w-80 h-8" />
+										</Form.Item>
+									)}
+								/>
+
+								<Controller
+									control={spaceForm.control}
+									name="is_used"
+									render={({ field }) => (
+										<Form.Item label="空间状态" required>
+											<Select style={{ width: 320 }} onChange={field.onChange} value={field.value} options={buildingIsUsedSelectOptions.map((item) => ({
+												value: item.value,
+												label: item.label,
+											}))} />
+										</Form.Item>
+									)}
+								/>
+
+								<Controller
+									control={spaceForm.control}
+									name="description"
+									render={({ field }) => (
+										<Form.Item label="空间描述">
+											<Input {...field} className="w-80 h-8" />
+										</Form.Item>
+									)}
+								/>
 							</Form>
 						)}
 						{addPropertySelectValue === "terminal" && (
-							<Form {...terminalForm}>
-								<form className="space-y-7">
-									<FormField
-										control={terminalForm.control}
-										name="number"
-										render={({ field }) => (
-											<FormItem className="relative flex items-center gap-5">
-												<FormLabel>网关（智能箱）编号</FormLabel>
-												<div className="flex flex-col">
-													<FormControl>
-														<Input {...field} className="w-80 h-8" />
-													</FormControl>
-													<FormMessage className="bottom-0 absolute translate-y-full" />
-												</div>
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={terminalForm.control}
-										name="type"
-										render={({ field }) => (
-											<FormItem className="relative flex items-center gap-5">
-												<FormLabel>网关（智能箱）型号</FormLabel>
-												<div className="flex flex-col">
-													<FormControl>
-														<Input {...field} className="w-80 h-8" />
-													</FormControl>
-													<FormMessage className="bottom-0 absolute translate-y-full" />
-												</div>
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={terminalForm.control}
-										name="property_bind_id"
-										render={({ field }) => (
-											<FormItem className="relative flex items-center gap-5">
-												<FormLabel>绑定空间</FormLabel>
-												<div className="flex flex-col">
-													<Select
-														onChange={field.onChange}
-														value={field.value}
-														placeholder="请选择绑定空间"
-														style={{ width: 320 }}
-													>
-														{bindPropertySelectOption.map((option) => (
-															<Select.Option
-																key={option.property_id}
-																value={option.property_id}
-															>
-																{option.name}
-															</Select.Option>
-														))}
-													</Select>
-													<FormMessage className="bottom-0 absolute translate-y-full" />
-												</div>
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={terminalForm.control}
-										name="is_used"
-										render={({ field }) => (
-											<FormItem className="relative flex items-center gap-5">
-												<FormLabel>网关（智能箱）状态</FormLabel>
-												<div className="flex flex-col">
-													<Select
-														onChange={field.onChange}
-														value={field.value}
-														options={buildingIsUsedSelectOptions}
-														style={{ width: 80 }}
-														placeholder="请选择网关（智能箱）状态"
-													/>
-													<FormMessage className="bottom-0 absolute translate-y-full" />
-												</div>
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={terminalForm.control}
-										name="description"
-										render={({ field }) => (
-											<FormItem className="flex items-center gap-5">
-												<FormLabel>网关（智能箱）描述</FormLabel>
-												<div className="flex flex-col">
-													<FormControl>
-														<Input {...field} className="w-80 h-8" />
-													</FormControl>
-												</div>
-											</FormItem>
-										)}
-									/>
-								</form>
+							<Form layout="horizontal" className="space-y-7">
+								<Controller
+									control={terminalForm.control}
+									name="number"
+									render={({ field }) => (
+										<Form.Item label="网关（智能箱）编号" required>
+											<Input {...field} className="w-80 h-8" />
+										</Form.Item>
+									)}
+								/>
+								<Controller
+									control={terminalForm.control}
+									name="type"
+									render={({ field }) => (
+										<Form.Item label="网关（智能箱）型号">
+											<Input {...field} className="w-80 h-8" />
+										</Form.Item>
+									)}
+								/>
+								<Controller
+									control={terminalForm.control}
+									name="property_bind_id"
+									render={({ field }) => (
+										<Form.Item label="绑定空间" required>
+											<div className="flex flex-col">
+												<Select onChange={field.onChange} value={field.value} placeholder="请选择绑定空间" options={bindPropertySelectOption?.map((option) => ({
+													value: option.property_id,
+													label: option.property_id,
+												})) || []} style={{ width: 320 }} />
+											</div>
+										</Form.Item>
+									)}
+								/>
+								<Controller
+									control={terminalForm.control}
+									name="is_used"
+									render={({ field }) => (
+										<Form.Item label="网关（智能箱）状态" required>
+											<Select style={{ width: 320 }} onChange={field.onChange} value={field.value} options={buildingIsUsedSelectOptions.map((item) => ({
+												value: item.value,
+												label: item.label,
+											}))} />
+										</Form.Item>
+									)}
+								/>
+								<Controller
+									control={terminalForm.control}
+									name="description"
+									render={({ field }) => (
+										<Form.Item label="网关（智能箱）描述">
+											<Input {...field} className="w-80 h-8" />
+										</Form.Item>
+									)}
+								/>
 							</Form>
 						)}
 						{addPropertySelectValue === "sensor" && (
-							<Form {...sensorForm}>
-								<form className="space-y-7">
-									<FormField
-										control={sensorForm.control}
-										name="kind"
-										render={({ field }) => (
-											<FormItem className="relative flex items-center gap-5">
-												<FormLabel>传感器大类</FormLabel>
-												<div className="flex flex-col">
-													<Select
-														onChange={field.onChange}
-														value={field.value}
-														placeholder="请选择传感器大类"
-														options={sensorKindSelectOption?.map((option) => ({
-															value: option.kind,
-															label: option.name,
-														})) || []}
-														style={{ width: 320 }}
-													/>
-													<FormMessage className="bottom-0 absolute translate-y-full" />
-												</div>
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={sensorForm.control}
-										name="type"
-										render={({ field }) => (
-											<FormItem className="relative flex items-center gap-5">
-												<FormLabel>传感器小类</FormLabel>
-												<div className="flex flex-col">
-													<Select
-														onChange={field.onChange}
-														value={field.value}
-														placeholder="请选择传感器小类"
-														options={sensorTypeSelectOption?.map((option) => ({
-															value: option.type,
-															label: option.name,
-														})) || []}
-														style={{ width: 320 }}
-													/>
-													<FormMessage className="bottom-0 absolute translate-y-full" />
-												</div>
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={sensorForm.control}
-										name="property_bind_id"
-										render={({ field }) => (
-											<FormItem className="relative flex items-center gap-5">
-												<FormLabel>绑定终端</FormLabel>
-												<div className="flex flex-col">
-													<Select
-														onChange={field.onChange}
-														value={field.value}
-														placeholder="请选择绑定终端"
-														style={{ width: 320 }}
-													>
-														{bindPropertySelectOption.map((option) => (
-															<Select.Option
-																key={option.property_id}
-																value={option.property_id}
-															>
-																{option.name}
-															</Select.Option>
-														))}
-													</Select>
-													<FormMessage className="bottom-0 absolute translate-y-full" />
-												</div>
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={sensorForm.control}
-										name="is_used"
-										render={({ field }) => (
-											<FormItem className="relative flex items-center gap-5">
-												<FormLabel>传感器状态</FormLabel>
-												<div className="flex flex-col">
-													<Select
-														onChange={field.onChange}
-														value={field.value}
-														options={buildingIsUsedSelectOptions}
-														style={{ width: 80 }}
-														placeholder="请选择传感器使用状态"
-													/>
-													<FormMessage className="bottom-0 absolute translate-y-full" />
-												</div>
-											</FormItem>
-										)}
-									/>
-									<FormField
-										control={sensorForm.control}
-										name="description"
-										render={({ field }) => (
-											<FormItem className="flex items-center gap-5">
-												<FormLabel>传感器描述</FormLabel>
-												<div className="flex flex-col">
-													<FormControl>
-														<Input {...field} className="w-80 h-8" />
-													</FormControl>
-												</div>
-											</FormItem>
-										)}
-									/>
-								</form>
+							<Form layout="horizontal" className="space-y-7">
+								<Controller
+									control={sensorForm.control}
+									name="kind"
+									render={({ field }) => (
+										<Form.Item label="传感器大类" required>
+											<div className="flex flex-col">
+												<Select onChange={field.onChange} value={field.value} placeholder="请选择传感器大类" options={sensorKindSelectOption?.map((option) => ({
+													value: option.kind,
+													label: option.name,
+												})) || []} style={{ width: 320 }} />
+											</div>
+										</Form.Item>
+									)}
+								/>
+								<Controller
+									control={sensorForm.control}
+									name="type"
+									render={({ field }) => (
+										<Form.Item label="传感器小类" required>
+											<div className="flex flex-col">
+												<Select onChange={field.onChange} value={field.value} placeholder="请选择传感器小类" options={sensorTypeSelectOption?.map((option) => ({
+													value: option.type,
+													label: option.name,
+												})) || []} style={{ width: 320 }} />
+											</div>
+										</Form.Item>
+									)}
+								/>
+
+								<Controller
+									control={sensorForm.control}
+									name="property_bind_id"
+									render={({ field }) => (
+										<Form.Item label="绑定终端" required>
+											<div className="flex flex-col">
+												<Select onChange={field.onChange} value={field.value} placeholder="请选择资产绑定" options={bindPropertySelectOption?.map((option) => ({
+													value: option.property_id,
+													label: option.property_id,
+												})) || []} style={{ width: 320 }} />
+											</div>
+										</Form.Item>
+									)}
+								/>
+
+								<Controller
+									control={sensorForm.control}
+									name="is_used"
+									render={({ field }) => (
+										<Form.Item label="传感器状态" required>
+											<Select style={{ width: 320 }} onChange={field.onChange} value={field.value} options={buildingIsUsedSelectOptions.map((item) => ({
+												value: item.value,
+												label: item.label,
+											}))} />
+										</Form.Item>
+									)}
+								/>
+
+								<Controller
+									control={sensorForm.control}
+									name="description"
+									render={({ field }) => (
+										<Form.Item label="传感器描述">
+											<Input {...field} className="w-80 h-8" />
+										</Form.Item>
+									)}
+								/>
 							</Form>
 						)}
 					</div>
