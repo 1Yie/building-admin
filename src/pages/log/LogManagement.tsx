@@ -1,18 +1,18 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { useQuery } from "@tanstack/react-query";
-import { Table, Button, Select, DatePicker, ConfigProvider } from "antd";
+import { Table, Button, Select, DatePicker, ConfigProvider, Form } from "antd";
 import { format } from "date-fns";
 import zhCN from 'antd/locale/zh_CN';
 import dayjs from "dayjs";
 import "dayjs/locale/zh-cn";
 import { CalendarIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 import { getLogList, getLogTypeList } from "@/request/log";
 import {
-	Form,
+	// Form,
 	FormControl,
 	FormField,
 	FormItem,
@@ -121,97 +121,98 @@ export default function LogManagement() {
 	return (
 		<div className="p-5">
 			<div>
-				<Form {...searchForm} >
-					<form className="space-y-8" onSubmit={searchForm.handleSubmit(onSearchFormSubmit)}>
-						<div className="flex gap-5">
-							<FormField
-								control={searchForm.control}
-								name="time"
-								render={({ field }) => (
-									<FormItem className="flex items-center gap-3">
-										<FormLabel>时间</FormLabel>
-										<div className="flex flex-col">
-											<ConfigProvider locale={ zhCN }>
-											<FormControl>
-												<DatePicker
-													value={field.value ? dayjs(field.value) : undefined}
-													onChange={(date) => {
-														field.onChange(date ? date.format("YYYY-MM-DD") : "");
-													}}
-													disabledDate={(current) => {
-														return current > dayjs() || current < dayjs("1900-01-01");
-													}}
-													placeholder="请选择日期"
-													style={{ width: 240 }}
-													format="YYYY-MM-DD"
-												/>
-											</FormControl>
-											</ConfigProvider>
-										</div>
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={searchForm.control}
-								name="log_type"
-								render={({ field }) => (
-									<FormItem className="flex items-center gap-3">
-										<FormLabel>日志类型</FormLabel>
-										<div className="flex flex-col">
-											<Select
-												onChange={field.onChange}
-												value={field.value}
-												placeholder="日志类型"
-												style={{ width: 180 }}
-											>
-												{logTypeSelectOption?.map((option) => (
-													<Select.Option key={option.type} value={option.type}>
-														{option.name}
-													</Select.Option>
-												))}
-											</Select>
-										</div>
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={searchForm.control}
-								name="operator"
-								render={({ field }) => (
-									<FormItem className="flex items-center gap-3">
-										<FormLabel>操作人</FormLabel>
-										<div className="flex flex-col">
-											<Select
-												onChange={field.onChange}
-												value={field.value}
-												placeholder="操作人"
-												style={{ width: 180 }}
-											>
-												{operateSelectOption?.map((option) => (
-													<Select.Option key={option.value} value={option.value}>
-														{option.name}
-													</Select.Option>
-												))}
-											</Select>
-										</div>
-									</FormItem>
-								)}
-							/>
-							<Button
-								type="primary"
-								htmlType="submit"
-							>
-								查询
-							</Button>
-							<Button
-								type="default"
-								htmlType="reset"
-								onClick={() => searchForm.reset()}
-							>
-								清空
-							</Button>
-						</div>
-					</form>
+				<Form layout="inline" className="space-y-7" onFinish={searchForm.handleSubmit(onSearchFormSubmit)}>
+					<Controller
+						control={searchForm.control}
+						name="time"
+						render={({ field }) => (
+							<Form.Item label="时间">
+								<div className="flex flex-col">
+									<ConfigProvider locale={zhCN}>
+
+										<DatePicker
+											value={field.value ? dayjs(field.value) : undefined}
+											onChange={(date) => {
+												field.onChange(date ? date.format("YYYY-MM-DD") : "");
+											}}
+											disabledDate={(current) => {
+												return current > dayjs() || current < dayjs("1900-01-01");
+											}}
+											placeholder="请选择日期"
+											style={{ width: 240 }}
+											format="YYYY-MM-DD"
+										/>
+
+									</ConfigProvider>
+								</div>
+							</Form.Item>
+						)}
+					/>
+
+					<Controller
+						control={searchForm.control}
+						name="log_type"
+						render={({ field }) => (
+							<Form.Item label="日志类型">
+								<div className="flex flex-col">
+									<Select
+										onChange={field.onChange}
+										value={field.value}
+										placeholder="日志类型"
+										style={{ width: 180 }}
+									>
+										{logTypeSelectOption?.map((option) => (
+											<Select.Option key={option.type} value={option.type}>
+												{option.name}
+											</Select.Option>
+										))}
+									</Select>
+								</div>
+							</Form.Item>
+						)}
+					/>
+
+					<Controller
+						control={searchForm.control}
+						name="operator"
+						render={({ field }) => (
+							<Form.Item label="操作人">
+								<div className="flex flex-col">
+									<Select
+										onChange={field.onChange}
+										value={field.value}
+										placeholder="操作人"
+										style={{ width: 180 }}
+									>
+										{operateSelectOption?.map((option) => (
+											<Select.Option key={option.value} value={option.value}>
+												{option.name}
+											</Select.Option>
+										))}
+									</Select>
+								</div>
+							</Form.Item>
+						)}
+					/>
+
+					<div className="flex gap-2">
+						<Button
+							type="primary"
+							htmlType="submit"
+							className="cursor-pointer"
+						>
+							查询
+						</Button>
+						<Button
+							type="default"
+							htmlType="reset"
+							className="cursor-pointer"
+							onClick={() => searchForm.reset()}
+						>
+							清空
+						</Button>
+
+					</div>
 				</Form>
 			</div>
 			<div className="mt-5">
