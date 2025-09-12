@@ -19,22 +19,7 @@ import {
 } from "@/request/property";
 import { Badge } from "@/shadcn/ui/badge";
 import { Button, Modal, Form } from "antd";
-import {
-	// Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "@/shadcn/ui/form";
 import { Input, Select } from "antd";
-import {
-
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/shadcn/ui/select";
 import type { PaginationType } from "@/types";
 
 const searchFormSchema = z.object({
