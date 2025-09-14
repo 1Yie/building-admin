@@ -1,7 +1,6 @@
 import request from "@/request";
 import type { RoleUser } from "@/request/role";
 import { urls } from "@/request/urls";
-import type { TreeDataNode } from "antd";
 
 // 账号表格
 interface AccountTableListParams {
@@ -9,6 +8,7 @@ interface AccountTableListParams {
 	pageSize: number;
 	username: string;
 }
+
 export interface AccountTableListResponse {
 	userInfoList: {
 		username: string;
@@ -21,6 +21,25 @@ export interface AccountTableListResponse {
 		totalSize: number;
 	};
 }
+
+type PermissionActionItem = {
+  resourceType: string;
+  permissionName: string;
+  action: string;
+  department: string;
+};
+
+type PermissionPayload = {
+  building?: string[] | PermissionActionItem[];
+  data?: string[] | PermissionActionItem[];
+  application?: string[] | PermissionActionItem[];
+  etl?: string[] | PermissionActionItem[];
+  table?: string[] | PermissionActionItem[];
+  equip?: string[] | PermissionActionItem[];
+  file?: string[] | PermissionActionItem[];
+  menu?: string[] | PermissionActionItem[];
+};
+
 export function getAccountTableList(
 	data: AccountTableListParams,
 ): Promise<AccountTableListResponse> {
@@ -150,39 +169,15 @@ export function permissionList({
 }
 
 export function accountPermissionUpdate({
-	username,
-	buildingPermissions,
-	dataPermissions,
-	applicationPermissions,
-	etlPermissions,
-	tablePermissions,
-	equipPermissions,
-	filePermissions,
-	menuPermissions,
+  username,
+  permissions,
 }: {
-	username: string;
-	buildingPermissions: any[];
-	dataPermissions: any[];
-	applicationPermissions: any[];
-	etlPermissions: any[];
-	tablePermissions: any[];
-	equipPermissions: any[];
-	filePermissions: any[];
-	menuPermissions: any[];
+  username: string;
+  permissions: PermissionPayload;
 }) {
-	return request({
-		method: "post",
-		url: urls.account.accountPermissionUpdate,
-		data: {
-			username,
-			dataPermissions,
-			applicationPermissions,
-			etlPermissions,
-			tablePermissions,
-			equipPermissions,
-			filePermissions,
-			menuPermissions,
-			buildingPermissions,
-		},
-	});
+  return request({
+    method: "post",
+    url: urls.account.accountPermissionUpdate,
+    data: { username, ...permissions },
+  });
 }

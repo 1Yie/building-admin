@@ -17,12 +17,14 @@ interface Props {
   actionMap: ActionMap;
 }
 
-export function MyTree({ treeData, actionMap }: Props) {
+export function PermissionTree({ treeData, actionMap }: Props) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
-  const [checkedActions, setCheckedActions] = useState<Record<string, string[]>>({});
+  const [checkedActions, setCheckedActions] = useState<
+    Record<string, string[]>
+  >({});
 
   // Tree 节点选择
-  const onSelect: TreeProps['onSelect'] = (keys) => {
+  const onSelect: TreeProps["onSelect"] = (keys) => {
     if (keys.length > 0) {
       const key = keys[0] as string;
       setSelectedKey(key);
@@ -59,14 +61,16 @@ export function MyTree({ treeData, actionMap }: Props) {
       return {
         ...node,
         title: (
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div className="flex items-center gap-3">
             <span>{node.title}</span>
             {selectedKey === node.key &&
               actions.map((action) => (
                 <Checkbox
                   key={action}
                   checked={checked.includes(action)}
-                  onChange={(e) => onActionChange(node.key, action, e.target.checked)}
+                  onChange={(e) =>
+                    onActionChange(node.key, action, e.target.checked)
+                  }
                   onClick={(e) => e.stopPropagation()} // 阻止冒泡，不取消选中
                 >
                   {action}
