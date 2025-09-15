@@ -41,18 +41,18 @@ const sidebarItems = [
 		icon: "file-text",
 		element: <Log />,
 	},
-	{
-		title: "教学科研",
-		path: "/teaching",
-		icon: "graduation-cap",	
-		element: <Teaching />,
-	},
-	{
-		title: "智能评估",
-		path: "/evaluation",
-		icon: "key-square",
-		element: <Evaluation />,
-	},
+	// {
+	// 	title: "教学科研",
+	// 	path: "/teaching",
+	// 	icon: "graduation-cap",	
+	// 	element: <Teaching />,
+	// },
+	// {
+	// 	title: "智能评估",
+	// 	path: "/evaluation",
+	// 	icon: "key-square",
+	// 	element: <Evaluation />,
+	// },
 	{
 		title: "角色管理",
 		path: "/role",

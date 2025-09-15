@@ -30,14 +30,14 @@ type PermissionActionItem = {
 };
 
 type PermissionPayload = {
-  building?: string[] | PermissionActionItem[];
-  data?: string[] | PermissionActionItem[];
-  application?: string[] | PermissionActionItem[];
-  etl?: string[] | PermissionActionItem[];
-  table?: string[] | PermissionActionItem[];
-  equip?: string[] | PermissionActionItem[];
-  file?: string[] | PermissionActionItem[];
-  menu?: string[] | PermissionActionItem[];
+  buildingPermissions?: PermissionActionItem[];
+  dataPermissions?: PermissionActionItem[];
+  applicationPermissions?: PermissionActionItem[];
+  etlPermissions?: PermissionActionItem[];
+  tablePermissions?: PermissionActionItem[];
+  equipPermissions?: PermissionActionItem[];
+  filePermissions?: PermissionActionItem[];
+  menuPermissions?: PermissionActionItem[];
 };
 
 export function getAccountTableList(

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import z from "zod";
+import z, { check } from "zod";
 import type { AccountTableListResponse } from "@/request/account";
 import {
   accountCreate,
@@ -25,6 +25,7 @@ import { PermissionTree } from "@/components/permission-tree";
 import type { TreeDataNode } from "antd";
 
 import type { PaginationType } from "@/types";
+import type { PermissionResponse } from "@/components/permission-tree";
 
 export default function AccountPage() {
   // 转换权限数据格式为Tree组件所需格式
@@ -51,7 +52,6 @@ export default function AccountPage() {
   const [permissionLoading, setPermissionLoading] = useState<boolean>(false);
   const [permissionError, setPermissionError] = useState<string>("");
 
-
   // 获取权限列表
   const { mutate: getPermissionMutate, mutateAsync: getPermissionMutateAsync } =
     useMutation({
@@ -68,9 +68,9 @@ export default function AccountPage() {
         const transformedData = transformPermissionData(rawData);
 
         setPermissionData(transformedData);
-        setPermissionKeyMap(data?.keyMap || {});
+        setPermissionKeyMap(data?.data?.keyMap || {});
 
-        const checked = data?.check || [];
+        const checked = data?.data?.result?.check || [];
         setCheckedKeys(checked);
       },
       onError: (error) => {
@@ -83,14 +83,14 @@ export default function AccountPage() {
     });
 
   // 获取权限keyMap和权限树
-  function getPermissionKeyMap() {
-    getPermissionMutate({ department: "test" });
-  }
+  // function getPermissionKeyMap() {
+  //   getPermissionMutate({ department: "" });
+  // }
 
   // 初始化时获取权限树数据
-  useEffect(() => {
-    getPermissionKeyMap();
-  }, []);
+  // useEffect(() => {
+  //   getPermissionKeyMap();
+  // }, []);
 
   // 表格列
   const columns = [
@@ -365,15 +365,22 @@ export default function AccountPage() {
     checkedActions: Record<string, string[]>;
   }> {
     try {
-      const res = await getPermissionMutateAsync({ department, username });
-      const result = res.data.result || {};
+      const res = (await getPermissionMutateAsync({
+        department,
+        username,
+      })) as unknown as PermissionResponse;
 
-      const checkedKeys: string[] = result.check || [];
+      console.log("res:", res);
+
+      const checkedKeys: string[] = res.check || [];
       const checkedActions: Record<string, string[]> = {};
 
-      Object.entries(result.actionMap || {}).forEach(([key, actionStr]) => {
-        checkedActions[key] = (actionStr as string).split(",");
+      Object.entries(res.actionMap || {}).forEach(([key, actionStr]) => {
+        checkedActions[key] = String(actionStr).split(",");
       });
+
+      console.log("checkedKeys:", checkedKeys);
+      console.log("checkedActions:", checkedActions);
 
       return { checkedKeys, checkedActions };
     } catch (err) {
@@ -512,15 +519,22 @@ export default function AccountPage() {
             resourceType,
             permissionName: key.split("-")[1],
             action: actions.join(","),
-            department: "test",
+            department: "test", // TODO: 测试
           };
         });
-
+      console.log("提交 buildingPermissions:", buildingPermissions);
       // 调用权限更新接口
       await updatePermissionsMutate({
         username,
         permissions: {
-          building: buildingPermissions,
+          buildingPermissions,
+          dataPermissions: [],
+          applicationPermissions: [],
+          etlPermissions: [],
+          tablePermissions: [],
+          equipPermissions: [],
+          filePermissions: [],
+          menuPermissions: [],
         },
       });
 
@@ -669,11 +683,11 @@ export default function AccountPage() {
               className="cursor-pointer"
               onClick={
                 addOrUpdate === "add"
-                  ? accountForm.handleSubmit(() =>
-                      (values: z.infer<typeof accountFormSchema>) => handleSubmitCommon(values, false)
+                  ? accountForm.handleSubmit((values) =>
+                      handleSubmitCommon(values, false)
                     )
-                  : editAccountForm.handleSubmit(() =>
-                      (values: z.infer<typeof editAccountFormSchema>) => handleSubmitCommon(values, true)
+                  : editAccountForm.handleSubmit((values) =>
+                      handleSubmitCommon(values, true)
                     )
               }
             >
@@ -688,8 +702,8 @@ export default function AccountPage() {
             <Form
               layout="horizontal"
               className="space-y-7"
-              onFinish={accountForm.handleSubmit(() =>
-                (values: z.infer<typeof accountFormSchema>) => handleSubmitCommon(values, false)
+              onFinish={accountForm.handleSubmit((values) =>
+                handleSubmitCommon(values, false)
               )}
             >
               <Controller
@@ -755,26 +769,6 @@ export default function AccountPage() {
 
               <Controller
                 control={accountForm.control}
-                name="auditUser"
-                render={({ field }) => (
-                  <Form.Item label="审核">
-                    <Input {...field} className="w-80 h-8" />
-                  </Form.Item>
-                )}
-              />
-
-              <Controller
-                control={accountForm.control}
-                name=""
-                render={({ field }) => (
-                  <Form.Item label="模块权限">
-                    <Switch />
-                  </Form.Item>
-                )}
-              />
-
-              <Controller
-                control={accountForm.control}
                 name="role"
                 render={({ field }) => (
                   <Form.Item
@@ -805,6 +799,26 @@ export default function AccountPage() {
 
               <Controller
                 control={accountForm.control}
+                name="auditUser"
+                render={({ field }) => (
+                  <Form.Item label="教学科研“上级管理/审核人员">
+                    <Input {...field} className="w-80 h-8" />
+                  </Form.Item>
+                )}
+              />
+
+              <Controller
+                control={accountForm.control}
+                name=""
+                render={({ field }) => (
+                  <Form.Item label="“教学科研-虚拟教学空间”模块管理权限">
+                    <Switch />
+                  </Form.Item>
+                )}
+              />
+
+              <Controller
+                control={accountForm.control}
                 name="buildingPermissions"
                 render={({ field }) => (
                   <Form.Item label="楼宇权限">
@@ -813,25 +827,21 @@ export default function AccountPage() {
                         checkable
                         checkedKeys={field.value?.checkedKeys || []}
                         checkedActions={field.value?.checkedActions || {}}
-                        onCheck={(keys: string[]) => {
+                        onChange={(value) => {
+                          // 合并之前的 checkedActions 和当前返回的 checkedActions
+                          const mergedActions = {
+                            ...field.value?.checkedActions,
+                            ...value.checkedActions,
+                          };
+
                           field.onChange({
-                            checkedKeys: keys,
-                            checkedActions: field.value?.checkedActions || {},
-                          });
-                        }}
-                        onActionChange={(key: string, actions: string[]) => {
-                          field.onChange({
-                            checkedKeys: [
-                              ...(field.value?.checkedKeys || []),
-                              key,
-                            ],
-                            checkedActions: {
-                              ...(field.value?.checkedActions || {}),
-                              [key]: actions,
-                            },
+                            ...field.value,
+                            checkedKeys: value.checkedKeys,
+                            checkedActions: mergedActions,
                           });
                         }}
                         treeData={permissionData}
+                        expand={false}
                       />
                     </Spin>
                   </Form.Item>
@@ -844,8 +854,8 @@ export default function AccountPage() {
             <Form
               layout="horizontal"
               className="space-y-7"
-              onFinish={editAccountForm.handleSubmit(() =>
-                (values: z.infer<typeof editAccountFormSchema>) => handleSubmitCommon(values, true)
+              onFinish={editAccountForm.handleSubmit((values) =>
+                handleSubmitCommon(values, true)
               )}
             >
               <Controller
@@ -889,26 +899,6 @@ export default function AccountPage() {
 
               <Controller
                 control={editAccountForm.control}
-                name="auditUser"
-                render={({ field }) => (
-                  <Form.Item label="审核">
-                    <Input {...field} className="w-80 h-8" />
-                  </Form.Item>
-                )}
-              />
-
-              <Controller
-                control={editAccountForm.control}
-                name=""
-                render={({ field }) => (
-                  <Form.Item label="模块权限">
-                    <Switch />
-                  </Form.Item>
-                )}
-              />
-
-              <Controller
-                control={editAccountForm.control}
                 name="role"
                 render={({ field }) => (
                   <Form.Item
@@ -939,29 +929,52 @@ export default function AccountPage() {
 
               <Controller
                 control={editAccountForm.control}
+                name="auditUser"
+                render={({ field }) => (
+                  <Form.Item label="”教学科研“上级管理/审核人员">
+                    <Input {...field} className="w-80 h-8" />
+                  </Form.Item>
+                )}
+              />
+
+              <Controller
+                control={editAccountForm.control}
+                name=""
+                render={({ field }) => (
+                  <Form.Item label="“教学科研-虚拟教学空间”模块管理权限">
+                    <Switch />
+                  </Form.Item>
+                )}
+              />
+
+              <Controller
+                control={editAccountForm.control}
                 name="buildingPermissions"
                 render={({ field }) => (
-                  <PermissionTree
-                    checkable
-                    checkedKeys={field.value?.checkedKeys || []}
-                    checkedActions={field.value?.checkedActions || {}}
-                    onCheck={(keys: string[]) => {
-                      field.onChange({
-                        checkedKeys: keys,
-                        checkedActions: field.value?.checkedActions || {},
-                      });
-                    }}
-                    onActionChange={(key: string, actions: string[]) => {
-                      field.onChange({
-                        checkedKeys: [...(field.value?.checkedKeys || []), key],
-                        checkedActions: {
-                          ...(field.value?.checkedActions || {}),
-                          [key]: actions,
-                        },
-                      });
-                    }}
-                    treeData={permissionData}
-                  />
+                  <Form.Item label="楼宇权限">
+                    <Spin spinning={permissionLoading}>
+                      <PermissionTree
+                        checkable
+                        checkedKeys={field.value?.checkedKeys || []}
+                        checkedActions={field.value?.checkedActions || {}}
+                        onChange={(value) => {
+                          // 合并之前的 checkedActions 和当前返回的 checkedActions
+                          const mergedActions = {
+                            ...field.value?.checkedActions,
+                            ...value.checkedActions,
+                          };
+
+                          field.onChange({
+                            ...field.value,
+                            checkedKeys: value.checkedKeys,
+                            checkedActions: mergedActions,
+                          });
+                        }}
+                        treeData={permissionData}
+                        expand={false}
+                      />
+                    </Spin>
+                  </Form.Item>
                 )}
               />
             </Form>
