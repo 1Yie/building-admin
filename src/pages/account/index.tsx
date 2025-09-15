@@ -811,9 +811,15 @@ export default function AccountPage() {
                 control={accountForm.control}
                 name=""
                 render={({ field }) => (
-                  <Form.Item label="“教学科研-虚拟教学空间”模块管理权限">
-                    <Switch />
-                  </Form.Item>
+                  <>
+                    <Form.Item label="“教学科研-虚拟教学空间”模块管理权限">
+                      <Switch />
+                    </Form.Item>
+
+                    <p className="text-sm text-gray-600">
+                      有这个权限的账号才可在“教学科研-虚拟教学空间”创建虚拟空间
+                    </p>
+                  </>
                 )}
               />
 
@@ -941,9 +947,14 @@ export default function AccountPage() {
                 control={editAccountForm.control}
                 name=""
                 render={({ field }) => (
-                  <Form.Item label="“教学科研-虚拟教学空间”模块管理权限">
-                    <Switch />
-                  </Form.Item>
+                  <>
+                    <Form.Item label="“教学科研-虚拟教学空间”模块管理权限">
+                      <Switch />
+                    </Form.Item>
+                    <p className="text-sm text-gray-600">
+                      有这个权限的账号才可在“教学科研-虚拟教学空间”创建虚拟空间
+                    </p>
+                  </>
                 )}
               />
 
