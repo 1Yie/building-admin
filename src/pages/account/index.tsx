@@ -508,20 +508,29 @@ export default function AccountPage() {
       const buildingPermissions = Object.entries(buildingPermissionsRaw)
         .filter(([_, actions]) => actions.length > 0)
         .map(([key, actions]) => {
-          let resourceType = "building";
+          let resourceType:
+            | "building"
+            | "building_space"
+            | "building_space_gateway"
+            | "building_space_gateway_sensor" = "building";
+
           if (key.startsWith("building-KJ")) resourceType = "building_space";
           else if (key.startsWith("building-ZD"))
             resourceType = "building_space_gateway";
           else if (key.startsWith("building-CGQ"))
             resourceType = "building_space_gateway_sensor";
 
+          // 去掉 building- 前缀
+          const permissionName = key.split("-")[1];
+
           return {
             resourceType,
-            permissionName: key.split("-")[1],
+            permissionName,
             action: actions.join(","),
-            department: "test", // TODO: 测试
+            department: "test",
           };
         });
+
       console.log("提交 buildingPermissions:", buildingPermissions);
       // 调用权限更新接口
       await updatePermissionsMutate({
