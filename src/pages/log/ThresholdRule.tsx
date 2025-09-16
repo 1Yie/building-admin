@@ -25,12 +25,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/shadcn/ui/form";
-import {
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shadcn/ui/select";
 import type { PaginationType } from "@/types";
 
 export default function ThresholdRule() {
@@ -115,7 +109,11 @@ export default function ThresholdRule() {
   }
 
   // 表格
-  const { data: thresholdRuleList, isPending, refetch } = useQuery({
+  const {
+    data: thresholdRuleList,
+    isPending,
+    refetch,
+  } = useQuery({
     queryKey: ["getThresholdRuleList", pageParams],
     queryFn: () =>
       getThresholdRuleList({
@@ -153,8 +151,8 @@ export default function ThresholdRule() {
   }
 
   const { mutate: getThresholdRuleDetailsMutate } = useMutation({
-    mutationFn: getThresholdRuleDetails
-  })
+    mutationFn: getThresholdRuleDetails,
+  });
   function handleOpenEditDialog(record: any) {
     setAddOrUpdate("edit");
     setDialogOpen(true);
@@ -162,7 +160,7 @@ export default function ThresholdRule() {
       onSuccess: (data) => {
         thresholdRuleForm.reset(data);
       },
-    })
+    });
   }
 
   const thresholdRuleFormSchema = z.object({
@@ -219,6 +217,9 @@ export default function ThresholdRule() {
           setDialogOpen(false);
           refetch();
         },
+        onError: (error: any) => {
+          toast.error(error.message);
+        },
       });
     } else {
       updateThresholdRuleMutate(data, {
@@ -226,8 +227,11 @@ export default function ThresholdRule() {
           toast.success("编辑成功");
           setDialogOpen(false);
           refetch();
-        }
-      })
+        },
+        onError: (error: any) => {
+          toast.error(error.message);
+        },
+      });
     }
   }
 
@@ -326,7 +330,12 @@ export default function ThresholdRule() {
                   <FormItem className="relative flex items-center gap-5">
                     <FormLabel>传感器字段</FormLabel>
                     <div className="flex flex-col">
-                      <Select onChange={field.onChange} value={field.value} placeholder="传感器字段" style={{ width: 200 }}>
+                      <Select
+                        onChange={field.onChange}
+                        value={field.value}
+                        placeholder="传感器字段"
+                        style={{ width: 200 }}
+                      >
                         {fieldSelectOption?.map((option) => (
                           <Select.Option key={option.type} value={option.type}>
                             {option.name}
@@ -344,9 +353,17 @@ export default function ThresholdRule() {
                   <FormItem className="relative flex items-center gap-5">
                     <FormLabel>使用状态</FormLabel>
                     <div className="flex flex-col">
-                      <Select onChange={field.onChange} value={field.value} placeholder="使用状态" style={{ width: 200 }}>
+                      <Select
+                        onChange={field.onChange}
+                        value={field.value}
+                        placeholder="使用状态"
+                        style={{ width: 200 }}
+                      >
                         {isUsedSelectOption?.map((option) => (
-                          <Select.Option key={option.value} value={option.value}>
+                          <Select.Option
+                            key={option.value}
+                            value={option.value}
+                          >
                             {option.label}
                           </Select.Option>
                         ))}
@@ -388,8 +405,7 @@ export default function ThresholdRule() {
             </form>
           </Form>
         </div>
-      </Modal>  
-
+      </Modal>
     </div>
   );
 }

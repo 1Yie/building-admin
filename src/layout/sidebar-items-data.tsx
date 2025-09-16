@@ -3,7 +3,7 @@ import Control from "@/pages/control";
 import Home from "@/pages/home";
 import Log from "@/pages/log";
 import Personal from "@/pages/personal";
-import Property from "@/pages/property";
+import Property from "@/pages/property/index";
 import Realtime from "@/pages/realtime";
 import Role from "@/pages/role";
 import Settings from "@/pages/settings";
@@ -46,20 +46,20 @@ const sidebarItems = [
 		element: <Log />,
 		permission: "menu_building-日志管理",
 	},
-	// {
-	// 	title: "教学科研",
-	// 	path: "/teaching",
-	// 	icon: "graduation-cap",	
-	// 	element: <Teaching />,
-	// 	permission: "menu_building-教学科研",
-	// },
-	// {
-	// 	title: "智能评估",
-	// 	path: "/evaluation",
-	// 	icon: "key-square",
-	// 	element: <Evaluation />,
-	// 	permission: "menu_building-智能评估",
-	// },
+	{
+		title: "教学科研",
+		path: "/teaching",
+		icon: "graduation-cap",	
+		element: <Teaching />,
+		permission: "menu_building-教学科研",
+	},
+	{
+		title: "智能评估",
+		path: "/evaluation",
+		icon: "key-square",
+		element: <Evaluation />,
+		permission: "menu_building-智能评估",
+	},
 	{
 		title: "角色管理",
 		path: "/role",
