@@ -10,13 +10,12 @@ export interface PermissionResponse {
   actionMap: Record<string, string[]>;
 }
 
-interface TreeNode {
+export interface TreeNode {
   title: string;
   key: string;
-  children: TreeNode[];
+  children: TreeNode[] | undefined;
   item: any | null;
 }
-
 
 interface Props {
   treeData: TreeDataNode[];
@@ -46,6 +45,11 @@ export function PermissionTree({
 }: Props) {
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
 
+  // 检查节点是否是传感器 (通过key判断是否是building-CGQ开头)
+  const isSensor = (node: { key: string } | TreeNode | TreeDataNode) => {
+    return String(node.key).startsWith("building-CGQ");
+  };
+
   const onInternalCheck: TreeProps["onCheck"] = (checkedKeysValue, info) => {
     const keys = Array.isArray(checkedKeysValue)
       ? checkedKeysValue
@@ -54,7 +58,6 @@ export function PermissionTree({
     const newCheckedActions: Record<string, string[]> = { ...checkedActions };
     const actions = ["read", "update", "control"];
 
-    // 收集节点及其所有子节点
     const collectKeys = (node: any): string[] => {
       let all: string[] = [node.key];
       if (node.children)
@@ -62,20 +65,27 @@ export function PermissionTree({
       return all;
     };
 
-    // 对 info.node 及其子节点进行处理
     const affectedKeys = collectKeys(info.node);
 
     if (keys.includes(info.node.key)) {
       // 勾选 > 父子节点权限全选
       affectedKeys.forEach((k) => {
-        newCheckedActions[k] = actions;
+        // 只有传感器节点才赋予 control 权限
+        newCheckedActions[k] = isSensor({
+          key: k,
+          title: "",
+          children: [],
+          item: null,
+        })
+          ? actions
+          : ["read", "update"]; // 非传感器只给 read+update
       });
+
       setExpandedKeys((prev) =>
         Array.from(new Set([...prev, ...affectedKeys]))
       );
-
     } else {
-      // 取消 > 删除父子节点权限，但权限面板保持展开
+      // 取消 > 删除父子节点权限
       affectedKeys.forEach((k) => {
         newCheckedActions[k] = [];
       });
@@ -92,6 +102,14 @@ export function PermissionTree({
     action: string,
     isChecked: boolean
   ) => {
+    // 仅当节点为传感器时，才允许更改控制权限
+    if (
+      action === "control" &&
+      !isSensor({ key, title: "", children: [], item: null })
+    ) {
+      return; // 如果不是传感器，不允许更改 control 权限
+    }
+
     const currentActions = checkedActions[key] || [];
     const updatedActions = isChecked
       ? [...new Set([...currentActions, action])]
@@ -119,6 +137,11 @@ export function PermissionTree({
       const actions = ["read", "update", "control"];
       const checked = checkedActions[node.key as string] || [];
 
+      // 根据是否是传感器，动态决定是否渲染 control 权限
+      const actionToRender = isSensor(node)
+        ? actions // 如果是传感器，渲染所有动作
+        : actions.filter((action) => action !== "control"); // 非传感器，只渲染 read 和 update
+
       return {
         ...node,
         title: (
@@ -141,7 +164,7 @@ export function PermissionTree({
 
             {expandedKeys.includes(node.key as string) && (
               <div className="flex items-center gap-2">
-                {actions.map((action) => (
+                {actionToRender.map((action) => (
                   <Checkbox
                     key={action}
                     checked={checked.includes(action)}

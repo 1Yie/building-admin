@@ -1,4 +1,4 @@
-import { Button, Form, Input, Table, Modal } from "antd";
+import { Button, Form, Input, Table, Modal, Popconfirm } from "antd";
 import { Controller, useForm } from "react-hook-form";
 import { useState } from "react";
 
@@ -47,7 +47,9 @@ export function TeachingSpacePage() {
       render: (_: any, record: any) => (
         <div className="flex gap-2">
           <Button type="default">查看</Button>
-          <Button type="default">删除</Button>
+          <Popconfirm title="确定删除吗？" okText="确定" cancelText="取消">
+            <Button type="default">删除</Button>
+          </Popconfirm>
         </div>
       ),
     },

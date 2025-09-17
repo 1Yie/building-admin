@@ -1,4 +1,5 @@
 import type { start } from "repl";
+import { updateProperty } from "./property";
 
 function combineAuthorityUrl(url: string) {
   return `${import.meta.env.VITE_BASE_URL}${url}`;
@@ -116,6 +117,17 @@ export const urls = {
     // 进入/退出虚拟空间
     enterVirtual: combineUrl("/virtual/enter"),
     quitVirtual: combineUrl("/virtual/quit"),
+
+    // 查询资产
+    getAssetsByBuilding: combineUrl("/virtual/propertypage/get_property"),
+    // 添加新资产
+    addProperty: combineUrl("/virtual/propertypage/add_property"),
+    // 设置资产的启用状态(v2)
+    setPropertyStatus: combineUrl("/virtual/propertypage/set_property_used"),
+    // 更新资产(v2)
+    updateProperty: combineUrl("/virtual/propertypage/update_property"),
+    // 查询分页资产总表(v2)
+    searchInfo: combineUrl("/virtual/propertypage/search_info"),
 
     teaching: {
       // 教学空间

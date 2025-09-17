@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
 
 interface UserInfo {
+  username: string;
   remark_name: string;
   menu_building?: string[];
 }

@@ -49,8 +49,10 @@ export default function HomePage() {
   >("daily");
 
   const hasPermission = (perm: string) => permissions.includes(perm);
-  const hasOnlyHomepage =
-    permissions.length === 1 && permissions[0] === "menu_building-首页";
+
+  const hasAvailablePermission = permissions.some((p) =>
+    ["menu_building-楼宇资产", "menu_building-日志管理"].includes(p)
+  );
 
   const hasParentPermission = (parent: string) =>
     permissions.some(
@@ -61,13 +63,14 @@ export default function HomePage() {
 
   return (
     <div className="p-5">
-      {isLoggedIn && (permissions.length === 0 || hasOnlyHomepage) && (
+      {isLoggedIn && !hasAvailablePermission && (
         <div className="h-full flex flex-col items-center justify-center gap-4">
           <CircleSlash size={100} />
           <h1 className="text-2xl font-bold">无权限</h1>
           <p className="text-gray-500">你貌似没有任何权限访问状态信息</p>
         </div>
       )}
+      
       <div className="gap-5 grid grid-cols-3">
         {hasPermission("menu_building-实时数据") && device_unit && (
           <Card className="border-gray-100/50 w-full h-35">

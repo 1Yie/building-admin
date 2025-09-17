@@ -1,11 +1,20 @@
-import { Button, Table, Tag, Form, Input, Select, Modal } from "antd";
+import {
+  Button,
+  Table,
+  Tag,
+  Form,
+  Input,
+  Select,
+  Modal,
+  Popconfirm,
+} from "antd";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 
 interface Application {
   key: string;
   applicationNumber: string;
-  applicationTime: string;
+  applicationTime: string;2273
   applicationContent: string;
   status: "待审核" | "通过" | "驳回";
   reviewer: string;
@@ -163,7 +172,9 @@ export default function SourceApplicationPage() {
       render: (_: any, record: Application) => (
         <div className="flex gap-2">
           <Button type="default">查看</Button>
-          <Button type="default">删除</Button>
+          <Popconfirm title="确定删除吗？" okText="确定" cancelText="取消">
+            <Button type="default">删除</Button>
+          </Popconfirm>
         </div>
       ),
     },
