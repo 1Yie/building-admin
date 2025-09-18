@@ -55,7 +55,7 @@ export function AppSidebar() {
           const decoded = jwtDecode(token) as UserInfo;
           const decodedMenu = jwtDecode(token) as UserMenuBuilding;
           setUserInfo(decoded);
-          console.log(decodedMenu);
+          console.log("JWT解析: ", decoded);
 
           // 设置用户权限
           const decodedMenuPermissions = (decodedMenu.menu_building || []).map(
