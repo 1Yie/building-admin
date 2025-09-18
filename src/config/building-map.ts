@@ -56,6 +56,48 @@ export const buildingMaps: BuildingMap[] = [
           },
         ],
       },
+      {
+        key: "building-KJ0034",
+        title: "研究生工作室",
+        x: 1150,
+        y: 650,
+        width: 200,
+        height: 160,
+        terminals: [
+          {
+            key: "building-ZD0036",
+            title: "91330109031",
+          },
+        ],
+      },
+      {
+        key: "building-KJ0031",
+        title: "人工智能创新技术展示室",
+        x: 1950,
+        y: 350,
+        width: 220,
+        height: 160,
+        terminals: [
+          {
+            key: "building-ZD0033",
+            title: "91330109035",
+          },
+        ],
+      },
+      {
+        key: "building-KJ0026",
+        title: "网络实验室",
+        x: 1420,
+        y: 0,
+        width: 220,
+        height: 260,
+        terminals: [
+          {
+            key: "building-ZD0027",
+            title: "91330109041",
+          },
+        ],
+      },
     ],
   },
 ];

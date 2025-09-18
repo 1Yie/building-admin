@@ -47,6 +47,10 @@ export default function PropertyVis() {
     naturalHeight: 0,
   });
   const [allSensorFields, setAllSensorFields] = useState<any[]>([]);
+  const [sensorDataMap, setSensorDataMap] = useState<Map<string, any>>(new Map());
+
+  // 添加请求取消控制器的引用
+  const abortControllerRef = useRef<AbortController | null>(null);
 
 
   const {
@@ -114,10 +118,6 @@ export default function PropertyVis() {
 
     fetchAllSensorFields(rawData);
   }, [permissionDataResponse]);
-
-
-
-
 
   // 处理错误
   useEffect(() => {
@@ -336,8 +336,106 @@ export default function PropertyVis() {
     };
   };
 
+  // 获取字段单位
+  // const getFieldUnit = (field: string): string => {
+  //   const fieldLower = field.toLowerCase();
+  //   const unitMap: { [key: string]: string } = {
+  //     'temperature': '°C',
+  //     'temp': '°C',
+  //     'humidity': '%',
+  //     'humi': '%',
+  //     'pressure': 'kPa',
+  //     'co2': 'ppm',
+  //     'pm25': 'μg/m³',
+  //     'pm10': 'μg/m³',
+  //     'tvoc': 'ppb',
+  //     'noise': 'dB'
+  //   };
+  //   return unitMap[fieldLower] || '';
+  // };
+
+  // 获取指定空间下的传感器数据
+  const getSensorDataForSpace = async (spaceNode: PermissionNode, signal?: AbortSignal): Promise<any> => {
+    if (!spaceNode.children) return null;
+
+    // 查找该空间下的所有传感器
+    const sensors: PermissionNode[] = [];
+
+    function collectSensors(node: PermissionNode) {
+      if (!node.children) return;
+
+      node.children.forEach(child => {
+        if (child.key.includes('CGQ')) {
+          // 这是传感器节点
+          sensors.push(child);
+        } else {
+          // 继续递归查找（可能是终端节点）
+          collectSensors(child);
+        }
+      });
+    }
+
+    collectSensors(spaceNode);
+
+    if (sensors.length === 0) return null;
+
+    // 获取第一个传感器的数据作为代表（实际项目中可能需要聚合多个传感器数据）
+    try {
+      // 检查请求是否已被取消
+      if (signal?.aborted) {
+        throw new Error('Request aborted');
+      }
+
+      const sensorId = sensors[0].key.replace('building-', '');
+      const sensorData = await getSensorDetail(sensorId);
+      console.log("sensorData", sensorData)
+
+      // 再次检查请求是否已被取消
+      if (signal?.aborted) {
+        throw new Error('Request aborted');
+      }
+
+      if (sensorData?.property && sensorData.property.length > 0) {
+        const latestData: any = {};
+
+
+        sensorData.property.forEach((prop: any) => {
+          if (prop.values && prop.values.length > 0 && prop.times && prop.times.length > 0) {
+            // 取最新的值（数组最后一个元素）
+            const latestValue = prop.values[prop.values.length - 1];
+            const latestTime = prop.times[prop.times.length - 1];
+
+            latestData[prop.field] = {
+              value: latestValue,
+              time: latestTime,
+              name: prop.name
+            };
+          } else {
+            latestData[prop.field] = {
+              value: '--',
+              time: null,
+              name: prop.name
+            };
+          }
+        });
+
+
+
+        return latestData;
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Request aborted') {
+        console.log('传感器数据请求已取消');
+        return null;
+      }
+      console.error('获取传感器数据失败:', error);
+    }
+
+    return null;
+  };
+
   // 获取楼宇下的所有空间数据
-  const getBuildingData = () => {
+  const getBuildingData = async (signal?: AbortSignal) => {
     if (!selectedNode || !currentBuildingMap) {
       return [];
     }
@@ -372,7 +470,12 @@ export default function PropertyVis() {
     const spaceDataList: any[] = [];
 
     // 根据building-map.ts配置收集空间数据
-    currentBuildingMap.rooms.forEach((roomConfig) => {
+    for (const roomConfig of currentBuildingMap.rooms) {
+      // 检查请求是否已被取消
+      if (signal?.aborted) {
+        throw new Error('Request aborted');
+      }
+
       // 查找对应的空间节点
       const spaceNode = findSpaceNodeByKey(roomConfig.key, parentBuilding);
 
@@ -381,9 +484,9 @@ export default function PropertyVis() {
         const shouldHighlight = targetSpaceKey === spaceNode.key;
 
         console.log('shouldHighlight', shouldHighlight);
-        addSpaceData(roomConfig, spaceNode, spaceDataList);
+        await addSpaceData(roomConfig, spaceNode, spaceDataList, shouldHighlight, signal);
       }
-    });
+    }
 
     // 只添加空间数据
     seriesData.push(...spaceDataList);
@@ -396,9 +499,10 @@ export default function PropertyVis() {
     if (!buildingNode.children) return null;
     return buildingNode.children.find(child => child.key === spaceKey) || null;
   };
+  
 
   // 添加空间数据
-  const addSpaceData = (roomConfig: RoomInfo, spaceNode: PermissionNode, seriesData: any[]) => {
+  const addSpaceData = async (roomConfig: RoomInfo, spaceNode: PermissionNode, seriesData: any[], shouldHighlight: boolean, signal?: AbortSignal) => {
     const spaceCoords = convertToContainerCoords(
       roomConfig.x,
       roomConfig.y,
@@ -406,8 +510,47 @@ export default function PropertyVis() {
       roomConfig.height
     );
 
+    // 获取该空间的传感器数据
+    const sensorData = await getSensorDataForSpace(spaceNode, signal);
+
+
+
     console.log("selectedNode", selectedNode?.key)
     console.log("spaceNode", spaceNode?.key)
+
+    // 判断在线状态：根据传感器数据的最新时间判断
+    let onlineStatus = 'offline'; // 默认离线
+    let onlineCount = 0;
+    let totalSensors = 0;
+
+    if (sensorData && Object.keys(sensorData).length > 0) {
+      const currentTime = new Date().getTime();
+      const fiveMinutesAgo = currentTime - 5 * 60 * 1000; // 5分钟前的时间戳
+
+      // 检查所有传感器字段的最新时间
+      for (const field in sensorData) {
+        const sensorInfo = sensorData[field];
+        totalSensors++;
+        console.log("sensorInfo", sensorInfo.time)
+
+        if (sensorInfo && sensorInfo.time) {
+          const sensorTime = new Date(sensorInfo.time).getTime();
+          if (sensorTime > fiveMinutesAgo) {
+            onlineCount++;
+          }
+        }
+        // time 为 null 或 undefined 的传感器视为离线，不增加 onlineCount
+      }
+
+      // 根据在线传感器数量确定状态
+      if (onlineCount === totalSensors && totalSensors > 0) {
+        onlineStatus = 'online'; // 全部在线
+      } else if (onlineCount > 0) {
+        onlineStatus = `partial-${totalSensors - onlineCount}`; // 部分在线（几个离线）
+      } else {
+        onlineStatus = 'offline'; // 全部离线
+      }
+    }
 
     seriesData.push({
       name: roomConfig.title,
@@ -416,13 +559,19 @@ export default function PropertyVis() {
       spaceKey: spaceNode.key,
       coords: spaceCoords,
       roomConfig,
-      isSelected: selectedNode?.key === spaceNode.key
+      isSelected: shouldHighlight,
+      sensorData: sensorData || {}, // 添加传感器数据
+      online: onlineStatus, // 详细的在线状态信息
+      onlineCount, // 在线传感器数量
+      totalSensors // 总传感器数量
     });
-
   };
 
   // ECharts 配置
-  const getOption = () => {
+  const [chartOption, setChartOption] = useState<any>({});
+  const [isLoadingData, setIsLoadingData] = useState(false);
+
+  const getOption = async (signal?: AbortSignal) => {
     if (!currentBuildingMap || !selectedNode) {
       return {
         title: { text: selectedNode?.title || "请选择楼宇", left: "center", top: 10 },
@@ -432,7 +581,7 @@ export default function PropertyVis() {
       };
     }
 
-    const seriesData = getBuildingData();
+    const seriesData = await getBuildingData(signal);
 
     return {
       title: { text: selectedNode.title, left: "center", top: 10 },
@@ -452,21 +601,48 @@ export default function PropertyVis() {
             const width = endCoord[0] - startCoord[0];
             const height = endCoord[1] - startCoord[1];
 
-            // 文字行数据，带颜色、粗体和背景色
-            const lines = [
-              { text: `${data.name}`, color: "#333", bold: true },
-              { text: `温度: 26°C`, color: "#333", bold: false },
-              { text: `气温: 32°C`, color: "#333", bold: false },
-            ];
+            // 使用真实的传感器数据
+            const sensorData = data.sensorData || {};
+            const sensorFields = Object.keys(sensorData);
 
+            const lines = [{ text: `${data.name}`, color: "#333", bold: true }];
+
+            // 计算矩形可容纳的最大行数
             const paddingTop = 4;
+            const paddingBottom = 4;
             const lineHeight = 16;
+            const maxLines = Math.floor((Math.abs(height) - paddingTop - paddingBottom) / lineHeight);
+
+            // 动态添加传感器数据行，但不超过矩形高度
+            if (sensorFields.length > 0 && maxLines > 1) {
+              // 除了标题行，剩余可显示的行数
+              const availableLines = maxLines - 1;
+              const displayFields = sensorFields.slice(0, Math.min(availableLines, 2));
+
+              displayFields.forEach(field => {
+                const sensorInfo = sensorData[field];
+
+                if (sensorInfo && sensorInfo.value !== undefined) {
+                  // 从field中提取显示名称，去掉括号内容
+                  const displayName = field.replace(/\(.*?\)/g, '').trim();
+                  const value = sensorInfo.value;
+
+                  lines.push({ text: `${displayName}: ${value}`, color: "#333", bold: false });
+                }
+              });
+            } else if (sensorFields.length === 0 && maxLines > 1) {
+              lines.push({ text: '暂无传感器数据', color: "#999", bold: false });
+            }
+
             const topY = Math.min(startCoord[1], endCoord[1]);
             const fontSize = Math.min(12, lineHeight - 2);
 
             const textElements: any[] = [];
 
-            lines.forEach((item, idx) => {
+            // 只渲染能够完全显示在矩形内的文字行
+            const linesToRender = lines.slice(0, maxLines);
+
+            linesToRender.forEach((item, idx) => {
               const textY = topY + paddingTop + idx * lineHeight;
 
               // 背景矩形
@@ -479,7 +655,7 @@ export default function PropertyVis() {
                   height: lineHeight,
                   r: 2,
                 },
-                style: { fill: item.bgColor },
+                style: { fill: "rgba(255, 255, 255, 0.8)" },
                 silent: true,
               });
 
@@ -511,8 +687,32 @@ export default function PropertyVis() {
                   type: "rect",
                   shape: { x: startCoord[0], y: startCoord[1], width, height, r: 4 },
                   style: {
-                    fill: data.isSelected ? "rgba(24, 144, 255, 0.7)" : "rgba(24, 144, 255, 0.7)",
-                    stroke: data.isSelected ? "#1890ff" : "#40a9ff",
+                    fill: (() => {
+                      // if (data.isSelected &&) {
+                      //   return "rgba(24, 144, 255, 0.7)";
+                      // }
+                      // 根据在线状态设置颜色
+                      if (data.online === 'online') {
+                        return "rgba(82, 196, 26, 0.7)"; // 绿色 - 全部在线
+                      } else if (data.online && data.online.startsWith('partial-')) {
+                        return "rgba(250, 173, 20, 0.7)"; // 橙色 - 部分在线
+                      } else {
+                        return "rgba(245, 34, 45, 0.7)"; // 红色 - 离线
+                      }
+                    })(),
+                    stroke: (() => {
+                      // if (data.isSelected) {
+                      //   return "#1890ff";
+                      // }
+                      // 根据在线状态设置边框颜色
+                      if (data.online === 'online') {
+                        return "#52c41a"; // 绿色边框
+                      } else if (data.online && data.online.startsWith('partial-')) {
+                        return "#faad14"; // 橙色边框
+                      } else {
+                        return "#f5222d"; // 红色边框
+                      }
+                    })(),
                     lineWidth: 1,
                   },
                   silent: false,
@@ -531,16 +731,52 @@ export default function PropertyVis() {
 
           if (!data) return "";
           if (data.type === "space") {
+            const sensorData = data.sensorData || {};
+
+            // 动态生成传感器数据显示
+            const sensorFields = Object.keys(sensorData);
+            let sensorDataHtml = '';
+
+            if (sensorFields.length > 0) {
+              const displayFields = sensorFields.slice(0, 6); // 最多显示6个字段
+              sensorDataHtml = displayFields.map(field => {
+                const sensorInfo = sensorData[field];
+                if (sensorInfo && sensorInfo.value !== undefined) {
+                  // 从field中提取显示名称，去掉括号内容
+                  const displayName = field;
+                  const value = sensorInfo.value;
+
+                  return `<span style="flex: 0 0 33%;">${displayName}: ${value}</span>`;
+                }
+                return '';
+              }).filter(item => item !== '').join('');
+            } else {
+              sensorDataHtml = '<span style="color: #999;">暂无传感器数据</span>';
+            }
+
+            // 生成状态显示文本和颜色
+            let statusText = '';
+            let statusColor = '';
+            
+            if (data.online === 'online') {
+              statusText = '在线';
+              statusColor = '#52c41a';
+            } else if (data.online && data.online.startsWith('partial-')) {
+              const offlineCount = data.online.split('-')[1];
+              statusText = `部分在线 (${offlineCount}个离线)`;
+              statusColor = '#faad14';
+            } else {
+              statusText = '离线';
+              statusColor = '#ff4d4f';
+            }
+
             return `
           <div style="font-size:14px;color:#fff;">
             <b>${data.name}</b><br/>
-            <div>状态: <b><span style="color:${data.online ? '#52c41a' : '#ff4d4f'}">${data.online ? '在线' : '离线'}</span></b><br/></div>
+            <div>状态: <b><span style="color:${statusColor}">${statusText}</span></b></div>
+            <div>传感器: <span style="color:#ccc">${data.onlineCount || 0}/${data.totalSensors || 0} 在线</span><br/></div>
               <div style="display: flex; flex-wrap: wrap; gap: 2px; margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.2)">
-                  <span style="flex: 0 0 25%;">温度: 26℃</span>
-                  <span style="flex: 0 0 25%;">气压: 101kPa</span>
-                  <span style="flex: 0 0 25%;">湿度: 45%</span>
-                  <span style="flex: 0 0 25%;">CO2: 450ppm</span>
-                  <span style="flex: 0 0 25%;">PM2.5: 12μg/m³</span>
+                  ${sensorDataHtml}
 </div>
 
             <div style="color:#999;font-size:14px;margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.2)">更新时间: <b>${new Date().toLocaleString("zh-CN")}</b></div>
@@ -594,25 +830,34 @@ export default function PropertyVis() {
 
   // 监听容器大小变化
   useEffect(() => {
+    let resizeTimer: NodeJS.Timeout | null = null;
+    
     const resizeChart = () => {
-      if (currentBuildingMap) {
-        const img = new Image();
-        img.onload = () => {
-          calculateImageBounds(img.naturalWidth, img.naturalHeight);
-        };
-        img.src = currentBuildingMap.background;
+      // 清除之前的定时器，实现防抖
+      if (resizeTimer) {
+        clearTimeout(resizeTimer);
       }
+      
+      resizeTimer = setTimeout(() => {
+        if (currentBuildingMap) {
+          const img = new Image();
+          img.onload = () => {
+            calculateImageBounds(img.naturalWidth, img.naturalHeight);
+          };
+          img.src = currentBuildingMap.background;
+        }
 
-      if (chartRef.current) {
-        setTimeout(() => {
-          const echartsInstance = (
-            chartRef.current as any
-          ).getEchartsInstance();
-          if (echartsInstance) {
-            echartsInstance.resize();
-          }
-        }, 100);
-      }
+        if (chartRef.current) {
+          setTimeout(() => {
+            const echartsInstance = (
+              chartRef.current as any
+            ).getEchartsInstance();
+            if (echartsInstance) {
+              echartsInstance.resize();
+            }
+          }, 100);
+        }
+      }, 300); // 300ms防抖延迟
     };
 
     // 初始化时确保容器有正确的尺寸
@@ -649,6 +894,14 @@ export default function PropertyVis() {
     }
 
     return () => {
+      // 清理定时器
+      if (resizeTimer) {
+        clearTimeout(resizeTimer);
+      }
+      // 取消正在进行的请求
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
       window.removeEventListener("resize", resizeChart);
       if (resizeObserver) {
         resizeObserver.disconnect();
@@ -657,12 +910,50 @@ export default function PropertyVis() {
   }, [currentBuildingMap]);
 
   useEffect(() => {
-    if (chartRef.current && imageSize.width > 0) {
-      const echartsInstance = (chartRef.current as any).getEchartsInstance();
-      if (echartsInstance) {
-        echartsInstance.setOption(getOption());
+    const updateChart = async () => {
+      if (chartRef.current && imageSize.width > 0) {
+        // 如果正在加载数据，跳过这次更新
+        if (isLoadingData) {
+          return;
+        }
+
+        // 取消之前的请求
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+
+        // 创建新的取消控制器
+        abortControllerRef.current = new AbortController();
+        const signal = abortControllerRef.current.signal;
+
+        setIsLoadingData(true);
+        try {
+          const echartsInstance = (chartRef.current as any).getEchartsInstance();
+          if (echartsInstance) {
+            const option = await getOption(signal);
+            
+            // 检查请求是否已被取消
+            if (!signal.aborted) {
+              setChartOption(option);
+              echartsInstance.setOption(option);
+            }
+          }
+        } catch (error) {
+          if (error instanceof Error && error.message === 'Request aborted') {
+            console.log('图表更新请求已取消');
+          } else {
+            console.error('更新图表失败:', error);
+          }
+        } finally {
+          // 只有在请求没有被取消的情况下才设置加载状态为false
+          if (!signal.aborted) {
+            setIsLoadingData(false);
+          }
+        }
       }
-    }
+    };
+
+    updateChart();
   }, [selectedNode, imageSize, currentBuildingMap]);
 
   return (
@@ -716,9 +1007,15 @@ export default function PropertyVis() {
             backgroundPosition: "center",
           }}
         >
+          {isLoadingData && (
+            <div className="absolute inset-0 flex items-center justify-center  bg-opacity-50 z-10">
+              <Spin size="large" tip="正在加载传感器数据..." />
+            </div>
+          )}
           <ReactECharts
+          className="rounded-md"
             ref={chartRef}
-            option={getOption()}
+            option={chartOption || {}}
             onEvents={{
               click: onChartClick,
             }}
