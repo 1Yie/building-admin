@@ -995,6 +995,8 @@ export default function PropertyVis() {
         triggerOn: "mousemove",
         formatter: (params: any) => {
           const data = params.data;
+          const cleanSensorId = data.sensorKey.startsWith('building-') ? data.sensorKey.slice(9) : data.sensorKey;
+          const cleanTerminalKey = data.terminalKey.startsWith('building-') ? data.terminalKey.slice(9) : data.terminalKey;
           if (!data) return "";
 
           if (data.type === "space") {
@@ -1008,8 +1010,8 @@ export default function PropertyVis() {
           if (data.type === "sensor") {
             let tooltip = `<div style="padding: 2px;">`;
             tooltip += `<div style="font-weight: bold; margin-bottom: 6px; color: #fff;">${data.name}</div>`;
-            tooltip += `<div style="margin-bottom: 4px;">传感器ID: ${data.sensorKey}</div>`;
-            tooltip += `<div style="margin-bottom: 4px;">所属终端: ${data.terminalKey}</div>`;
+            tooltip += `<div style="margin-bottom: 4px;">传感器ID: ${cleanSensorId}</div>`;
+            tooltip += `<div style="margin-bottom: 4px;">所属终端: ${cleanTerminalKey}</div>`;
 
             const globalWindow = window as any;
             const propertyId = data.sensorKey.replace("building-", "");
