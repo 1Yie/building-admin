@@ -94,14 +94,6 @@ export default function PropertyVis() {
     console.log("收集到的传感器 ID:", sensorIds);
 
     try {
-      // 并发请求（这里可以改成分批请求避免压力太大）
-      // const results = await Promise.all(sensorIds.map(id => getSensorDetail(id)));
-
-      // 合并所有字段
-      // const allFields = results.flatMap((res: any) => res.property || []);
-      // console.log("所有传感器字段:", allFields);
-
-      // setAllSensorFields(allFields);
     } catch (err) {
       console.error("获取所有传感器字段失败:", err);
     }
@@ -120,8 +112,10 @@ export default function PropertyVis() {
 
     setCheckedKeys(rawData.check || []);
 
-    fetchAllSensorFields(rawData); // ✅ 直接调用
+    fetchAllSensorFields(rawData);
   }, [permissionDataResponse]);
+
+
 
 
 
@@ -143,6 +137,64 @@ export default function PropertyVis() {
   // 处理勾选事件
   const onCheck = (checkedKeysValue: any) => {
     setCheckedKeys(checkedKeysValue as string[]);
+  };
+
+  // 检测节点类型
+  const getNodeType = (nodeKey: string): 'building' | 'space' | 'terminal' | 'sensor' | 'unknown' => {
+    if (nodeKey.includes("building-LY")) return 'building';
+    if (nodeKey.includes("building-KJ")) return 'space';
+    if (nodeKey.includes("building-ZD")) return 'terminal';
+    if (nodeKey.includes("building-CGQ")) return 'sensor';
+    return 'unknown';
+  };
+
+  // 查找节点的父空间
+  const findParentSpace = (nodeKey: string, nodes: PermissionNode[]): PermissionNode | null => {
+    const nodeType = getNodeType(nodeKey);
+
+    // 如果本身就是空间节点，直接返回
+    if (nodeType === 'space') {
+      return findNodeByKey(nodeKey, nodes);
+    }
+
+    // 如果是终端或传感器，查找其父空间
+    if (nodeType === 'terminal' || nodeType === 'sensor') {
+      return findParentSpaceRecursive(nodeKey, nodes);
+    }
+
+    return null;
+  };
+
+  // 递归查找父空间
+  const findParentSpaceRecursive = (nodeKey: string, nodes: PermissionNode[]): PermissionNode | null => {
+    for (const node of nodes) {
+      if (getNodeType(node.key) === 'space') {
+        // 检查这个空间是否包含目标节点
+        if (checkNodeContains(node, nodeKey)) {
+          return node;
+        }
+      }
+
+      // 递归搜索子节点
+      if (node.children) {
+        const found = findParentSpaceRecursive(nodeKey, node.children);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  // 根据key查找节点
+  const findNodeByKey = (nodeKey: string, nodes: PermissionNode[]): PermissionNode | null => {
+    for (const node of nodes) {
+      if (node.key === nodeKey) return node;
+
+      if (node.children) {
+        const found = findNodeByKey(nodeKey, node.children);
+        if (found) return found;
+      }
+    }
+    return null;
   };
 
   // 查找节点的父楼宇
@@ -292,10 +344,28 @@ export default function PropertyVis() {
 
     const seriesData: any[] = [];
 
+
     // 找到父楼宇节点
     const parentBuilding = findParentBuilding(selectedNode.key, permissionData);
     if (!parentBuilding || !currentBuildingMap.rooms) {
       return [];
+    }
+
+    // 获取选择节点的类型
+    const selectedNodeType = getNodeType(selectedNode.key);
+
+
+    // 确定要高亮的空间
+    let targetSpaceKey: string | null = null;
+
+    if (selectedNodeType === 'space') {
+      // 如果选择的是空间，高亮该空间
+      targetSpaceKey = selectedNode.key;
+    } else if (selectedNodeType === 'terminal' || selectedNodeType === 'sensor') {
+      // 如果选择的是终端或传感器，高亮其所在的空间
+      const parentSpace = findParentSpace(selectedNode.key, permissionData);
+      console.log('parentSpace', parentSpace);
+      targetSpaceKey = parentSpace?.key || null;
     }
 
     // 只收集空间数据
@@ -307,7 +377,10 @@ export default function PropertyVis() {
       const spaceNode = findSpaceNodeByKey(roomConfig.key, parentBuilding);
 
       if (spaceNode) {
-        // 收集空间数据
+        // 收集空间数据，判断是否应该高亮
+        const shouldHighlight = targetSpaceKey === spaceNode.key;
+
+        console.log('shouldHighlight', shouldHighlight);
         addSpaceData(roomConfig, spaceNode, spaceDataList);
       }
     });
@@ -333,6 +406,9 @@ export default function PropertyVis() {
       roomConfig.height
     );
 
+    console.log("selectedNode", selectedNode?.key)
+    console.log("spaceNode", spaceNode?.key)
+
     seriesData.push({
       name: roomConfig.title,
       value: [spaceCoords.x + spaceCoords.width / 2, spaceCoords.y + spaceCoords.height / 2],
@@ -342,6 +418,7 @@ export default function PropertyVis() {
       roomConfig,
       isSelected: selectedNode?.key === spaceNode.key
     });
+
   };
 
   // ECharts 配置
@@ -377,9 +454,9 @@ export default function PropertyVis() {
 
             // 文字行数据，带颜色、粗体和背景色
             const lines = [
-              { text: `${data.name}`, color: "#333", bold: true, bgColor: "rgba(255,255,255,0.2)" },
-              { text: `温度: 26°C`, color: "#1890ff", bold: false, bgColor: "rgba(255,255,255,0.1)" },
-              { text: `气温: 32°C`, color: "#f5222d", bold: false, bgColor: "rgba(255,255,255,0.1)" },
+              { text: `${data.name}`, color: "#333", bold: true },
+              { text: `温度: 26°C`, color: "#333", bold: false },
+              { text: `气温: 32°C`, color: "#333", bold: false },
             ];
 
             const paddingTop = 4;
@@ -434,7 +511,7 @@ export default function PropertyVis() {
                   type: "rect",
                   shape: { x: startCoord[0], y: startCoord[1], width, height, r: 4 },
                   style: {
-                    fill: data.isSelected ? "rgba(24, 144, 255, 0.2)" : "rgba(24, 144, 255, 0.1)",
+                    fill: data.isSelected ? "rgba(24, 144, 255, 0.7)" : "rgba(24, 144, 255, 0.7)",
                     stroke: data.isSelected ? "#1890ff" : "#40a9ff",
                     lineWidth: 1,
                   },
