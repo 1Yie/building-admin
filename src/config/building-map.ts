@@ -3,10 +3,6 @@ import Floor1Pic from "@/assets/1楼.png";
 export interface TerminalInfo {
   key: string;
   title: string;
-  x: number;
-  y: number;
-  width?: number;
-  height?: number;
 }
 
 export interface RoomInfo {
@@ -35,36 +31,28 @@ export const buildingMaps: BuildingMap[] = [
       {
         key: "building-KJ0036",
         title: "双创中心",
-        x: 250,
-        y: 150,
-        width: 180,
-        height: 200,
+        x: -45,
+        y: 30,
+        width: 200,
+        height: 250,
         terminals: [
           {
             key: "building-ZD0038",
             title: "91330109040",
-            x: 250,
-            y: 180,
-            width: 60,
-            height: 40,
           },
         ],
       },
       {
         key: "building-KJ0035",
         title: "研究生工作室",
-        x: 440,
+        x: 190,
         y: 660,
-        width: 200,
-        height: 180,
+        width: 260,
+        height: 190,
         terminals: [
           {
             key: "building-ZD0037",
             title: "91330109027",
-            x: 440,
-            y: 710,
-            width: 60,
-            height: 40,
           },
         ],
       },

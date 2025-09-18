@@ -46,3 +46,29 @@ export function getSensorList(
 ): Promise<GetSensorListResponse> {
 	return request.get(urls.realtime.getSensorList, { params: data });
 }
+
+// 获取单个传感器详情数据
+interface GetSensorDetailParams {
+	property_id: string;
+}
+
+interface GetSensorDetailResponse {
+	page: {
+		pageNum: number;
+		pageSize: number;
+		totalSize: number;
+	};
+	property: {
+		property_id: string;
+		field: string;
+		name: string;
+		values: number[];
+		times: string[];
+	}[];
+}
+
+export function getSensorDetail(
+	property_id: string,
+): Promise<GetSensorDetailResponse> {
+	return request.get(`${urls.realtime.getSensorList}?property_id=${property_id}`);
+}

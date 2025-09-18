@@ -24,7 +24,8 @@ export const urls = {
     accountCreate: combineAuthorityUrl("/authority/user/create"),
     accountDelete: combineAuthorityUrl("/authority/user/delete"),
     accountPasswordReset: combineAuthorityUrl("/authority/user/password/reset"),
-    // 没做完
+    
+    
     accountPermission: combineAuthorityUrl(
       "/authority/manager/permission/builder/list/task/all"
     ),
