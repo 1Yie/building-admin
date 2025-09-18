@@ -1,5 +1,13 @@
 import Floor1Pic from "@/assets/1楼.png";
 
+// 楼层背景图配置
+export const floorBackgrounds: { [floor: number]: string } = {
+  1: Floor1Pic,
+  // 可以添加更多楼层的背景图
+  // 2: Floor2Pic,
+  // 3: Floor3Pic,
+};
+
 export interface TerminalInfo {
   key: string;
   title: string;
@@ -12,13 +20,13 @@ export interface RoomInfo {
   y: number;
   width: number;
   height: number;
+  floor: number;
   terminals: TerminalInfo[];
 }
 
 export interface BuildingMap {
   key: string;
   title: string;
-  background: string;
   rooms: RoomInfo[];
 }
 
@@ -26,7 +34,7 @@ export const buildingMaps: BuildingMap[] = [
   {
     key: "building-LY0001",
     title: "交通楼电子电气学院",
-    background: Floor1Pic,
+  
     rooms: [
       {
         key: "building-KJ0036",
@@ -35,6 +43,7 @@ export const buildingMaps: BuildingMap[] = [
         y: 30,
         width: 200,
         height: 250,
+        floor: 1, // 一楼
         terminals: [
           {
             key: "building-ZD0038",
@@ -49,6 +58,7 @@ export const buildingMaps: BuildingMap[] = [
         y: 660,
         width: 260,
         height: 190,
+        floor: 1, // 一楼
         terminals: [
           {
             key: "building-ZD0037",
@@ -63,6 +73,7 @@ export const buildingMaps: BuildingMap[] = [
         y: 650,
         width: 200,
         height: 160,
+        floor: 1, // 一楼
         terminals: [
           {
             key: "building-ZD0036",
@@ -77,6 +88,7 @@ export const buildingMaps: BuildingMap[] = [
         y: 350,
         width: 220,
         height: 160,
+        floor: 1, // 一楼
         terminals: [
           {
             key: "building-ZD0033",
@@ -91,6 +103,7 @@ export const buildingMaps: BuildingMap[] = [
         y: 0,
         width: 220,
         height: 260,
+        floor: 1, // 一楼
         terminals: [
           {
             key: "building-ZD0027",

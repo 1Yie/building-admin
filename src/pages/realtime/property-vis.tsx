@@ -4,7 +4,7 @@ import ReactECharts from "echarts-for-react";
 import { useQuery } from "@tanstack/react-query";
 import { permissionList } from "@/request/account";
 import type { TreeDataNode } from "antd";
-import { buildingMaps } from "@/config/building-map";
+import { buildingMaps, floorBackgrounds } from "@/config/building-map";
 import { getSensorList, getSensorDetail } from "@/request/realtime";
 import type {
   BuildingMap,
@@ -35,6 +35,7 @@ export default function PropertyVis() {
   const [checkedKeys, setCheckedKeys] = useState<string[]>([]);
   const [selectedNode, setSelectedNode] = useState<PermissionNode | null>(null);
   const [currentBuildingMap, setCurrentBuildingMap] = useState<BuildingMap | null>(null);
+  const [currentFloor, setCurrentFloor] = useState<number | null>(null); // 添加当前楼层状态
   const chartRef = useRef(null);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const [chartSize, setChartSize] = useState({ width: 0, height: 0 });
@@ -254,23 +255,72 @@ export default function PropertyVis() {
       const buildingMap = buildingMaps.find((map) => map.key === parentBuilding.key);
 
       if (buildingMap) {
-        setCurrentBuildingMap(buildingMap);
-        // 预加载背景图片并计算尺寸
-        const img = new Image();
-        img.onload = () => {
-          calculateImageBounds(img.naturalWidth, img.naturalHeight);
-        };
-        img.onerror = () => {
-          console.error('Failed to load building map background:', buildingMap.background);
+        // 根据选中的节点确定楼层
+        let targetFloor: number | null = null; // 初始化为null，表示未找到楼层
+        let roomConfig: any = null;
+
+        // 获取选择节点的类型
+        const selectedNodeType = getNodeType(info.node.key);
+
+        if (selectedNodeType === 'building') {
+          // 如果选择的是楼宇（顶层），默认显示一楼
+          targetFloor = 1;
+        } else if (selectedNodeType === 'space') {
+          // 如果选择的是空间，直接从房间配置中获取楼层
+          roomConfig = buildingMap.rooms.find(room => room.key === info.node.key);
+          if (roomConfig) {
+            targetFloor = roomConfig.floor;
+          }
+        } else if (selectedNodeType === 'terminal' || selectedNodeType === 'sensor') {
+          // 如果选择的是终端或传感器，找到其所在的空间，然后获取楼层
+          const parentSpace = findParentSpace(info.node.key, permissionData);
+          if (parentSpace) {
+            roomConfig = buildingMap.rooms.find(room => room.key === parentSpace.key);
+            if (roomConfig) {
+              targetFloor = roomConfig.floor;
+            }
+          }
+        }
+
+        // 检查是否找到了有效的楼层和对应的背景图
+        if (targetFloor !== null && floorBackgrounds[targetFloor]) {
+          // 根据楼层选择背景图
+          const backgroundImage = floorBackgrounds[targetFloor];
+
+          // 创建新的建筑地图配置，使用对应楼层的背景
+          const updatedBuildingMap = {
+            ...buildingMap,
+            background: backgroundImage
+          };
+
+          setCurrentBuildingMap(updatedBuildingMap);
+          setCurrentFloor(targetFloor); // 设置当前楼层
+
+          // 预加载背景图片并计算尺寸
+          const img = new Image();
+          img.onload = () => {
+            calculateImageBounds(img.naturalWidth, img.naturalHeight);
+          };
+          img.onerror = () => {
+            console.error('Failed to load building map background:', backgroundImage);
+            setCurrentBuildingMap(null);
+            setCurrentFloor(null);
+          };
+          img.src = backgroundImage;
+        } else {
+          // 如果没有找到对应的楼层配置或背景图，不显示背景
+          console.warn('No floor configuration or background found for selected node:', info.node.key);
           setCurrentBuildingMap(null);
-        };
-        img.src = buildingMap.background;
+          setCurrentFloor(null);
+        }
       } else {
         console.warn('Building map not found for key:', parentBuilding.key);
         setCurrentBuildingMap(null);
+        setCurrentFloor(null);
       }
     } else {
       setCurrentBuildingMap(null);
+      setCurrentFloor(null);
     }
   };
 
@@ -499,7 +549,7 @@ export default function PropertyVis() {
     if (!buildingNode.children) return null;
     return buildingNode.children.find(child => child.key === spaceKey) || null;
   };
-  
+
 
   // 添加空间数据
   const addSpaceData = async (roomConfig: RoomInfo, spaceNode: PermissionNode, seriesData: any[], shouldHighlight: boolean, signal?: AbortSignal) => {
@@ -738,15 +788,17 @@ export default function PropertyVis() {
             let sensorDataHtml = '';
 
             if (sensorFields.length > 0) {
-              const displayFields = sensorFields.slice(0, 6); // 最多显示6个字段
-              sensorDataHtml = displayFields.map(field => {
+              // 显示所有字段，不限制数量
+              sensorDataHtml = sensorFields.map(field => {
                 const sensorInfo = sensorData[field];
                 if (sensorInfo && sensorInfo.value !== undefined) {
-                  // 从field中提取显示名称，去掉括号内容
-                  const displayName = field;
+                  // 从field中提取显示名称和单位
+                  const fieldParts = field.match(/^([^（(]+)([（(][^）)]*[）)])?/);
+                  const displayName = fieldParts ? fieldParts[1] : field;
+                  const unit = fieldParts && fieldParts[2] ? fieldParts[2] : '';
                   const value = sensorInfo.value;
 
-                  return `<span style="flex: 0 0 33%;">${displayName}: ${value}</span>`;
+                  return `<div style="margin: 0px;"><span style="color: #fff; font-size: 12px; ">${displayName}</span><span style="color: #CCCCCC; font-size: 9px; margin-left: 4px;">${unit}</span>: <b style="color: #fff; font-size: 15px; font-weight: 700;">${value}</b></div>`;
                 }
                 return '';
               }).filter(item => item !== '').join('');
@@ -757,7 +809,7 @@ export default function PropertyVis() {
             // 生成状态显示文本和颜色
             let statusText = '';
             let statusColor = '';
-            
+
             if (data.online === 'online') {
               statusText = '在线';
               statusColor = '#52c41a';
@@ -773,13 +825,13 @@ export default function PropertyVis() {
             return `
           <div style="font-size:14px;color:#fff;">
             <b>${data.name}</b><br/>
-            <div>状态: <b><span style="color:${statusColor}">${statusText}</span></b></div>
-            <div>传感器: <span style="color:#ccc">${data.onlineCount || 0}/${data.totalSensors || 0} 在线</span><br/></div>
-              <div style="display: flex; flex-wrap: wrap; gap: 2px; margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.2)">
-                  ${sensorDataHtml}
-</div>
 
-            <div style="color:#999;font-size:14px;margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.2)">更新时间: <b>${new Date().toLocaleString("zh-CN")}</b></div>
+            <div style="margin-bottom: 0px;">状态: <b><span style="color:${statusColor}">${statusText}</span></b></div>
+            <div style="margin-bottom: 8px;">传感器: <span style="color:#ccc">${data.onlineCount || 0}/${data.totalSensors || 0} 在线</span></div>
+            <div style="padding-top:8px;border-top:1px solid rgba(255,255,255,0.2)">
+              ${sensorDataHtml}
+            </div>
+            <div style="color:#999;font-size:12px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.2)">更新时间: <b style="color:#fff">${new Date().toLocaleString("zh-CN")}</b></div>
           </div>
         `;
           }
@@ -831,20 +883,20 @@ export default function PropertyVis() {
   // 监听容器大小变化
   useEffect(() => {
     let resizeTimer: NodeJS.Timeout | null = null;
-    
+
     const resizeChart = () => {
       // 清除之前的定时器，实现防抖
       if (resizeTimer) {
         clearTimeout(resizeTimer);
       }
-      
+
       resizeTimer = setTimeout(() => {
-        if (currentBuildingMap) {
+        if (currentBuildingMap && currentFloor && floorBackgrounds[currentFloor]) {
           const img = new Image();
           img.onload = () => {
             calculateImageBounds(img.naturalWidth, img.naturalHeight);
           };
-          img.src = currentBuildingMap.background;
+          img.src = floorBackgrounds[currentFloor];
         }
 
         if (chartRef.current) {
@@ -931,7 +983,7 @@ export default function PropertyVis() {
           const echartsInstance = (chartRef.current as any).getEchartsInstance();
           if (echartsInstance) {
             const option = await getOption(signal);
-            
+
             // 检查请求是否已被取消
             if (!signal.aborted) {
               setChartOption(option);
@@ -999,8 +1051,8 @@ export default function PropertyVis() {
           style={{
             height: "calc(100vh - 2rem)",
             border: "1px solid #ddd",
-            backgroundImage: currentBuildingMap
-              ? `url(${currentBuildingMap.background})`
+            backgroundImage: currentBuildingMap && currentFloor && floorBackgrounds[currentFloor]
+              ? `url(${floorBackgrounds[currentFloor]})`
               : "none",
             backgroundSize: "contain",
             backgroundRepeat: "no-repeat",
@@ -1013,7 +1065,7 @@ export default function PropertyVis() {
             </div>
           )}
           <ReactECharts
-          className="rounded-md"
+            className="rounded-md"
             ref={chartRef}
             option={chartOption || {}}
             onEvents={{
