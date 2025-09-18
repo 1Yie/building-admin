@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Plus, CircleSlash } from "lucide-react";
-import { useState, useEffect } from "react";
-import { Link, NavLink, useNavigate } from "react-router";
+import { ArrowDown, ArrowUp, Plus, CircleSlash, Ban } from "lucide-react";
+import { useState  } from "react";
+import { Link, NavLink } from "react-router";
 import { getAlarmInfo, getOutLineInfo } from "@/request/home";
 import { getTaskInterVal } from "@/request/settings";
-import { jwtDecode } from "jwt-decode";
+
 import { Button } from "@/shadcn/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shadcn/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/shadcn/ui/tabs";
@@ -14,8 +14,8 @@ import { BuildingTable } from "./table";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function HomePage() {
-  const navigate = useNavigate();
-  const { userInfo, permissions, isLoggedIn } = useAuth();
+
+  const { permissions, isLoggedIn } = useAuth();
 
   // 设备信息概览
   const { data: outlineInfo } = useQuery({
@@ -70,7 +70,7 @@ export default function HomePage() {
           <p className="text-gray-500">你貌似没有任何权限访问状态信息</p>
         </div>
       )}
-      
+
       <div className="gap-5 grid grid-cols-3">
         {hasPermission("menu_building-实时数据") && device_unit && (
           <Card className="border-gray-100/50 w-full h-35">
@@ -78,11 +78,10 @@ export default function HomePage() {
               <div className="flex justify-between items-center">
                 <div className="text-gray-500 text-xl">在线设备</div>
                 <div
-                  className={`flex items-center ${
-                    device_unit.trend === "decrease"
-                      ? "text-green-500"
-                      : "text-red-500"
-                  }`}
+                  className={`flex items-center ${device_unit.trend === "decrease"
+                    ? "text-green-500"
+                    : "text-red-500"
+                    }`}
                 >
                   {device_unit.trend === "decrease" ? (
                     <ArrowDown size={24} />
@@ -104,11 +103,10 @@ export default function HomePage() {
               <div className="flex justify-between items-center">
                 <div className="text-gray-500 text-xl">预警数量</div>
                 <div
-                  className={`flex items-center ${
-                    alarm_unit.trend === "decrease"
-                      ? "text-green-500"
-                      : "text-red-500"
-                  }`}
+                  className={`flex items-center ${alarm_unit.trend === "decrease"
+                    ? "text-green-500"
+                    : "text-red-500"
+                    }`}
                 >
                   {alarm_unit.trend === "decrease" ? (
                     <ArrowDown size={24} />
@@ -201,9 +199,17 @@ export default function HomePage() {
                       <p>{item.description}</p>
                     </div>
                   ))}
-                  <div className="text-right px-2">
-                    <p className="text-sm text-gray-500">仅显示最近预警信息</p>
-                  </div>
+
+                  {alarmInfo?.length === 0 ? (
+                    <div className="flex flex-col items-center gap-1 px-2">
+                      <Ban className="text-gray-500"/>
+                      <p className="text-sm text-gray-500">暂无预警信息</p>
+                    </div>
+                  ) : (
+                    <div className="text-right px-2">
+                      <p className="text-sm text-gray-500">仅显示最近的预警信息</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

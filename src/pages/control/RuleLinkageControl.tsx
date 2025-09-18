@@ -118,7 +118,7 @@ export default function RuleLinkageControl() {
       align: "center",
       render: (_, record: any) => (
         <Button
-          type="link"
+          type="default"
           className="text-blue-500 cursor-pointer"
           onClick={() => handleOpenUpdateDialog(record)}
         >
