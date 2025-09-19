@@ -6,9 +6,11 @@ const importFloorPic = (floor: number) => {
   return modules[`/src/assets/${floor}楼.png`];
 };
 
+const MAX_FLOOR = 10;
+
 // 生成楼层背景映射
 export const floorBackgrounds: { [floor: number]: string } = Object.fromEntries(
-  Array.from({ length: 6 }, (_, i) => {
+  Array.from({ length: MAX_FLOOR }, (_, i) => {
     const floor = i + 1;
     return [floor, importFloorPic(floor)];
   })
@@ -51,8 +53,23 @@ export const buildingMaps: BuildingMap[] = [
 
     rooms: [
       {
-        key: "building-KJ0022",
-        title: "电力电子与电机拖动实验室",
+        key: "building-KJ0001",
+        title: "新能源技术实验室",
+        x: 530,
+        y: -20,
+        width: 440,
+        height: 300,
+        floor: 1,
+        terminals: [
+          {
+            key: "building-ZD0001",
+            title: "91330109057",
+          },
+        ],
+      },
+      {
+        key: "building-KJ0002",
+        title: "电机与电气技术实验室",
         x: 530,
         y: 440,
         width: 440,
@@ -60,8 +77,42 @@ export const buildingMaps: BuildingMap[] = [
         floor: 1,
         terminals: [
           {
+            key: "building-ZD0003",
+            title: "91330109044",
+          },
+          {
+            key: "building-ZD0002",
+            title: "91330109042",
+          },
+        ],
+      },
+      {
+        key: "building-KJ0022",
+        title: "电力电子与电机拖动实验室",
+        x: 2530,
+        y: 540,
+        width: 400,
+        height: 250,
+        floor: 5,
+        terminals: [
+          {
             key: "building-ZD0023",
             title: "91330109059",
+          },
+        ],
+      },
+      {
+        key: "building-KJ0012",
+        title: "自控理论与微机实验室2",
+        x: -80,
+        y: 540,
+        width: 300,
+        height: 510,
+        floor: 3,
+        terminals: [
+          {
+            key: "building-ZD0013",
+            title: "91330109034",
           },
         ],
       },
@@ -156,6 +207,21 @@ export const buildingMaps: BuildingMap[] = [
         ],
       },
       {
+        key: "building-KJ0011",
+        title: "自控理论与微机实验室1",
+        x: 300,
+        y: 540,
+        width: 300,
+        height: 510,
+        floor: 3,
+        terminals: [
+          {
+            key: "building-ZD0012",
+            title: "91330109061",
+          },
+        ],
+      },
+      {
         key: "building-KJ0006",
         title: "数模拟电子实验室",
         x: 1590,
@@ -167,6 +233,21 @@ export const buildingMaps: BuildingMap[] = [
           {
             key: "building-ZD0007",
             title: "91330109049",
+          },
+        ],
+      },
+      {
+        key: "building-KJ0005",
+        title: "数模拟电子实验室",
+        x: 2360,
+        y: -20,
+        width: 450,
+        height: 280,
+        floor: 3,
+        terminals: [
+          {
+            key: "building-ZD0006",
+            title: "91330109052",
           },
         ],
       },
@@ -248,6 +329,21 @@ export const buildingMaps: BuildingMap[] = [
       {
         key: "building-KJ0024",
         title: "运动控制综合实验室",
+        x: -80,
+        y: -60,
+        width: 310,
+        height: 400,
+        floor: 5,
+        terminals: [
+          {
+            key: "building-ZD0025",
+            title: "91330109047",
+          },
+        ],
+      },
+      {
+        key: "building-KJ0021",
+        title: "运动控制综合实验室",
         x: -480,
         y: 600,
         width: 310,
@@ -255,8 +351,8 @@ export const buildingMaps: BuildingMap[] = [
         floor: 5,
         terminals: [
           {
-            key: "building-ZD0025",
-            title: "91330109047",
+            key: "building-ZD0022",
+            title: "91330109058",
           },
         ],
       },
@@ -317,6 +413,186 @@ export const buildingMaps: BuildingMap[] = [
           {
             key: "building-ZD0021",
             title: "91330109056",
+          },
+        ],
+      },
+      {
+        key: "building-KJ0026",
+        title: "网络实验室",
+        x: 2300,
+        y: 430,
+        width: 230,
+        height: 210,
+        floor: 6,
+        terminals: [
+          {
+            key: "building-ZD0027",
+            title: "91330109041",
+          },
+        ],
+      },
+      {
+        key: "building-KJ0027",
+        title: "嵌入式实验室",
+        x: 1760,
+        y: -30,
+        width: 300,
+        height: 310,
+        floor: 6,
+        terminals: [
+          {
+            key: "building-ZD0028",
+            title: "91330109037",
+          },
+        ],
+      },
+      {
+        key: "building-KJ0028",
+        title: "软件实验室1",
+        x: 1400,
+        y: -30,
+        width: 300,
+        height: 310,
+        floor: 6,
+        terminals: [
+          {
+            key: "building-ZD0029",
+            title: "91330109022",
+          },
+        ],
+      },
+      {
+        key: "building-KJ0025",
+        title: "计算机硬件与机器视觉实验室",
+        x: 2100,
+        y: -30,
+        width: 430,
+        height: 310,
+        floor: 6,
+        terminals: [
+          {
+            key: "building-ZD0026",
+            title: "91330109030",
+          },
+        ],
+      },
+      {
+        key: "building-KJ0029",
+        title: "软件实验室2",
+        x: 700,
+        y: -30,
+        width: 530,
+        height: 310,
+        floor: 6,
+        terminals: [
+          {
+            key: "building-ZD0031",
+            title: "91330109023",
+          },
+        ],
+      },
+      {
+        key: "building-KJ0031",
+        title: "人工智能创新技术展示室",
+        x: 2060,
+        y: 450,
+        width: 240,
+        height: 210,
+        floor: 7,
+        terminals: [
+          {
+            key: "building-ZD0033",
+            title: "91330109035",
+          },
+        ],
+      },
+      {
+        key: "building-KJ0030",
+        title: "5G创新联合实验室",
+        x: -360,
+        y: 450,
+        width: 240,
+        height: 410,
+        floor: 7,
+        terminals: [
+          {
+            key: "building-ZD0032",
+            title: "91330109026",
+          },
+        ],
+      },
+      {
+        key: "building-KJ0033",
+        title: "研究生工作室",
+        x: 1630,
+        y: -30,
+        width: 340,
+        height: 260,
+        floor: 8,
+        terminals: [
+          {
+            key: "building-ZD0035",
+            title: "91330109031",
+          },
+        ],
+      },
+      {
+        key: "building-KJ0032",
+        title: "研究生工作室",
+        x: 930,
+        y: -30,
+        width: 540,
+        height: 260,
+        floor: 8,
+        terminals: [
+          {
+            key: "building-ZD0034",
+            title: "91330109033",
+          },
+        ],
+      },
+      {
+        key: "building-KJ0035",
+        title: "研究生工作室",
+        x: 400,
+        y: -30,
+        width: 440,
+        height: 260,
+        floor: 8,
+        terminals: [
+          {
+            key: "building-ZD0037",
+            title: "91330109031",
+          },
+        ],
+      },
+      {
+        key: "building-KJ0034",
+        title: "研究生工作室",
+        x: 130,
+        y: -40,
+        width: 100,
+        height: 100,
+        floor: 8,
+        terminals: [
+          {
+            key: "building-ZD0036",
+            title: "91330109040",
+          },
+        ],
+      },
+      {
+        key: "building-KJ0036",
+        title: "双创中心",
+        x: 830,
+        y: -30,
+        width: 540,
+        height: 260,
+        floor: 10,
+        terminals: [
+          {
+            key: "building-ZD0038",
+            title: "91330109040",
           },
         ],
       },

@@ -576,7 +576,6 @@ export default function PropertyVis() {
     // 获取选择节点的类型
     const selectedNodeType = getNodeType(selectedNode.key);
 
-
     // 确定要高亮的空间
     let targetSpaceKey: string | null = null;
 
@@ -818,7 +817,7 @@ export default function PropertyVis() {
                   value: { fill: "#000", fontWeight: "bold", fontSize },
                   empty: { fill: item.color || "#999", fontWeight: item.bold ? "bold" : "normal", fontSize },
                 };
-                // 注意：当使用 rich 时，不要同时设置 fill（会被忽略）
+                // 注意：当使用 rich 时，不要同时设置 fill
               } else {
                 // 普通文本，直接用 fill 生效
                 baseStyle.fill = item.color || "#333";
@@ -831,7 +830,6 @@ export default function PropertyVis() {
                 silent: true,
               });
             });
-
 
             return {
               type: "group",
