@@ -14,7 +14,7 @@ RUN npm install
 COPY . .
 
 # 构建生产环境静态文件
-RUN npm run build
+RUN npm install --legacy-peer-deps
 
 # 2. 使用 Nginx 作为生产环境服务器
 FROM nginx:alpine
