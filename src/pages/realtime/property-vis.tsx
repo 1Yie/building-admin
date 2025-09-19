@@ -456,72 +456,83 @@ export default function PropertyVis() {
 
     if (!spaceNode.children) return null;
 
-    // 查找该空间下的所有传感器
-    const sensors: PermissionNode[] = [];
+    // 查找该空间下的所有终端节点（ZD节点）
+    const terminals: PermissionNode[] = [];
 
-    function collectSensors(node: PermissionNode) {
+    function collectTerminals(node: PermissionNode) {
       if (!node.children) return;
 
       node.children.forEach(child => {
-        if (child.key.includes('CGQ')) {
-          // 这是传感器节点
-          sensors.push(child);
+        if (child.key.includes('ZD')) {
+          // 这是终端节点，直接添加
+          terminals.push(child);
         } else {
-          // 继续递归查找（可能是终端节点）
-          collectSensors(child);
+          // 继续递归查找
+          collectTerminals(child);
         }
       });
     }
 
-    collectSensors(spaceNode);
+    collectTerminals(spaceNode);
 
-    if (sensors.length === 0) return null;
+    if (terminals.length === 0) return null;
 
-    // 获取所有传感器的数据并聚合
+    // 获取所有终端下的传感器数据并聚合
     const allSensorData: any = {};
 
     try {
-      // 并行获取所有传感器的数据
-      const sensorPromises = sensors.map(async (sensor) => {
+      // 并行获取所有终端的传感器数据
+      const terminalPromises = terminals.map(async (terminal) => {
         // 检查请求是否已被取消
         if (signal?.aborted) {
           throw new Error('Request aborted');
         }
 
-        const sensorId = sensor.key.replace('building-', '');
+        const terminalId = terminal.key.replace('building-', '');
+        console.log('通过终端获取传感器数据', terminalId, terminal.title);
+
         try {
-          const sensorData = await getSensorDetail(sensorId);
-          return {
-            sensorKey: sensor.key,
-            sensorTitle: sensor.title,
-            data: sensorData
-          };
+          // 直接通过终端ID获取该终端下的所有传感器数据
+          const terminalSensorData = await getSensorDetail(terminalId, signal);
+
+
+          if (terminalSensorData && terminalSensorData.property && terminalSensorData.property.length > 0) {
+            // 将终端下的所有传感器数据转换为统一格式
+            return terminalSensorData.property.map((prop: any) => ({
+              sensorKey: `building-${prop.property_id}`,
+              sensorTitle: prop.field || `传感器-${prop.property_id}`, // 使用传感器的field字段
+              terminalTitle: terminal.title,
+              terminalKey: terminal.key,
+              data: {
+                property: [prop]
+              }
+            }));
+          } else {
+            console.log(`终端 ${terminal.title} (${terminalId}) 下没有传感器数据`);
+            return [];
+          }
         } catch (error) {
-          console.error(`获取传感器 ${sensor.title} 数据失败:`, error);
-          return {
-            sensorKey: sensor.key,
-            sensorTitle: sensor.title,
-            data: null
-          };
+          console.error(`获取终端 ${terminal.title} (${terminalId}) 下的传感器数据失败:`, error);
+          return [];
         }
       });
 
-      const sensorResults = await Promise.all(sensorPromises);
+      const terminalResults = await Promise.all(terminalPromises);
 
       // 再次检查请求是否已被取消
       if (signal?.aborted) {
         throw new Error('Request aborted');
       }
 
-      // 聚合所有传感器的数据
-      sensorResults.forEach((result) => {
+      // 聚合所有终端的传感器数据
+      terminalResults.flat().forEach((result) => {
         if (result.data?.property && result.data.property.length > 0) {
           result.data.property.forEach((prop: any) => {
             // 使用传感器标题和字段名组合作为唯一键
             const fieldKey = `${result.sensorTitle}_${prop.field}`;
 
             if (prop.values && prop.values.length > 0 && prop.times && prop.times.length > 0) {
-              // 取最新的值（数组最后一个元素）
+              // 取最新的值
               const latestValue = prop.values[prop.values.length - 1];
               const latestTime = prop.times[prop.times.length - 1];
 
@@ -531,6 +542,8 @@ export default function PropertyVis() {
                 name: prop.name,
                 sensorTitle: result.sensorTitle,
                 sensorKey: result.sensorKey,
+                terminalTitle: result.terminalTitle,
+                terminalKey: result.terminalKey,
                 field: prop.field
               };
             } else {
@@ -540,6 +553,8 @@ export default function PropertyVis() {
                 name: prop.name,
                 sensorTitle: result.sensorTitle,
                 sensorKey: result.sensorKey,
+                terminalTitle: result.terminalTitle,
+                terminalKey: result.terminalKey,
                 field: prop.field
               };
             }
@@ -909,36 +924,63 @@ export default function PropertyVis() {
                 }
               });
 
-              // 生成每个传感器的数据显示
-              const sensorGroupsHtml = Object.keys(sensorGroups).map(sensorTitle => {
-                const sensorFields = sensorGroups[sensorTitle];
-                const fieldsHtml = sensorFields.map(fieldInfo => {
-                  const value = fieldInfo.value !== '--' ? fieldInfo.value : '--';
-                  const valueColor = fieldInfo.value !== '--' ? '#fff' : '#999';
+              // 传入所有 fieldInfo 的数组，聚合成 {设备名: fieldInfo[]}
+              function groupByDevice(allSensorFields: any[]) {
+                const groups: Record<string, any[]> = {};
 
-                  // 从field中提取字段名和单位，保持原始field格式但缩小括号部分
-                  const fieldText = fieldInfo.field;
-                  const fieldWithStyledUnit = fieldText.replace(/([（(][^）)]*[）)])/g, '<span style="font-size: 8px; color: #999;">$1</span>');
+                allSensorFields.forEach(fieldInfo => {
+                  const name = fieldInfo.name || "";
+                  // 假设 name 格式：能源-断路器-字段(楼宇-房间-编号)
+                  const parts = name.split("-");
+                  const deviceTitle = parts[1] || "未知设备";
+
+                  if (!groups[deviceTitle]) {
+                    groups[deviceTitle] = [];
+                  }
+                  groups[deviceTitle].push(fieldInfo);
+                });
+
+                return groups;
+              }
+
+              // 假设 sensorGroups 是一个对象，里面有很多 field 数组
+              const allSensorFields = Object.values(sensorGroups).flat();
+
+              // 关键：先合并成以设备名为 key 的对象
+              const groupedByDevice = groupByDevice(allSensorFields);
+
+              const sensorGroupsHtml = Object.entries(groupedByDevice).map(([deviceTitle, fields]) => {
+                const fieldsHtml = fields.map(fieldInfo => {
+                  const value = fieldInfo.value !== '--' ? fieldInfo.value : '--';
+                  const valueColor = fieldInfo.value !== '--' ? '#fff' : '#fff';
+
+                  // 缩小括号里的单位
+                  const fieldWithStyledUnit = fieldInfo.field.replace(
+                    /([（(][^）)]*[）)])/g,
+                    '<span style="font-size: 8px; color: #999;">$1</span>'
+                  );
 
                   return `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin: 1px 0; padding: 1px 4px; background: rgba(255,255,255,0.05); border-radius: 2px; box-sizing: border-box;">
-                      <span style="color: #ccc; font-size: 10px; flex: 1;">
-                        ${fieldWithStyledUnit}
-                      </span>
-                      <span style="color: ${valueColor}; font-size: 10px; font-weight: 600; text-align: right; color: white; font-weight: bold">${value}</span>
-                    </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin: 1px 0; padding: 1px 4px; background: rgba(255,255,255,0.05); border-radius: 2px; box-sizing: border-box;">
+                  <span style="color: #ccc; font-size: 10px; flex: 1;">
+                  ${fieldWithStyledUnit}
+                  </span>
+                  <span style="color: ${valueColor}; font-size: 10px; font-weight: bold; text-align: right;">
+                  ${value}
+                  </span>
+                  </div>
                   `;
-                }).join('');
+                }).join("");
 
                 return `
-                  <div style="margin-bottom: 6px;">
-                    <div style="color: #1890ff; font-size: 11px; font-weight: 600; margin-bottom: 3px; padding-bottom: 1px; border-bottom: 1px solid rgba(24,144,255,0.3);">
-                      ${sensorTitle}
-                    </div>
-                    <div style="margin-left: 2px;">
-                      ${fieldsHtml}
-                    </div>
-                  </div>
+                <div style="margin-bottom: 6px;">
+                <div style="color: #1890ff; font-size: 11px; font-weight: 600; margin-bottom: 3px; padding-bottom: 1px; border-bottom: 1px solid rgba(24,144,255,0.3);">
+                ${deviceTitle}
+                </div>
+                <div style="margin-left: 2px;">
+                ${fieldsHtml}
+                </div>
+                </div>
                 `;
               }).join('');
 
