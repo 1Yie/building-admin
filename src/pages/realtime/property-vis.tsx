@@ -12,6 +12,7 @@ import type {
 } from "@/config/building-map";
 import { useAuth } from "@/hooks/use-auth";
 
+
 interface PermissionNode extends TreeDataNode {
   key: string;
   title: string;
@@ -53,6 +54,7 @@ export default function PropertyVis() {
 
   // 添加传感器请求开关状态
   const [enableSensorRequest, setEnableSensorRequest] = useState<boolean>(false);
+
 
 
   const {
@@ -529,12 +531,16 @@ export default function PropertyVis() {
         if (result.data?.property && result.data.property.length > 0) {
           result.data.property.forEach((prop: any) => {
             // 使用传感器标题和字段名组合作为唯一键
-            const fieldKey = `${result.sensorTitle}_${prop.field}`;
+            const fieldKey = `${result.sensorTitle}`;
 
             if (prop.values && prop.values.length > 0 && prop.times && prop.times.length > 0) {
               // 取最新的值
               const latestValue = prop.values[prop.values.length - 1];
               const latestTime = prop.times[prop.times.length - 1];
+              console.log("latestTime", latestTime)
+              console.log("latestValue", latestValue)
+              console.log("prop.name", prop.name)
+              console.log("fieldKey.name", fieldKey)
 
               allSensorData[fieldKey] = {
                 value: latestValue,
@@ -561,6 +567,8 @@ export default function PropertyVis() {
           });
         }
       });
+
+      console.log("allSensorData", allSensorData)
 
       return Object.keys(allSensorData).length > 0 ? allSensorData : null;
     } catch (error) {
@@ -666,34 +674,53 @@ export default function PropertyVis() {
     let onlineCount = 0;
     let totalSensors = 0;
 
+
     if (sensorData && Object.keys(sensorData).length > 0) {
       const currentTime = new Date().getTime();
-      const fiveMinutesAgo = currentTime - 5 * 60 * 1000; // 5分钟前的时间戳
+      const fiveMinutesAgo = currentTime - 5 * 60 * 1000; // 5分钟前
+      console.log("currentTime", currentTime);
+      console.log("fiveMinutesAgo", fiveMinutesAgo);
 
-      // 检查所有传感器字段的最新时间
       for (const field in sensorData) {
         const sensorInfo = sensorData[field];
         totalSensors++;
-        // console.log("sensorInfo", sensorInfo.time)
+
+        console.log("raw sensorInfo.time:", sensorInfo.time, typeof sensorInfo.time);
 
         if (sensorInfo && sensorInfo.time) {
-          const sensorTime = new Date(sensorInfo.time).getTime();
+          // 解析为今天的时间
+          const [hours, minutes] = sensorInfo.time.split(":").map(Number);
+          const sensorTime = new Date(
+            new Date().getFullYear(),
+            new Date().getMonth(),
+            new Date().getDate(),
+            hours,
+            minutes
+          ).getTime();
+
+          console.log("sensorTime", sensorTime);
+          console.log("fiveMinutesAgo", fiveMinutesAgo);
+
           if (sensorTime > fiveMinutesAgo) {
+            console.log("sensorTime > fiveMinutesAgo", sensorTime, fiveMinutesAgo);
             onlineCount++;
           }
         }
-        // time 为 null 或 undefined 的传感器视为离线，不增加 onlineCount
+        // time 为 null 或 undefined 的传感器视为离线
       }
 
-      // 根据在线传感器数量确定状态
+      console.log("onlineCount", onlineCount);
+      console.log("totalSensors", totalSensors);
+
       if (onlineCount === totalSensors && totalSensors > 0) {
-        onlineStatus = 'online'; // 全部在线
+        onlineStatus = 'online';
       } else if (onlineCount > 0) {
-        onlineStatus = `partial-${totalSensors - onlineCount}`; // 部分在线（几个离线）
+        onlineStatus = `partial-${totalSensors - onlineCount}`;
       } else {
-        onlineStatus = 'offline'; // 全部离线
+        onlineStatus = 'offline';
       }
     }
+
 
     seriesData.push({
       name: roomConfig.title,
@@ -746,6 +773,7 @@ export default function PropertyVis() {
 
             // 使用传感器数据
             const sensorData = data.sensorData || {};
+
             const sensorFields = Object.keys(sensorData);
 
             const lines = [{ text: `${data.name}`, color: "#333", bold: true }];

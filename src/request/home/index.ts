@@ -19,7 +19,7 @@ export type OutLineInfoResponse = {
 	};
 	property_unit: {
 		terminals_count: number;
-		spaces_count: number;
+		buildings_count: number;
 	};
 	building_property_unit: {
 		name: string;

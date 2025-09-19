@@ -31,6 +31,7 @@ export default function HomePage() {
     sensor_kind_unit,
   } = outlineInfo || {};
 
+
   // 预警信息
   const { data: alarmInfo } = useQuery({
     queryKey: ["alarm"],
@@ -138,7 +139,7 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="mt-5 font-semibold text-4xl">
-                {property_unit.spaces_count}
+                {building_property_unit?.[0]?.space_count ?? 0}
               </div>
             </CardContent>
           </Card>
@@ -235,7 +236,7 @@ export default function HomePage() {
               </div>
             </CardHeader>
             <CardContent>
-              <BuildingTable tableData={building_property_unit} />
+              <BuildingTable tableData={building_property_unit || []} />
             </CardContent>
           </Card>
 
@@ -245,7 +246,7 @@ export default function HomePage() {
                 <CardTitle>设备类型统计</CardTitle>
               </CardHeader>
               <CardContent>
-                <ChartPie pieData={sensor_kind_unit} />
+                <ChartPie pieData={sensor_kind_unit || []} />
               </CardContent>
             </Card>
           )}
