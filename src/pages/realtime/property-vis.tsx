@@ -30,7 +30,7 @@ const transformTree = (arr: any[]): PermissionNode[] => {
 };
 
 export default function PropertyVis() {
-  const { userInfo, isLoggedIn, permissions } = useAuth();
+  const { userInfo, isLoggedIn } = useAuth();
   const [permissionData, setPermissionData] = useState<PermissionNode[]>([]);
   const [checkedKeys, setCheckedKeys] = useState<string[]>([]);
   const [selectedNode, setSelectedNode] = useState<PermissionNode | null>(null);
@@ -47,11 +47,12 @@ export default function PropertyVis() {
     naturalWidth: 0,
     naturalHeight: 0,
   });
-  const [allSensorFields, setAllSensorFields] = useState<any[]>([]);
-  const [sensorDataMap, setSensorDataMap] = useState<Map<string, any>>(new Map());
 
   // 添加请求取消控制器的引用
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // 添加传感器请求开关状态
+  const [enableSensorRequest, setEnableSensorRequest] = useState<boolean>(false);
 
 
   const {
@@ -104,10 +105,11 @@ export default function PropertyVis() {
     }
   }
 
-
-
-
+  // 初始化当前楼宇地图
   useEffect(() => {
+    // 调试: 改变空间坐标时可以关闭发送传感器请求
+    setEnableSensorRequest(true);
+
     if (!permissionDataResponse?.data) return;
 
     const rawData = permissionDataResponse.data;
@@ -245,6 +247,15 @@ export default function PropertyVis() {
 
   // 处理选择树节点事件
   const onSelect = (_: React.Key[], info: { node: PermissionNode }) => {
+    // 立即取消正在进行的请求
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+
+    // 立即重置加载状态
+    setIsLoadingData(false);
+
     setSelectedNode(info.node);
 
     // 查找父楼宇
@@ -287,34 +298,55 @@ export default function PropertyVis() {
           // 根据楼层选择背景图
           const backgroundImage = floorBackgrounds[targetFloor];
 
-          // 创建新的建筑地图配置，使用对应楼层的背景
-          const updatedBuildingMap = {
-            ...buildingMap,
-            background: backgroundImage
-          };
-
-          setCurrentBuildingMap(updatedBuildingMap);
-          setCurrentFloor(targetFloor); // 设置当前楼层
+          // 先重置图片尺寸状态，避免使用旧的尺寸信息
+          setImageSize({
+            width: 0,
+            height: 0,
+            offsetX: 0,
+            offsetY: 0,
+            naturalWidth: 0,
+            naturalHeight: 0,
+          });
 
           // 预加载背景图片并计算尺寸
           const img = new Image();
           img.onload = () => {
-            calculateImageBounds(img.naturalWidth, img.naturalHeight);
+            // 确保在图片加载完成后再更新状态和计算尺寸
+            const updatedBuildingMap = {
+              ...buildingMap,
+              background: backgroundImage
+            };
+
+            setCurrentBuildingMap(updatedBuildingMap);
+            setCurrentFloor(targetFloor);
+
+            // 使用 setTimeout 确保状态更新完成后再计算尺寸
+            setTimeout(() => {
+              calculateImageBounds(img.naturalWidth, img.naturalHeight);
+            }, 50);
           };
           img.onerror = () => {
-            console.error('Failed to load building map background:', backgroundImage);
+            console.error('加载楼宇地图背景图片失败:', backgroundImage);
             setCurrentBuildingMap(null);
             setCurrentFloor(null);
+            setImageSize({
+              width: 0,
+              height: 0,
+              offsetX: 0,
+              offsetY: 0,
+              naturalWidth: 0,
+              naturalHeight: 0,
+            });
           };
           img.src = backgroundImage;
         } else {
           // 如果没有找到对应的楼层配置或背景图，不显示背景
-          console.warn('No floor configuration or background found for selected node:', info.node.key);
+          console.warn('未找到所选节点的楼层配置或背景图:', info.node.key);
           setCurrentBuildingMap(null);
           setCurrentFloor(null);
         }
       } else {
-        console.warn('Building map not found for key:', parentBuilding.key);
+        console.warn('未找到对应的楼宇地图配置:', parentBuilding.key);
         setCurrentBuildingMap(null);
         setCurrentFloor(null);
       }
@@ -335,6 +367,13 @@ export default function PropertyVis() {
     const containerRect = container.getBoundingClientRect();
     const containerWidth = containerRect.width;
     const containerHeight = containerRect.height;
+
+    // 确保容器尺寸有效
+    if (containerWidth <= 0 || containerHeight <= 0) {
+      console.warn('容器尺寸无效，跳过图片尺寸计算');
+      return;
+    }
+
     const imageAspectRatio = naturalWidth / naturalHeight;
     const containerAspectRatio = containerWidth / containerHeight;
 
@@ -352,16 +391,19 @@ export default function PropertyVis() {
       offsetY = 0;
     }
 
-    setImageSize({
-      width: displayWidth,
-      height: displayHeight,
-      offsetX,
-      offsetY,
-      naturalWidth,
-      naturalHeight,
-    });
+    // 使用 requestAnimationFrame 确保在下一帧更新状态
+    requestAnimationFrame(() => {
+      setImageSize({
+        width: displayWidth,
+        height: displayHeight,
+        offsetX,
+        offsetY,
+        naturalWidth,
+        naturalHeight,
+      });
 
-    setChartSize({ width: containerWidth, height: containerHeight });
+      setChartSize({ width: containerWidth, height: containerHeight });
+    });
   };
 
   // 将图片坐标转换为容器坐标
@@ -404,8 +446,14 @@ export default function PropertyVis() {
   //   return unitMap[fieldLower] || '';
   // };
 
+
   // 获取指定空间下的传感器数据
   const getSensorDataForSpace = async (spaceNode: PermissionNode, signal?: AbortSignal): Promise<any> => {
+    // 如果传感器请求开关关闭，直接返回null
+    if (!enableSensorRequest) {
+      return null;
+    }
+
     if (!spaceNode.children) return null;
 
     // 查找该空间下的所有传感器
@@ -429,59 +477,85 @@ export default function PropertyVis() {
 
     if (sensors.length === 0) return null;
 
-    // 获取第一个传感器的数据作为代表（实际项目中可能需要聚合多个传感器数据）
-    try {
-      // 检查请求是否已被取消
-      if (signal?.aborted) {
-        throw new Error('Request aborted');
-      }
+    // 获取所有传感器的数据并聚合
+    const allSensorData: any = {};
 
-      const sensorId = sensors[0].key.replace('building-', '');
-      const sensorData = await getSensorDetail(sensorId);
-      console.log("sensorData", sensorData)
+    try {
+      // 并行获取所有传感器的数据
+      const sensorPromises = sensors.map(async (sensor) => {
+        // 检查请求是否已被取消
+        if (signal?.aborted) {
+          throw new Error('Request aborted');
+        }
+
+        const sensorId = sensor.key.replace('building-', '');
+        try {
+          const sensorData = await getSensorDetail(sensorId);
+          return {
+            sensorKey: sensor.key,
+            sensorTitle: sensor.title,
+            data: sensorData
+          };
+        } catch (error) {
+          console.error(`获取传感器 ${sensor.title} 数据失败:`, error);
+          return {
+            sensorKey: sensor.key,
+            sensorTitle: sensor.title,
+            data: null
+          };
+        }
+      });
+
+      const sensorResults = await Promise.all(sensorPromises);
 
       // 再次检查请求是否已被取消
       if (signal?.aborted) {
         throw new Error('Request aborted');
       }
 
-      if (sensorData?.property && sensorData.property.length > 0) {
-        const latestData: any = {};
+      // 聚合所有传感器的数据
+      sensorResults.forEach((result) => {
+        if (result.data?.property && result.data.property.length > 0) {
+          result.data.property.forEach((prop: any) => {
+            // 使用传感器标题和字段名组合作为唯一键
+            const fieldKey = `${result.sensorTitle}_${prop.field}`;
 
+            if (prop.values && prop.values.length > 0 && prop.times && prop.times.length > 0) {
+              // 取最新的值（数组最后一个元素）
+              const latestValue = prop.values[prop.values.length - 1];
+              const latestTime = prop.times[prop.times.length - 1];
 
-        sensorData.property.forEach((prop: any) => {
-          if (prop.values && prop.values.length > 0 && prop.times && prop.times.length > 0) {
-            // 取最新的值（数组最后一个元素）
-            const latestValue = prop.values[prop.values.length - 1];
-            const latestTime = prop.times[prop.times.length - 1];
+              allSensorData[fieldKey] = {
+                value: latestValue,
+                time: latestTime,
+                name: prop.name,
+                sensorTitle: result.sensorTitle,
+                sensorKey: result.sensorKey,
+                field: prop.field
+              };
+            } else {
+              allSensorData[fieldKey] = {
+                value: '--',
+                time: null,
+                name: prop.name,
+                sensorTitle: result.sensorTitle,
+                sensorKey: result.sensorKey,
+                field: prop.field
+              };
+            }
+          });
+        }
+      });
 
-            latestData[prop.field] = {
-              value: latestValue,
-              time: latestTime,
-              name: prop.name
-            };
-          } else {
-            latestData[prop.field] = {
-              value: '--',
-              time: null,
-              name: prop.name
-            };
-          }
-        });
-
-
-
-        return latestData;
-      }
+      return Object.keys(allSensorData).length > 0 ? allSensorData : null;
     } catch (error) {
       if (error instanceof Error && error.message === 'Request aborted') {
         console.log('传感器数据请求已取消');
         return null;
       }
       console.error('获取传感器数据失败:', error);
+      return null;
     }
-
-    return null;
   };
 
   // 获取楼宇下的所有空间数据
@@ -524,6 +598,11 @@ export default function PropertyVis() {
       // 检查请求是否已被取消
       if (signal?.aborted) {
         throw new Error('Request aborted');
+      }
+
+      // 只渲染当前楼层的房间
+      if (roomConfig.floor !== currentFloor) {
+        continue;
       }
 
       // 查找对应的空间节点
@@ -581,7 +660,7 @@ export default function PropertyVis() {
       for (const field in sensorData) {
         const sensorInfo = sensorData[field];
         totalSensors++;
-        console.log("sensorInfo", sensorInfo.time)
+        // console.log("sensorInfo", sensorInfo.time)
 
         if (sensorInfo && sensorInfo.time) {
           const sensorTime = new Date(sensorInfo.time).getTime();
@@ -651,7 +730,7 @@ export default function PropertyVis() {
             const width = endCoord[0] - startCoord[0];
             const height = endCoord[1] - startCoord[1];
 
-            // 使用真实的传感器数据
+            // 使用传感器数据
             const sensorData = data.sensorData || {};
             const sensorFields = Object.keys(sensorData);
 
@@ -667,17 +746,25 @@ export default function PropertyVis() {
             if (sensorFields.length > 0 && maxLines > 1) {
               // 除了标题行，剩余可显示的行数
               const availableLines = maxLines - 1;
-              const displayFields = sensorFields.slice(0, Math.min(availableLines, 2));
+              const displayFields = sensorFields.slice(0, availableLines);
 
               displayFields.forEach(field => {
                 const sensorInfo = sensorData[field];
-
                 if (sensorInfo && sensorInfo.value !== undefined) {
-                  // 从field中提取显示名称，去掉括号内容
-                  const displayName = field.replace(/\(.*?\)/g, '').trim();
+                  // 从field中提取显示名称
+                  const displayName = field
+                    .replace(/\(.*?\)/g, '')        // 去掉括号内容
+                    .replace(/_.*/, '')             // 去掉下划线和后面的内容
+                    .replace(/传感器|sensor/gi, '') // 去掉“传感器”或“sensor”
+                    .trim();
+
                   const value = sensorInfo.value;
 
-                  lines.push({ text: `${displayName}: ${value}`, color: "#333", bold: false });
+                  lines.push({
+                    text: `{name|${displayName}: }{value|${value}}`,
+                    color: "#333",
+                    bold: false
+                  });
                 }
               });
             } else if (sensorFields.length === 0 && maxLines > 1) {
@@ -709,25 +796,42 @@ export default function PropertyVis() {
                 silent: true,
               });
 
-              // 文字
+              // 构建 text 的基础 style
+              const baseStyle: any = {
+                text: item.text,
+                x: startCoord[0] + width / 2,
+                y: textY + lineHeight / 2,
+                fontSize,
+                textAlign: "center",
+                textVerticalAlign: "middle",
+                width: width - 4,
+                overflow: "truncate",
+                ellipsis: "...",
+              };
+
+              // 简单判断是否包含 rich 模板语法 {tag|...}
+              const hasRich = /\{[^|}]+\|[^}]+\}/.test(item.text);
+
+              if (hasRich) {
+                baseStyle.rich = {
+                  name: { fill: item.color || "#333", fontWeight: item.bold ? "bold" : "normal", fontSize },
+                  value: { fill: "#000", fontWeight: "bold", fontSize },
+                  empty: { fill: item.color || "#999", fontWeight: item.bold ? "bold" : "normal", fontSize },
+                };
+                // 注意：当使用 rich 时，不要同时设置 fill（会被忽略）
+              } else {
+                // 普通文本，直接用 fill 生效
+                baseStyle.fill = item.color || "#333";
+                baseStyle.fontWeight = item.bold ? "bold" : "normal";
+              }
+
               textElements.push({
                 type: "text",
-                style: {
-                  text: item.text,
-                  x: startCoord[0] + width / 2,
-                  y: textY + lineHeight / 2,
-                  fill: item.color,
-                  fontSize,
-                  fontWeight: item.bold ? "bold" : "normal",
-                  textAlign: "center",
-                  textVerticalAlign: "middle",
-                  width: width - 4,
-                  overflow: "truncate",
-                  ellipsis: "...",
-                },
+                style: baseStyle,
                 silent: true,
               });
             });
+
 
             return {
               type: "group",
@@ -788,22 +892,75 @@ export default function PropertyVis() {
             let sensorDataHtml = '';
 
             if (sensorFields.length > 0) {
-              // 显示所有字段，不限制数量
-              sensorDataHtml = sensorFields.map(field => {
-                const sensorInfo = sensorData[field];
-                if (sensorInfo && sensorInfo.value !== undefined) {
-                  // 从field中提取显示名称和单位
-                  const fieldParts = field.match(/^([^（(]+)([（(][^）)]*[）)])?/);
-                  const displayName = fieldParts ? fieldParts[1] : field;
-                  const unit = fieldParts && fieldParts[2] ? fieldParts[2] : '';
-                  const value = sensorInfo.value;
+              // 按传感器分组显示数据
+              const sensorGroups: { [sensorTitle: string]: any[] } = {};
 
-                  return `<div style="margin: 0px;"><span style="color: #fff; font-size: 12px; ">${displayName}</span><span style="color: #CCCCCC; font-size: 9px; margin-left: 4px;">${unit}</span>: <b style="color: #fff; font-size: 15px; font-weight: 700;">${value}</b></div>`;
+              // 将数据按传感器分组
+              sensorFields.forEach(field => {
+                const sensorInfo = sensorData[field];
+                if (sensorInfo && sensorInfo.sensorTitle) {
+                  if (!sensorGroups[sensorInfo.sensorTitle]) {
+                    sensorGroups[sensorInfo.sensorTitle] = [];
+                  }
+                  sensorGroups[sensorInfo.sensorTitle].push({
+                    field: sensorInfo.field,
+                    name: sensorInfo.name,
+                    value: sensorInfo.value,
+                    time: sensorInfo.time
+                  });
                 }
-                return '';
-              }).filter(item => item !== '').join('');
+              });
+
+              // 生成每个传感器的数据显示
+              const sensorGroupsHtml = Object.keys(sensorGroups).map(sensorTitle => {
+                const sensorFields = sensorGroups[sensorTitle];
+                const fieldsHtml = sensorFields.map(fieldInfo => {
+                  const value = fieldInfo.value !== '--' ? fieldInfo.value : '--';
+                  const valueColor = fieldInfo.value !== '--' ? '#fff' : '#999';
+
+                  // 从field中提取字段名和单位，保持原始field格式但缩小括号部分
+                  const fieldText = fieldInfo.field;
+                  const fieldWithStyledUnit = fieldText.replace(/([（(][^）)]*[）)])/g, '<span style="font-size: 8px; color: #999;">$1</span>');
+
+                  return `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin: 1px 0; padding: 1px 4px; background: rgba(255,255,255,0.05); border-radius: 2px; box-sizing: border-box;">
+                      <span style="color: #ccc; font-size: 10px; flex: 1;">
+                        ${fieldWithStyledUnit}
+                      </span>
+                      <span style="color: ${valueColor}; font-size: 10px; font-weight: 600; text-align: right; color: white; font-weight: bold">${value}</span>
+                    </div>
+                  `;
+                }).join('');
+
+                return `
+                  <div style="margin-bottom: 6px;">
+                    <div style="color: #1890ff; font-size: 11px; font-weight: 600; margin-bottom: 3px; padding-bottom: 1px; border-bottom: 1px solid rgba(24,144,255,0.3);">
+                      ${sensorTitle}
+                    </div>
+                    <div style="margin-left: 2px;">
+                      ${fieldsHtml}
+                    </div>
+                  </div>
+                `;
+              }).join('');
+
+              // 根据传感器数量和容器宽度动态计算列数
+              const sensorCount = Object.keys(sensorGroups).length;
+              let columns = 2; // 默认两列
+
+              if (sensorCount <= 2) {
+                columns = 1; // 传感器少时单列显示
+              } else if (sensorCount >= 6) {
+                columns = 3; // 传感器多时三列显示
+              }
+
+              sensorDataHtml = `
+                <div style="margin-top: 8px; line-height: 1.4; display: grid; grid-template-columns: repeat(${columns}, 1fr); gap: 6px;">
+                  ${sensorGroupsHtml}
+                </div>
+              `;
             } else {
-              sensorDataHtml = '<span style="color: #999;">暂无传感器数据</span>';
+              sensorDataHtml = '<div style="color: #999; text-align: center; padding: 8px;">暂无传感器数据</div>';
             }
 
             // 生成状态显示文本和颜色
@@ -823,15 +980,21 @@ export default function PropertyVis() {
             }
 
             return `
-          <div style="font-size:14px;color:#fff;">
-            <b>${data.name}</b><br/>
-
-            <div style="margin-bottom: 0px;">状态: <b><span style="color:${statusColor}">${statusText}</span></b></div>
-            <div style="margin-bottom: 8px;">传感器: <span style="color:#ccc">${data.onlineCount || 0}/${data.totalSensors || 0} 在线</span></div>
-            <div style="padding-top:8px;border-top:1px solid rgba(255,255,255,0.2)">
-              ${sensorDataHtml}
+          <div style="font-size:12px;color:#fff; min-width: 240px; max-width: 400px;">
+            <div style="font-size: 14px; font-weight: 700; margin-bottom: 6px; color: #fff;">
+              ${data.name}
             </div>
-            <div style="color:#999;font-size:12px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.2)">更新时间: <b style="color:#fff">${new Date().toLocaleString("zh-CN")}</b></div>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.2);">
+              <div style="font-size: 11px;">状态: <span style="color:${statusColor}; font-weight: 600;">${statusText}</span></div>
+              <div style="font-size: 11px;">传感器: <span style="color:#ccc">${data.onlineCount || 0}/${data.totalSensors || 0} 在线</span></div>
+            </div>
+            
+            ${sensorDataHtml}
+            
+            <div style="color:#999;font-size:10px;margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.2);text-align:center;">
+              更新时间: ${new Date().toLocaleString("zh-CN")}
+            </div>
           </div>
         `;
           }
@@ -892,9 +1055,16 @@ export default function PropertyVis() {
 
       resizeTimer = setTimeout(() => {
         if (currentBuildingMap && currentFloor && floorBackgrounds[currentFloor]) {
+          // 重新计算图片尺寸，确保坐标计算的准确性
           const img = new Image();
           img.onload = () => {
-            calculateImageBounds(img.naturalWidth, img.naturalHeight);
+            // 使用 setTimeout 确保状态更新完成后再计算尺寸
+            setTimeout(() => {
+              calculateImageBounds(img.naturalWidth, img.naturalHeight);
+            }, 50);
+          };
+          img.onerror = () => {
+            console.error('重新加载楼宇地图背景图片失败:', floorBackgrounds[currentFloor]);
           };
           img.src = floorBackgrounds[currentFloor];
         }
@@ -907,7 +1077,7 @@ export default function PropertyVis() {
             if (echartsInstance) {
               echartsInstance.resize();
             }
-          }, 100);
+          }, 150); // 增加延迟确保图片尺寸计算完成
         }
       }, 300); // 300ms防抖延迟
     };
@@ -963,12 +1133,7 @@ export default function PropertyVis() {
 
   useEffect(() => {
     const updateChart = async () => {
-      if (chartRef.current && imageSize.width > 0) {
-        // 如果正在加载数据，跳过这次更新
-        if (isLoadingData) {
-          return;
-        }
-
+      if (chartRef.current && imageSize.width > 0 && imageSize.naturalWidth > 0) {
         // 取消之前的请求
         if (abortControllerRef.current) {
           abortControllerRef.current.abort();
@@ -1005,8 +1170,24 @@ export default function PropertyVis() {
       }
     };
 
-    updateChart();
-  }, [selectedNode, imageSize, currentBuildingMap]);
+    // 添加延迟确保图片尺寸计算完成后再更新图表
+    const timer = setTimeout(() => {
+      updateChart();
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [
+    selectedNode,
+    currentBuildingMap,
+    imageSize.width,
+    imageSize.height,
+    imageSize.naturalWidth,
+    imageSize.naturalHeight,
+    chartSize.width,
+    chartSize.height,
+  ]);
 
   return (
     <div className="flex min-h-screen">

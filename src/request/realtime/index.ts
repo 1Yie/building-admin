@@ -69,6 +69,9 @@ interface GetSensorDetailResponse {
 
 export function getSensorDetail(
 	property_id: string,
+	signal?: AbortSignal,
 ): Promise<GetSensorDetailResponse> {
-	return request.get(`${urls.realtime.getSensorList}?property_id=${property_id}`);
+	return request.get(`${urls.realtime.getSensorList}?property_id=${property_id}`, {
+		signal,
+	});
 }
