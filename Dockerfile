@@ -1,32 +1,28 @@
-# 1. 使用 Node 镜像作为构建环境
+# 1. 构建阶段
 FROM node:20-alpine AS build
-
-# 设置工作目录
 WORKDIR /app
 
-# 复制 package.json 和 package-lock.json / yarn.lock
+# 复制依赖文件
 COPY package*.json ./
 
-# 安装依赖
-RUN npm install
+# 安装依赖，忽略 peerDependencies
+RUN npm install --legacy-peer-deps
 
 # 复制源代码
 COPY . .
 
-# 构建生产环境静态文件
-RUN npm install --legacy-peer-deps
+# 构建生产环境
+RUN npm run build
 
-# 2. 使用 Nginx 作为生产环境服务器
+# 2. 生产阶段
 FROM nginx:alpine
-
-# 复制构建好的静态文件到 nginx 默认目录
+# 复制静态文件
 COPY --from=build /app/dist /usr/share/nginx/html
 
 # 复制自定义 nginx 配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# 暴露 80 端口
+# 暴露端口
 EXPOSE 80
 
-# 启动 nginx
 CMD ["nginx", "-g", "daemon off;"]
