@@ -14,7 +14,7 @@ import { useForm, Controller } from "react-hook-form";
 interface Application {
   key: string;
   applicationNumber: string;
-  applicationTime: string;2273
+  applicationTime: string;
   applicationContent: string;
   status: "待审核" | "通过" | "驳回";
   reviewer: string;
@@ -63,6 +63,8 @@ export default function SourceApplicationPage() {
   // 控制新增申请弹窗
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [addForm] = Form.useForm();
+  const [modalMode, setModalMode] = useState<"add" | "view">("add");
+  const [selectedRecord, setSelectedRecord] = useState<Application | null>(null);
 
   // 搜索处理
   const onSearch = (values: any) => {
@@ -171,7 +173,16 @@ export default function SourceApplicationPage() {
       key: "action",
       render: (_: any, record: Application) => (
         <div className="flex gap-2">
-          <Button type="default">查看</Button>
+          <Button
+            type="default"
+            onClick={() => {
+              setModalMode("view");
+              setSelectedRecord(record);
+              setIsModalOpen(true);
+            }}
+          >
+            查看
+          </Button>
           <Popconfirm title="确定删除吗？" okText="确定" cancelText="取消">
             <Button type="default">删除</Button>
           </Popconfirm>
@@ -202,7 +213,9 @@ export default function SourceApplicationPage() {
           render={({ field }) => (
             <Form.Item label="状态">
               <Select
+                placeholder="请选择状态"
                 {...field}
+                value={field.value || undefined}
                 style={{ width: 120 }}
                 allowClear
                 options={[
@@ -224,7 +237,10 @@ export default function SourceApplicationPage() {
           <Button
             type="primary"
             htmlType="button"
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              setModalMode("add");
+              setIsModalOpen(true);
+            }}
           >
             提交申请
           </Button>
@@ -234,35 +250,51 @@ export default function SourceApplicationPage() {
       <Table className="mt-2" dataSource={data} columns={columns} />
 
       <Modal
-        title="提交新申请"
+        title={modalMode === 'add' ? '提交新申请' : '查看申请详情'}
         open={isModalOpen}
-        onOk={handleAdd}
         onCancel={() => setIsModalOpen(false)}
-        footer={[
+        footer={modalMode === 'add' ? [
           <Button key="cancel" onClick={() => setIsModalOpen(false)}>
             取消
           </Button>,
-          <Button key="submit" type="primary" htmlType="submit">
+          <Button key="submit" type="primary" onClick={handleAdd}>
             提交
+          </Button>,
+        ] : [
+          <Button key="close" onClick={() => setIsModalOpen(false)}>
+            关闭
           </Button>,
         ]}
       >
-        <Form form={addForm} layout="vertical">
-          <Form.Item
-            label="申请编号"
-            name="applicationNumber"
-            rules={[{ required: true, message: "请输入申请编号" }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="申请内容"
-            name="applicationContent"
-            rules={[{ required: true, message: "请输入申请内容" }]}
-          >
-            <Input.TextArea rows={3} />
-          </Form.Item>
-        </Form>
+        {modalMode === 'add' ? (
+          <Form form={addForm} layout="horizontal" className="space-y-7">
+            <Form.Item
+              label="申请编号"
+              name="applicationNumber"
+              rules={[{ required: true, message: "请输入申请编号" }]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              label="申请内容"
+              name="applicationContent"
+              rules={[{ required: true, message: "请输入申请内容" }]}
+            >
+              <Input.TextArea rows={12} />
+            </Form.Item>
+          </Form>
+        ) : (
+          selectedRecord && (
+            <div>
+              <p>申请编号: {selectedRecord.applicationNumber}</p>
+              <p>申请时间: {selectedRecord.applicationTime}</p>
+              <p>申请内容: {selectedRecord.applicationContent}</p>
+              <p>状态: {selectedRecord.status}</p>
+              <p>审核人: {selectedRecord.reviewer}</p>
+              <p>审核备注: {selectedRecord.reviewNote}</p>
+            </div>
+          )
+        )}
       </Modal>
     </div>
   );

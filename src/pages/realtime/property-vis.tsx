@@ -9,6 +9,7 @@ import { getSensorDetail } from "@/request/realtime";
 import type { BuildingMap, RoomInfo } from "@/config/building-map";
 import { useAuth } from "@/hooks/use-auth";
 import { CountdownTimer } from "./countdown-timer";
+import BuildingMapChart from "./building-map-chart";
 
 interface PermissionNode extends TreeDataNode {
   key: string;

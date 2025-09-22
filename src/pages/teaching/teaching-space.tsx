@@ -1,4 +1,4 @@
-import { Button, Form, Input, Table, Modal, Popconfirm } from "antd";
+import { Button, Form, Input, Table, Modal, Popconfirm, Select } from "antd";
 import { Controller, useForm } from "react-hook-form";
 import { useState } from "react";
 
@@ -35,6 +35,8 @@ export function TeachingSpacePage() {
   ]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"add" | "view">("add");
+  const [selectedRecord, setSelectedRecord] = useState<any>(null);
 
   const columns = [
     { title: "空间编号", dataIndex: "teaching-space", key: "teaching-space" },
@@ -46,7 +48,16 @@ export function TeachingSpacePage() {
       key: "operation",
       render: (_: any, record: any) => (
         <div className="flex gap-2">
-          <Button type="default">查看</Button>
+          <Button
+            type="default"
+            onClick={() => {
+              setModalMode("view");
+              setSelectedRecord(record);
+              setIsModalOpen(true);
+            }}
+          >
+            查看
+          </Button>
           <Popconfirm title="确定删除吗？" okText="确定" cancelText="取消">
             <Button type="default">删除</Button>
           </Popconfirm>
@@ -154,8 +165,14 @@ export function TeachingSpacePage() {
           </Button>
         </div>
         <div>
-          <Button type="primary" onClick={() => setIsModalOpen(true)}>
-            新增
+          <Button
+            type="primary"
+            onClick={() => {
+              setModalMode("add");
+              setIsModalOpen(true);
+            }}
+          >
+            创建
           </Button>
         </div>
       </Form>
@@ -163,51 +180,73 @@ export function TeachingSpacePage() {
       {/* 表格 */}
       <Table className="mt-2" columns={columns} dataSource={dataSource} />
 
-      {/* 新增弹窗 */}
+      {/* 新增/查看弹窗 */}
       <Modal
-        title="新增教学空间"
+        title={modalMode === "add" ? "新增教学空间" : "查看教学空间"}
         open={isModalOpen}
-        onOk={handleAdd}
         onCancel={() => setIsModalOpen(false)}
-        footer={[
-          <Button key="cancel" onClick={() => setIsModalOpen(false)}>
-            取消
-          </Button>,
-          <Button key="submit" type="primary" htmlType="submit">
-            提交
-          </Button>,
-        ]}
+        footer={
+          modalMode === "add"
+            ? [
+                <Button key="cancel" onClick={() => setIsModalOpen(false)}>
+                  取消
+                </Button>,
+                <Button key="submit" type="primary" onClick={handleAdd}>
+                  提交
+                </Button>,
+              ]
+            : [
+                <Button key="close" onClick={() => setIsModalOpen(false)}>
+                  关闭
+                </Button>,
+              ]
+        }
       >
-        <Form form={addForm} layout="vertical">
-          <Form.Item
-            label="空间编号"
-            name="teaching-space"
-            rules={[{ required: true, message: "请输入空间编号" }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="创建时间"
-            name="teaching-time"
-            rules={[{ required: true, message: "请输入创建时间" }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="空间名称"
-            name="teaching-name"
-            rules={[{ required: true, message: "请输入空间名称" }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="所属账号"
-            name="teaching-role"
-            rules={[{ required: true, message: "请输入所属账号" }]}
-          >
-            <Input />
-          </Form.Item>
-        </Form>
+        {modalMode === "add" ? (
+          <Form form={addForm} layout="horizontal" className="space-y-7">
+            <Form.Item
+              label="空间编号"
+              name="teaching-space"
+              rules={[{ required: true, message: "请输入空间编号" }]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              label="空间名称"
+              name="teaching-name"
+              rules={[{ required: true, message: "请输入空间名称" }]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              label="所属账号"
+              name="teaching-role"
+              rules={[{ required: true, message: "请输入所属账号" }]}
+            >
+              <Select
+                options={[
+                  { label: "管理员", value: "管理员" },
+                  { label: "老师", value: "老师" },
+                  { label: "学生", value: "学生" },
+                ]}
+              />
+            </Form.Item>
+          </Form>
+        ) : (
+          selectedRecord && (
+            <div>
+              <p>空间编号: {selectedRecord["teaching-space"]}</p>
+              <p>创建时间: {selectedRecord["teaching-time"]}</p>
+              <p>空间名称: {selectedRecord["teaching-name"]}</p>
+              <p>所属账号: {selectedRecord["teaching-role"]}</p>
+              <div className="flex flex-row gap-2 mt-4">
+                <Button type="primary">日志管理</Button>
+                <Button type="primary">楼宇管控</Button>
+                <Button type="primary">实时数据</Button>
+              </div>
+            </div>
+          )
+        )}
       </Modal>
     </div>
   );
