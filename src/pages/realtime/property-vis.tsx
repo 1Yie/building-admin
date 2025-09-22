@@ -5,9 +5,10 @@ import { useQuery } from "@tanstack/react-query";
 import { permissionList } from "@/request/account";
 import type { TreeDataNode } from "antd";
 import { buildingMaps, floorBackgrounds } from "@/config/building-map";
-import { getSensorList, getSensorDetail } from "@/request/realtime";
+import { getSensorDetail } from "@/request/realtime";
 import type { BuildingMap, RoomInfo } from "@/config/building-map";
 import { useAuth } from "@/hooks/use-auth";
+import { CountdownTimer } from "./countdown-timer";
 
 interface PermissionNode extends TreeDataNode {
   key: string;
@@ -45,6 +46,10 @@ export default function PropertyVis() {
     naturalWidth: 0,
     naturalHeight: 0,
   });
+
+  // 刷新间隔
+  const REFRESH_INTERVAL = 60;
+  const [refreshTicker, setRefreshTicker] = useState(0);
 
   // 添加请求取消控制器的引用
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -155,16 +160,41 @@ export default function PropertyVis() {
     nodeKey: string,
     nodes: PermissionNode[]
   ): PermissionNode | null => {
-    const nodeType = getNodeType(nodeKey);
+    // 辅助函数: 查找到节点的完整路径
+    const findPathToNode = (
+      key: string,
+      currentNodes: PermissionNode[],
+      path: PermissionNode[]
+    ): PermissionNode[] | null => {
+      for (const node of currentNodes) {
+        const newPath = [...path, node];
+        if (node.key === key) {
+          return newPath;
+        }
+        if (node.children) {
+          const result = findPathToNode(key, node.children, newPath);
+          if (result) return result;
+        }
+      }
+      return null;
+    };
 
-    // 如果本身就是空间节点，直接返回
-    if (nodeType === "space") {
-      return findNodeByKey(nodeKey, nodes);
+    const path = findPathToNode(nodeKey, nodes, []);
+    if (!path) return null;
+
+    // 查找最近的空间类型祖先节点
+    // 从倒数第二个元素(直接父节点)开始向前遍历
+    for (let i = path.length - 2; i >= 0; i--) {
+      const ancestor = path[i];
+      if (getNodeType(ancestor.key) === "space") {
+        return ancestor;
+      }
     }
 
-    // 如果是终端或传感器，查找其父空间
-    if (nodeType === "terminal" || nodeType === "sensor") {
-      return findParentSpaceRecursive(nodeKey, nodes);
+    // 如果节点本身是空间类型,则直接返回该节点
+    const targetNode = path[path.length - 1];
+    if (getNodeType(targetNode.key) === "space") {
+      return targetNode;
     }
 
     return null;
@@ -453,24 +483,6 @@ export default function PropertyVis() {
     };
   };
 
-  // 获取字段单位
-  // const getFieldUnit = (field: string): string => {
-  //   const fieldLower = field.toLowerCase();
-  //   const unitMap: { [key: string]: string } = {
-  //     'temperature': '°C',
-  //     'temp': '°C',
-  //     'humidity': '%',
-  //     'humi': '%',
-  //     'pressure': 'kPa',
-  //     'co2': 'ppm',
-  //     'pm25': 'μg/m³',
-  //     'pm10': 'μg/m³',
-  //     'tvoc': 'ppb',
-  //     'noise': 'dB'
-  //   };
-  //   return unitMap[fieldLower] || '';
-  // };
-
   // 获取指定空间下的传感器数据
   const getSensorDataForSpace = async (
     spaceNode: PermissionNode
@@ -699,7 +711,7 @@ export default function PropertyVis() {
 
     if (sensorData && Object.keys(sensorData).length > 0) {
       const currentTime = new Date().getTime();
-      const fiveMinutesAgo = currentTime - 5 * 60 * 1000; // 5分钟前
+      const fiveMinutesAgo = currentTime - 10 * 60 * 1000;
       console.log("currentTime", currentTime);
       console.log("fiveMinutesAgo", fiveMinutesAgo);
 
@@ -736,7 +748,6 @@ export default function PropertyVis() {
             onlineCount++;
           }
         }
-        // time 为 null 或 undefined 的传感器视为离线
       }
 
       console.log("onlineCount", onlineCount);
@@ -952,9 +963,9 @@ export default function PropertyVis() {
                   },
                   style: {
                     fill: (() => {
-                      // if (data.isSelected &&) {
-                      //   return "rgba(24, 144, 255, 0.7)";
-                      // }
+                      if (data.isSelected) {
+                        return "rgba(24, 144, 255, 0.7)";
+                      }
                       // 根据在线状态设置颜色
                       if (data.online === "online") {
                         return "rgba(82, 196, 26, 0.7)"; // 绿色 - 全部在线
@@ -968,9 +979,9 @@ export default function PropertyVis() {
                       }
                     })(),
                     stroke: (() => {
-                      // if (data.isSelected) {
-                      //   return "#1890ff";
-                      // }
+                      if (data.isSelected) {
+                        return "#1890ff";
+                      }
                       // 根据在线状态设置边框颜色
                       if (data.online === "online") {
                         return "#52c41a"; // 绿色边框
@@ -983,7 +994,7 @@ export default function PropertyVis() {
                         return "#f5222d"; // 红色边框
                       }
                     })(),
-                    lineWidth: 1,
+                    lineWidth: data.isSelected ? 3 : 1,
                   },
                   silent: false,
                 },
@@ -1354,6 +1365,7 @@ export default function PropertyVis() {
     imageSize.naturalHeight,
     chartSize.width,
     chartSize.height,
+    refreshTicker,
   ]);
 
   return (
@@ -1414,6 +1426,12 @@ export default function PropertyVis() {
               <Spin size="large" tip="正在加载传感器数据..." />
             </div>
           )}
+          <div className="absolute top-2 right-2 z-20 flex items-center gap-2">
+            <CountdownTimer
+              initialCountdown={REFRESH_INTERVAL}
+              onTick={() => setRefreshTicker((r) => r + 1)}
+            />
+          </div>
           <ReactECharts
             className="rounded-md"
             ref={chartRef}
