@@ -6,12 +6,8 @@ import { permissionList } from "@/request/account";
 import type { TreeDataNode } from "antd";
 import { buildingMaps, floorBackgrounds } from "@/config/building-map";
 import { getSensorList, getSensorDetail } from "@/request/realtime";
-import type {
-  BuildingMap,
-  RoomInfo,
-} from "@/config/building-map";
+import type { BuildingMap, RoomInfo } from "@/config/building-map";
 import { useAuth } from "@/hooks/use-auth";
-
 
 interface PermissionNode extends TreeDataNode {
   key: string;
@@ -35,7 +31,8 @@ export default function PropertyVis() {
   const [permissionData, setPermissionData] = useState<PermissionNode[]>([]);
   const [checkedKeys, setCheckedKeys] = useState<string[]>([]);
   const [selectedNode, setSelectedNode] = useState<PermissionNode | null>(null);
-  const [currentBuildingMap, setCurrentBuildingMap] = useState<BuildingMap | null>(null);
+  const [currentBuildingMap, setCurrentBuildingMap] =
+    useState<BuildingMap | null>(null);
   const [currentFloor, setCurrentFloor] = useState<number | null>(null); // 添加当前楼层状态
   const chartRef = useRef(null);
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -53,9 +50,8 @@ export default function PropertyVis() {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // 添加传感器请求开关状态
-  const [enableSensorRequest, setEnableSensorRequest] = useState<boolean>(false);
-
-
+  const [enableSensorRequest, setEnableSensorRequest] =
+    useState<boolean>(false);
 
   const {
     data: permissionDataResponse,
@@ -77,7 +73,6 @@ export default function PropertyVis() {
     retry: 3, // 失败时重试3次
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // 指数退避重试延迟
   });
-
 
   async function fetchAllSensorFields(transformed: any[]) {
     // 用于收集所有传感器 ID
@@ -129,9 +124,9 @@ export default function PropertyVis() {
     if (permissionError) {
       console.error("获取权限失败:", permissionError);
 
-      if (permissionError.message?.includes('timeout')) {
+      if (permissionError.message?.includes("timeout")) {
         console.warn("网络请求超时，请检查网络连接或稍后重试");
-      } else if (permissionError.message?.includes('Network Error')) {
+      } else if (permissionError.message?.includes("Network Error")) {
         console.warn("网络连接失败，请检查网络设置");
       } else {
         console.warn("获取权限数据失败，请稍后重试");
@@ -145,25 +140,30 @@ export default function PropertyVis() {
   };
 
   // 检测节点类型
-  const getNodeType = (nodeKey: string): 'building' | 'space' | 'terminal' | 'sensor' | 'unknown' => {
-    if (nodeKey.includes("building-LY")) return 'building';
-    if (nodeKey.includes("building-KJ")) return 'space';
-    if (nodeKey.includes("building-ZD")) return 'terminal';
-    if (nodeKey.includes("building-CGQ")) return 'sensor';
-    return 'unknown';
+  const getNodeType = (
+    nodeKey: string
+  ): "building" | "space" | "terminal" | "sensor" | "unknown" => {
+    if (nodeKey.includes("building-LY")) return "building";
+    if (nodeKey.includes("building-KJ")) return "space";
+    if (nodeKey.includes("building-ZD")) return "terminal";
+    if (nodeKey.includes("building-CGQ")) return "sensor";
+    return "unknown";
   };
 
   // 查找节点的父空间
-  const findParentSpace = (nodeKey: string, nodes: PermissionNode[]): PermissionNode | null => {
+  const findParentSpace = (
+    nodeKey: string,
+    nodes: PermissionNode[]
+  ): PermissionNode | null => {
     const nodeType = getNodeType(nodeKey);
 
     // 如果本身就是空间节点，直接返回
-    if (nodeType === 'space') {
+    if (nodeType === "space") {
       return findNodeByKey(nodeKey, nodes);
     }
 
     // 如果是终端或传感器，查找其父空间
-    if (nodeType === 'terminal' || nodeType === 'sensor') {
+    if (nodeType === "terminal" || nodeType === "sensor") {
       return findParentSpaceRecursive(nodeKey, nodes);
     }
 
@@ -171,9 +171,12 @@ export default function PropertyVis() {
   };
 
   // 递归查找父空间
-  const findParentSpaceRecursive = (nodeKey: string, nodes: PermissionNode[]): PermissionNode | null => {
+  const findParentSpaceRecursive = (
+    nodeKey: string,
+    nodes: PermissionNode[]
+  ): PermissionNode | null => {
     for (const node of nodes) {
-      if (getNodeType(node.key) === 'space') {
+      if (getNodeType(node.key) === "space") {
         // 检查这个空间是否包含目标节点
         if (checkNodeContains(node, nodeKey)) {
           return node;
@@ -190,7 +193,10 @@ export default function PropertyVis() {
   };
 
   // 根据key查找节点
-  const findNodeByKey = (nodeKey: string, nodes: PermissionNode[]): PermissionNode | null => {
+  const findNodeByKey = (
+    nodeKey: string,
+    nodes: PermissionNode[]
+  ): PermissionNode | null => {
     for (const node of nodes) {
       if (node.key === nodeKey) return node;
 
@@ -203,14 +209,19 @@ export default function PropertyVis() {
   };
 
   // 查找节点的父楼宇
-  const findParentBuilding = (nodeKey: string, nodes: PermissionNode[]): PermissionNode | null => {
+  const findParentBuilding = (
+    nodeKey: string,
+    nodes: PermissionNode[]
+  ): PermissionNode | null => {
     // 如果本身就是楼宇节点
     if (nodeKey.includes("building-LY")) {
-      return nodes.find(node => node.key === nodeKey) || null;
+      return nodes.find((node) => node.key === nodeKey) || null;
     }
 
     // 递归查找父楼宇
-    const searchInNodes = (searchNodes: PermissionNode[]): PermissionNode | null => {
+    const searchInNodes = (
+      searchNodes: PermissionNode[]
+    ): PermissionNode | null => {
       for (const node of searchNodes) {
         // 如果是楼宇节点，检查其子节点
         if (node.key.includes("building-LY")) {
@@ -233,7 +244,10 @@ export default function PropertyVis() {
   };
 
   // 检查节点是否包含目标节点
-  const checkNodeContains = (parentNode: PermissionNode, targetKey: string): boolean => {
+  const checkNodeContains = (
+    parentNode: PermissionNode,
+    targetKey: string
+  ): boolean => {
     if (parentNode.key === targetKey) return true;
 
     if (parentNode.children) {
@@ -265,7 +279,9 @@ export default function PropertyVis() {
 
     if (parentBuilding) {
       // 找到对应的楼宇地图配置
-      const buildingMap = buildingMaps.find((map) => map.key === parentBuilding.key);
+      const buildingMap = buildingMaps.find(
+        (map) => map.key === parentBuilding.key
+      );
 
       if (buildingMap) {
         // 根据选中的节点确定楼层
@@ -275,20 +291,27 @@ export default function PropertyVis() {
         // 获取选择节点的类型
         const selectedNodeType = getNodeType(info.node.key);
 
-        if (selectedNodeType === 'building') {
+        if (selectedNodeType === "building") {
           // 如果选择的是楼宇（顶层），默认显示一楼
           targetFloor = 1;
-        } else if (selectedNodeType === 'space') {
+        } else if (selectedNodeType === "space") {
           // 如果选择的是空间，直接从房间配置中获取楼层
-          roomConfig = buildingMap.rooms.find(room => room.key === info.node.key);
+          roomConfig = buildingMap.rooms.find(
+            (room) => room.key === info.node.key
+          );
           if (roomConfig) {
             targetFloor = roomConfig.floor;
           }
-        } else if (selectedNodeType === 'terminal' || selectedNodeType === 'sensor') {
+        } else if (
+          selectedNodeType === "terminal" ||
+          selectedNodeType === "sensor"
+        ) {
           // 如果选择的是终端或传感器，找到其所在的空间，然后获取楼层
           const parentSpace = findParentSpace(info.node.key, permissionData);
           if (parentSpace) {
-            roomConfig = buildingMap.rooms.find(room => room.key === parentSpace.key);
+            roomConfig = buildingMap.rooms.find(
+              (room) => room.key === parentSpace.key
+            );
             if (roomConfig) {
               targetFloor = roomConfig.floor;
             }
@@ -316,7 +339,7 @@ export default function PropertyVis() {
             // 确保在图片加载完成后再更新状态和计算尺寸
             const updatedBuildingMap = {
               ...buildingMap,
-              background: backgroundImage
+              background: backgroundImage,
             };
 
             setCurrentBuildingMap(updatedBuildingMap);
@@ -328,7 +351,7 @@ export default function PropertyVis() {
             }, 50);
           };
           img.onerror = () => {
-            console.error('加载楼宇地图背景图片失败:', backgroundImage);
+            console.error("加载楼宇地图背景图片失败:", backgroundImage);
             setCurrentBuildingMap(null);
             setCurrentFloor(null);
             setImageSize({
@@ -343,12 +366,12 @@ export default function PropertyVis() {
           img.src = backgroundImage;
         } else {
           // 如果没有找到对应的楼层配置或背景图，不显示背景
-          console.warn('未找到所选节点的楼层配置或背景图:', info.node.key);
+          console.warn("未找到所选节点的楼层配置或背景图:", info.node.key);
           setCurrentBuildingMap(null);
           setCurrentFloor(null);
         }
       } else {
-        console.warn('未找到对应的楼宇地图配置:', parentBuilding.key);
+        console.warn("未找到对应的楼宇地图配置:", parentBuilding.key);
         setCurrentBuildingMap(null);
         setCurrentFloor(null);
       }
@@ -372,7 +395,7 @@ export default function PropertyVis() {
 
     // 确保容器尺寸有效
     if (containerWidth <= 0 || containerHeight <= 0) {
-      console.warn('容器尺寸无效，跳过图片尺寸计算');
+      console.warn("容器尺寸无效，跳过图片尺寸计算");
       return;
     }
 
@@ -448,24 +471,25 @@ export default function PropertyVis() {
   //   return unitMap[fieldLower] || '';
   // };
 
-
   // 获取指定空间下的传感器数据
-  const getSensorDataForSpace = async (spaceNode: PermissionNode, signal?: AbortSignal): Promise<any> => {
-    // 如果传感器请求开关关闭，直接返回null
+  const getSensorDataForSpace = async (
+    spaceNode: PermissionNode
+  ): Promise<any> => {
+    // 如果传感器请求开关关闭，直接返回 null
     if (!enableSensorRequest) {
       return null;
     }
 
     if (!spaceNode.children) return null;
 
-    // 查找该空间下的所有终端节点（ZD节点）
+    // 查找该空间下的所有终端节点（ZD 节点）
     const terminals: PermissionNode[] = [];
 
     function collectTerminals(node: PermissionNode) {
       if (!node.children) return;
 
-      node.children.forEach(child => {
-        if (child.key.includes('ZD')) {
+      node.children.forEach((child) => {
+        if (child.key.includes("ZD")) {
           // 这是终端节点，直接添加
           terminals.push(child);
         } else {
@@ -479,68 +503,57 @@ export default function PropertyVis() {
 
     if (terminals.length === 0) return null;
 
-    // 获取所有终端下的传感器数据并聚合
-    const allSensorData: any = {};
+    // 聚合所有终端的传感器数据
+    const allSensorData: Record<string, any> = {};
 
     try {
       // 并行获取所有终端的传感器数据
       const terminalPromises = terminals.map(async (terminal) => {
-        // 检查请求是否已被取消
-        if (signal?.aborted) {
-          throw new Error('Request aborted');
-        }
-
-        const terminalId = terminal.key.replace('building-', '');
-        console.log('通过终端获取传感器数据', terminalId, terminal.title);
+        const terminalId = terminal.key.replace("building-", "");
+        console.log("通过终端获取传感器数据", terminalId, terminal.title);
 
         try {
-          // 直接通过终端ID获取该终端下的所有传感器数据
-          const terminalSensorData = await getSensorDetail(terminalId, signal);
+          const terminalSensorData = await getSensorDetail(terminalId);
 
-
-          if (terminalSensorData && terminalSensorData.property && terminalSensorData.property.length > 0) {
-            // 将终端下的所有传感器数据转换为统一格式
+          if (
+            terminalSensorData?.property &&
+            terminalSensorData.property.length > 0
+          ) {
             return terminalSensorData.property.map((prop: any) => ({
               sensorKey: `building-${prop.property_id}`,
-              sensorTitle: prop.field || `传感器-${prop.property_id}`, // 使用传感器的field字段
+              sensorTitle: prop.field || `传感器-${prop.property_id}`,
               terminalTitle: terminal.title,
               terminalKey: terminal.key,
               data: {
-                property: [prop]
-              }
+                property: [prop],
+              },
             }));
           } else {
-            console.log(`终端 ${terminal.title} (${terminalId}) 下没有传感器数据`);
+            console.log(
+              `终端 ${terminal.title} (${terminalId}) 下没有传感器数据`
+            );
             return [];
           }
         } catch (error) {
-          console.error(`获取终端 ${terminal.title} (${terminalId}) 下的传感器数据失败:`, error);
+          console.error(
+            `获取终端 ${terminal.title} (${terminalId}) 下的传感器数据失败`,
+            error
+          );
           return [];
         }
       });
 
       const terminalResults = await Promise.all(terminalPromises);
 
-      // 再次检查请求是否已被取消
-      if (signal?.aborted) {
-        throw new Error('Request aborted');
-      }
-
       // 聚合所有终端的传感器数据
       terminalResults.flat().forEach((result) => {
         if (result.data?.property && result.data.property.length > 0) {
           result.data.property.forEach((prop: any) => {
-            // 使用传感器标题和字段名组合作为唯一键
             const fieldKey = `${result.sensorTitle}`;
 
-            if (prop.values && prop.values.length > 0 && prop.times && prop.times.length > 0) {
-              // 取最新的值
+            if (prop.values?.length > 0 && prop.times?.length > 0) {
               const latestValue = prop.values[prop.values.length - 1];
               const latestTime = prop.times[prop.times.length - 1];
-              console.log("latestTime", latestTime)
-              console.log("latestValue", latestValue)
-              console.log("prop.name", prop.name)
-              console.log("fieldKey.name", fieldKey)
 
               allSensorData[fieldKey] = {
                 value: latestValue,
@@ -550,33 +563,29 @@ export default function PropertyVis() {
                 sensorKey: result.sensorKey,
                 terminalTitle: result.terminalTitle,
                 terminalKey: result.terminalKey,
-                field: prop.field
+                field: prop.field,
               };
             } else {
               allSensorData[fieldKey] = {
-                value: '--',
+                value: "--",
                 time: null,
                 name: prop.name,
                 sensorTitle: result.sensorTitle,
                 sensorKey: result.sensorKey,
                 terminalTitle: result.terminalTitle,
                 terminalKey: result.terminalKey,
-                field: prop.field
+                field: prop.field,
               };
             }
           });
         }
       });
 
-      console.log("allSensorData", allSensorData)
+      console.log("allSensorData", allSensorData);
 
       return Object.keys(allSensorData).length > 0 ? allSensorData : null;
     } catch (error) {
-      if (error instanceof Error && error.message === 'Request aborted') {
-        console.log('传感器数据请求已取消');
-        return null;
-      }
-      console.error('获取传感器数据失败:', error);
+      console.error("获取传感器数据失败:", error);
       return null;
     }
   };
@@ -588,7 +597,6 @@ export default function PropertyVis() {
     }
 
     const seriesData: any[] = [];
-
 
     // 找到父楼宇节点
     const parentBuilding = findParentBuilding(selectedNode.key, permissionData);
@@ -602,13 +610,16 @@ export default function PropertyVis() {
     // 确定要高亮的空间
     let targetSpaceKey: string | null = null;
 
-    if (selectedNodeType === 'space') {
+    if (selectedNodeType === "space") {
       // 如果选择的是空间，高亮该空间
       targetSpaceKey = selectedNode.key;
-    } else if (selectedNodeType === 'terminal' || selectedNodeType === 'sensor') {
+    } else if (
+      selectedNodeType === "terminal" ||
+      selectedNodeType === "sensor"
+    ) {
       // 如果选择的是终端或传感器，高亮其所在的空间
       const parentSpace = findParentSpace(selectedNode.key, permissionData);
-      console.log('parentSpace', parentSpace);
+      console.log("parentSpace", parentSpace);
       targetSpaceKey = parentSpace?.key || null;
     }
 
@@ -619,7 +630,7 @@ export default function PropertyVis() {
     for (const roomConfig of currentBuildingMap.rooms) {
       // 检查请求是否已被取消
       if (signal?.aborted) {
-        throw new Error('Request aborted');
+        throw new Error("Request aborted");
       }
 
       // 只渲染当前楼层的房间
@@ -634,8 +645,13 @@ export default function PropertyVis() {
         // 收集空间数据，判断是否应该高亮
         const shouldHighlight = targetSpaceKey === spaceNode.key;
 
-        console.log('shouldHighlight', shouldHighlight);
-        await addSpaceData(roomConfig, spaceNode, spaceDataList, shouldHighlight, signal);
+        console.log("shouldHighlight", shouldHighlight);
+        await addSpaceData(
+          roomConfig,
+          spaceNode,
+          spaceDataList,
+          shouldHighlight
+        );
       }
     }
 
@@ -646,14 +662,23 @@ export default function PropertyVis() {
   };
 
   // 查找空间节点
-  const findSpaceNodeByKey = (spaceKey: string, buildingNode: PermissionNode): PermissionNode | null => {
+  const findSpaceNodeByKey = (
+    spaceKey: string,
+    buildingNode: PermissionNode
+  ): PermissionNode | null => {
     if (!buildingNode.children) return null;
-    return buildingNode.children.find(child => child.key === spaceKey) || null;
+    return (
+      buildingNode.children.find((child) => child.key === spaceKey) || null
+    );
   };
 
-
   // 添加空间数据
-  const addSpaceData = async (roomConfig: RoomInfo, spaceNode: PermissionNode, seriesData: any[], shouldHighlight: boolean, signal?: AbortSignal) => {
+  const addSpaceData = async (
+    roomConfig: RoomInfo,
+    spaceNode: PermissionNode,
+    seriesData: any[],
+    shouldHighlight: boolean
+  ) => {
     const spaceCoords = convertToContainerCoords(
       roomConfig.x,
       roomConfig.y,
@@ -662,18 +687,15 @@ export default function PropertyVis() {
     );
 
     // 获取该空间的传感器数据
-    const sensorData = await getSensorDataForSpace(spaceNode, signal);
+    const sensorData = await getSensorDataForSpace(spaceNode);
 
-
-
-    console.log("selectedNode", selectedNode?.key)
-    console.log("spaceNode", spaceNode?.key)
+    console.log("selectedNode", selectedNode?.key);
+    console.log("spaceNode", spaceNode?.key);
 
     // 判断在线状态：根据传感器数据的最新时间判断
-    let onlineStatus = 'offline'; // 默认离线
+    let onlineStatus = "offline"; // 默认离线
     let onlineCount = 0;
     let totalSensors = 0;
-
 
     if (sensorData && Object.keys(sensorData).length > 0) {
       const currentTime = new Date().getTime();
@@ -685,7 +707,11 @@ export default function PropertyVis() {
         const sensorInfo = sensorData[field];
         totalSensors++;
 
-        console.log("raw sensorInfo.time:", sensorInfo.time, typeof sensorInfo.time);
+        console.log(
+          "raw sensorInfo.time:",
+          sensorInfo.time,
+          typeof sensorInfo.time
+        );
 
         if (sensorInfo && sensorInfo.time) {
           // 解析为今天的时间
@@ -702,7 +728,11 @@ export default function PropertyVis() {
           console.log("fiveMinutesAgo", fiveMinutesAgo);
 
           if (sensorTime > fiveMinutesAgo) {
-            console.log("sensorTime > fiveMinutesAgo", sensorTime, fiveMinutesAgo);
+            console.log(
+              "sensorTime > fiveMinutesAgo",
+              sensorTime,
+              fiveMinutesAgo
+            );
             onlineCount++;
           }
         }
@@ -713,19 +743,21 @@ export default function PropertyVis() {
       console.log("totalSensors", totalSensors);
 
       if (onlineCount === totalSensors && totalSensors > 0) {
-        onlineStatus = 'online';
+        onlineStatus = "online";
       } else if (onlineCount > 0) {
         onlineStatus = `partial-${totalSensors - onlineCount}`;
       } else {
-        onlineStatus = 'offline';
+        onlineStatus = "offline";
       }
     }
 
-
     seriesData.push({
       name: roomConfig.title,
-      value: [spaceCoords.x + spaceCoords.width / 2, spaceCoords.y + spaceCoords.height / 2],
-      type: 'space',
+      value: [
+        spaceCoords.x + spaceCoords.width / 2,
+        spaceCoords.y + spaceCoords.height / 2,
+      ],
+      type: "space",
       spaceKey: spaceNode.key,
       coords: spaceCoords,
       roomConfig,
@@ -733,7 +765,7 @@ export default function PropertyVis() {
       sensorData: sensorData || {}, // 添加传感器数据
       online: onlineStatus, // 详细的在线状态信息
       onlineCount, // 在线传感器数量
-      totalSensors // 总传感器数量
+      totalSensors, // 总传感器数量
     });
   };
 
@@ -744,7 +776,11 @@ export default function PropertyVis() {
   const getOption = async (signal?: AbortSignal) => {
     if (!currentBuildingMap || !selectedNode) {
       return {
-        title: { text: selectedNode?.title || "请选择楼宇", left: "center", top: 10 },
+        title: {
+          text: selectedNode?.title || "请选择楼宇",
+          left: "center",
+          top: 10,
+        },
         xAxis: { type: "value", min: 0, max: 100, show: false },
         yAxis: { type: "value", min: 0, max: 100, show: false },
         series: [],
@@ -755,19 +791,32 @@ export default function PropertyVis() {
 
     return {
       title: { text: selectedNode.title, left: "center", top: 10 },
-      xAxis: { type: "value", min: 0, max: chartSize.width || 100, show: false },
-      yAxis: { type: "value", min: 0, max: chartSize.height || 100, show: false },
+      xAxis: {
+        type: "value",
+        min: 0,
+        max: chartSize.width || 100,
+        show: false,
+      },
+      yAxis: {
+        type: "value",
+        min: 0,
+        max: chartSize.height || 100,
+        show: false,
+      },
       series: [
         {
           type: "custom",
           coordinateSystem: "cartesian2d",
-          data: seriesData.map(item => ({ value: item.value, ...item })),
+          data: seriesData.map((item) => ({ value: item.value, ...item })),
           renderItem: (params: any, api: any) => {
             const data = seriesData[params.dataIndex] || params.data;
             if (!data || data.type !== "space") return null;
 
             const startCoord = api.coord([data.coords.x, data.coords.y]);
-            const endCoord = api.coord([data.coords.x + data.coords.width, data.coords.y + data.coords.height]);
+            const endCoord = api.coord([
+              data.coords.x + data.coords.width,
+              data.coords.y + data.coords.height,
+            ]);
             const width = endCoord[0] - startCoord[0];
             const height = endCoord[1] - startCoord[1];
 
@@ -782,7 +831,9 @@ export default function PropertyVis() {
             const paddingTop = 4;
             const paddingBottom = 4;
             const lineHeight = 16;
-            const maxLines = Math.floor((Math.abs(height) - paddingTop - paddingBottom) / lineHeight);
+            const maxLines = Math.floor(
+              (Math.abs(height) - paddingTop - paddingBottom) / lineHeight
+            );
 
             // 动态添加传感器数据行，但不超过矩形高度
             if (sensorFields.length > 0 && maxLines > 1) {
@@ -790,14 +841,14 @@ export default function PropertyVis() {
               const availableLines = maxLines - 1;
               const displayFields = sensorFields.slice(0, availableLines);
 
-              displayFields.forEach(field => {
+              displayFields.forEach((field) => {
                 const sensorInfo = sensorData[field];
                 if (sensorInfo && sensorInfo.value !== undefined) {
                   // 从field中提取显示名称
                   const displayName = field
-                    .replace(/\(.*?\)/g, '')        // 去掉括号内容
-                    .replace(/_.*/, '')             // 去掉下划线和后面的内容
-                    .replace(/传感器|sensor/gi, '') // 去掉“传感器”或“sensor”
+                    .replace(/\(.*?\)/g, "") // 去掉括号内容
+                    .replace(/_.*/, "") // 去掉下划线和后面的内容
+                    .replace(/传感器|sensor/gi, "") // 去掉“传感器”或“sensor”
                     .trim();
 
                   const value = sensorInfo.value;
@@ -805,12 +856,16 @@ export default function PropertyVis() {
                   lines.push({
                     text: `{name|${displayName}: }{value|${value}}`,
                     color: "#333",
-                    bold: false
+                    bold: false,
                   });
                 }
               });
             } else if (sensorFields.length === 0 && maxLines > 1) {
-              lines.push({ text: '暂无传感器数据', color: "#999", bold: false });
+              lines.push({
+                text: "暂无传感器数据",
+                color: "#999",
+                bold: false,
+              });
             }
 
             const topY = Math.min(startCoord[1], endCoord[1]);
@@ -856,9 +911,17 @@ export default function PropertyVis() {
 
               if (hasRich) {
                 baseStyle.rich = {
-                  name: { fill: item.color || "#333", fontWeight: item.bold ? "bold" : "normal", fontSize },
+                  name: {
+                    fill: item.color || "#333",
+                    fontWeight: item.bold ? "bold" : "normal",
+                    fontSize,
+                  },
                   value: { fill: "#000", fontWeight: "bold", fontSize },
-                  empty: { fill: item.color || "#999", fontWeight: item.bold ? "bold" : "normal", fontSize },
+                  empty: {
+                    fill: item.color || "#999",
+                    fontWeight: item.bold ? "bold" : "normal",
+                    fontSize,
+                  },
                 };
                 // 注意：当使用 rich 时，不要同时设置 fill
               } else {
@@ -880,16 +943,25 @@ export default function PropertyVis() {
                 // 矩形背景
                 {
                   type: "rect",
-                  shape: { x: startCoord[0], y: startCoord[1], width, height, r: 4 },
+                  shape: {
+                    x: startCoord[0],
+                    y: startCoord[1],
+                    width,
+                    height,
+                    r: 4,
+                  },
                   style: {
                     fill: (() => {
                       // if (data.isSelected &&) {
                       //   return "rgba(24, 144, 255, 0.7)";
                       // }
                       // 根据在线状态设置颜色
-                      if (data.online === 'online') {
+                      if (data.online === "online") {
                         return "rgba(82, 196, 26, 0.7)"; // 绿色 - 全部在线
-                      } else if (data.online && data.online.startsWith('partial-')) {
+                      } else if (
+                        data.online &&
+                        data.online.startsWith("partial-")
+                      ) {
                         return "rgba(250, 173, 20, 0.7)"; // 橙色 - 部分在线
                       } else {
                         return "rgba(245, 34, 45, 0.7)"; // 红色 - 离线
@@ -900,9 +972,12 @@ export default function PropertyVis() {
                       //   return "#1890ff";
                       // }
                       // 根据在线状态设置边框颜色
-                      if (data.online === 'online') {
+                      if (data.online === "online") {
                         return "#52c41a"; // 绿色边框
-                      } else if (data.online && data.online.startsWith('partial-')) {
+                      } else if (
+                        data.online &&
+                        data.online.startsWith("partial-")
+                      ) {
                         return "#faad14"; // 橙色边框
                       } else {
                         return "#f5222d"; // 红色边框
@@ -930,14 +1005,14 @@ export default function PropertyVis() {
 
             // 动态生成传感器数据显示
             const sensorFields = Object.keys(sensorData);
-            let sensorDataHtml = '';
+            let sensorDataHtml = "";
 
             if (sensorFields.length > 0) {
               // 按传感器分组显示数据
               const sensorGroups: { [sensorTitle: string]: any[] } = {};
 
               // 将数据按传感器分组
-              sensorFields.forEach(field => {
+              sensorFields.forEach((field) => {
                 const sensorInfo = sensorData[field];
                 if (sensorInfo && sensorInfo.sensorTitle) {
                   if (!sensorGroups[sensorInfo.sensorTitle]) {
@@ -947,7 +1022,7 @@ export default function PropertyVis() {
                     field: sensorInfo.field,
                     name: sensorInfo.name,
                     value: sensorInfo.value,
-                    time: sensorInfo.time
+                    time: sensorInfo.time,
                   });
                 }
               });
@@ -956,7 +1031,7 @@ export default function PropertyVis() {
               function groupByDevice(allSensorFields: any[]) {
                 const groups: Record<string, any[]> = {};
 
-                allSensorFields.forEach(fieldInfo => {
+                allSensorFields.forEach((fieldInfo) => {
                   const name = fieldInfo.name || "";
                   // 假设 name 格式：能源-断路器-字段(楼宇-房间-编号)
                   const parts = name.split("-");
@@ -977,18 +1052,22 @@ export default function PropertyVis() {
               // 关键：先合并成以设备名为 key 的对象
               const groupedByDevice = groupByDevice(allSensorFields);
 
-              const sensorGroupsHtml = Object.entries(groupedByDevice).map(([deviceTitle, fields]) => {
-                const fieldsHtml = fields.map(fieldInfo => {
-                  const value = fieldInfo.value !== '--' ? fieldInfo.value : '--';
-                  const valueColor = fieldInfo.value !== '--' ? '#fff' : '#fff';
+              const sensorGroupsHtml = Object.entries(groupedByDevice)
+                .map(([deviceTitle, fields]) => {
+                  const fieldsHtml = fields
+                    .map((fieldInfo) => {
+                      const value =
+                        fieldInfo.value !== "--" ? fieldInfo.value : "--";
+                      const valueColor =
+                        fieldInfo.value !== "--" ? "#fff" : "#fff";
 
-                  // 缩小括号里的单位
-                  const fieldWithStyledUnit = fieldInfo.field.replace(
-                    /([（(][^）)]*[）)])/g,
-                    '<span style="font-size: 8px; color: #999;">$1</span>'
-                  );
+                      // 缩小括号里的单位
+                      const fieldWithStyledUnit = fieldInfo.field.replace(
+                        /([（(][^）)]*[）)])/g,
+                        '<span style="font-size: 8px; color: #999;">$1</span>'
+                      );
 
-                  return `
+                      return `
                   <div style="display: flex; justify-content: space-between; align-items: center; margin: 1px 0; padding: 1px 4px; background: rgba(255,255,255,0.05); border-radius: 2px; box-sizing: border-box;">
                   <span style="color: #ccc; font-size: 10px; flex: 1;">
                   ${fieldWithStyledUnit}
@@ -998,9 +1077,10 @@ export default function PropertyVis() {
                   </span>
                   </div>
                   `;
-                }).join("");
+                    })
+                    .join("");
 
-                return `
+                  return `
                 <div style="margin-bottom: 6px;">
                 <div style="color: #1890ff; font-size: 11px; font-weight: 600; margin-bottom: 3px; padding-bottom: 1px; border-bottom: 1px solid rgba(24,144,255,0.3);">
                 ${deviceTitle}
@@ -1010,7 +1090,8 @@ export default function PropertyVis() {
                 </div>
                 </div>
                 `;
-              }).join('');
+                })
+                .join("");
 
               // 根据传感器数量和容器宽度动态计算列数
               const sensorCount = Object.keys(sensorGroups).length;
@@ -1028,23 +1109,24 @@ export default function PropertyVis() {
                 </div>
               `;
             } else {
-              sensorDataHtml = '<div style="color: #999; text-align: center; padding: 8px;">暂无传感器数据</div>';
+              sensorDataHtml =
+                '<div style="color: #999; text-align: center; padding: 8px;">暂无传感器数据</div>';
             }
 
             // 生成状态显示文本和颜色
-            let statusText = '';
-            let statusColor = '';
+            let statusText = "";
+            let statusColor = "";
 
-            if (data.online === 'online') {
-              statusText = '在线';
-              statusColor = '#52c41a';
-            } else if (data.online && data.online.startsWith('partial-')) {
-              const offlineCount = data.online.split('-')[1];
+            if (data.online === "online") {
+              statusText = "在线";
+              statusColor = "#52c41a";
+            } else if (data.online && data.online.startsWith("partial-")) {
+              const offlineCount = data.online.split("-")[1];
               statusText = `部分在线 (${offlineCount}个离线)`;
-              statusColor = '#faad14';
+              statusColor = "#faad14";
             } else {
-              statusText = '离线';
-              statusColor = '#ff4d4f';
+              statusText = "离线";
+              statusColor = "#ff4d4f";
             }
 
             return `
@@ -1055,7 +1137,9 @@ export default function PropertyVis() {
 
             <div style="display: flex; justify-content: space-between; margin-bottom: 6px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.2);">
               <div style="font-size: 11px;">状态: <span style="color:${statusColor}; font-weight: 600;">${statusText}</span></div>
-              <div style="font-size: 11px;">传感器: <span style="color:#ccc">${data.onlineCount || 0}/${data.totalSensors || 0} 在线</span></div>
+              <div style="font-size: 11px;">传感器: <span style="color:#ccc">${
+                data.onlineCount || 0
+              }/${data.totalSensors || 0} 在线</span></div>
             </div>
             
             ${sensorDataHtml}
@@ -1076,7 +1160,6 @@ export default function PropertyVis() {
     };
   };
 
-
   // 处理图表点击事件
   const onChartClick = async (params: any) => {
     if (!params.data) return;
@@ -1091,7 +1174,10 @@ export default function PropertyVis() {
       //  console.log('🔍 选择节点:', nodeKey);
 
       // 查找并选择对应的树节点
-      const findAndSelectNode = (nodes: PermissionNode[], targetKey: string): boolean => {
+      const findAndSelectNode = (
+        nodes: PermissionNode[],
+        targetKey: string
+      ): boolean => {
         for (const node of nodes) {
           if (node.key === targetKey) {
             setSelectedNode(node);
@@ -1109,8 +1195,6 @@ export default function PropertyVis() {
     }
   };
 
-
-
   // 监听容器大小变化
   useEffect(() => {
     let resizeTimer: NodeJS.Timeout | null = null;
@@ -1122,7 +1206,11 @@ export default function PropertyVis() {
       }
 
       resizeTimer = setTimeout(() => {
-        if (currentBuildingMap && currentFloor && floorBackgrounds[currentFloor]) {
+        if (
+          currentBuildingMap &&
+          currentFloor &&
+          floorBackgrounds[currentFloor]
+        ) {
           // 重新计算图片尺寸，确保坐标计算的准确性
           const img = new Image();
           img.onload = () => {
@@ -1132,7 +1220,10 @@ export default function PropertyVis() {
             }, 50);
           };
           img.onerror = () => {
-            console.error('重新加载楼宇地图背景图片失败:', floorBackgrounds[currentFloor]);
+            console.error(
+              "重新加载楼宇地图背景图片失败:",
+              floorBackgrounds[currentFloor]
+            );
           };
           img.src = floorBackgrounds[currentFloor];
         }
@@ -1164,7 +1255,9 @@ export default function PropertyVis() {
 
         // 触发图表重新渲染
         if (chartRef.current) {
-          const echartsInstance = (chartRef.current as any).getEchartsInstance();
+          const echartsInstance = (
+            chartRef.current as any
+          ).getEchartsInstance();
           if (echartsInstance) {
             echartsInstance.resize();
           }
@@ -1201,7 +1294,11 @@ export default function PropertyVis() {
 
   useEffect(() => {
     const updateChart = async () => {
-      if (chartRef.current && imageSize.width > 0 && imageSize.naturalWidth > 0) {
+      if (
+        chartRef.current &&
+        imageSize.width > 0 &&
+        imageSize.naturalWidth > 0
+      ) {
         // 取消之前的请求
         if (abortControllerRef.current) {
           abortControllerRef.current.abort();
@@ -1213,7 +1310,9 @@ export default function PropertyVis() {
 
         setIsLoadingData(true);
         try {
-          const echartsInstance = (chartRef.current as any).getEchartsInstance();
+          const echartsInstance = (
+            chartRef.current as any
+          ).getEchartsInstance();
           if (echartsInstance) {
             const option = await getOption(signal);
 
@@ -1224,10 +1323,10 @@ export default function PropertyVis() {
             }
           }
         } catch (error) {
-          if (error instanceof Error && error.message === 'Request aborted') {
-            console.log('图表更新请求已取消');
+          if (error instanceof Error && error.message === "Request aborted") {
+            // 请求被取消，静默处理，不显示任何提示
           } else {
-            console.error('更新图表失败:', error);
+            console.error("更新图表失败:", error);
           }
         } finally {
           // 只有在请求没有被取消的情况下才设置加载状态为false
@@ -1266,12 +1365,11 @@ export default function PropertyVis() {
             <div className="p-4 text-center bg-white rounded-md">
               <div className="text-red-500 mb-2">权限数据加载失败</div>
               <div className="text-gray-500 text-sm mb-3">
-                {permissionError.message?.includes('timeout')
-                  ? '网络请求超时，请检查网络连接'
-                  : permissionError.message?.includes('Network Error')
-                    ? '网络连接失败，请检查网络设置'
-                    : '获取权限数据失败，请稍后重试'
-                }
+                {permissionError.message?.includes("timeout")
+                  ? "网络请求超时，请检查网络连接"
+                  : permissionError.message?.includes("Network Error")
+                  ? "网络连接失败，请检查网络设置"
+                  : "获取权限数据失败，请稍后重试"}
               </div>
               <Button
                 onClick={() => window.location.reload()}
@@ -1300,9 +1398,12 @@ export default function PropertyVis() {
           style={{
             height: "calc(100vh - 2rem)",
             border: "1px solid #ddd",
-            backgroundImage: currentBuildingMap && currentFloor && floorBackgrounds[currentFloor]
-              ? `url(${floorBackgrounds[currentFloor]})`
-              : "none",
+            backgroundImage:
+              currentBuildingMap &&
+              currentFloor &&
+              floorBackgrounds[currentFloor]
+                ? `url(${floorBackgrounds[currentFloor]})`
+                : "none",
             backgroundSize: "contain",
             backgroundRepeat: "no-repeat",
             backgroundPosition: "center",
@@ -1331,9 +1432,9 @@ export default function PropertyVis() {
               background: "transparent",
             }}
             opts={{
-              renderer: 'canvas',
-              width: 'auto',
-              height: 'auto'
+              renderer: "canvas",
+              width: "auto",
+              height: "auto",
             }}
           />
         </div>
