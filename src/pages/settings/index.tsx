@@ -1,9 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
-import z from "zod";
+import z from "zod/v4";
 import { getTaskInterVal, setTaskInterVal } from "@/request/settings";
 import { Button, Card, Input, Form } from "antd";
 
@@ -32,7 +32,7 @@ export default function SettingsPage() {
   });
 
   const settingsForm = useForm<z.infer<typeof settingsFormSchema>>({
-    resolver: zodResolver(settingsFormSchema),
+    resolver: zodResolver(settingsFormSchema) as Resolver<{ seconds: number }>,
     defaultValues: {
       seconds: 300,
     },
@@ -78,7 +78,9 @@ export default function SettingsPage() {
               <Controller
                 control={settingsForm.control}
                 name="seconds"
-                render={({ field }) => <Input style={{ width: 80 }} {...field} />}
+                render={({ field }) => (
+                  <Input style={{ width: 80 }} {...field} />
+                )}
               />
             </Form>
             <span className="text-gray-700">

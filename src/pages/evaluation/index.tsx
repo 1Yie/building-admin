@@ -46,7 +46,7 @@ import {
   WarningOutlined,
   FireOutlined,
   SunOutlined,
-  CloudOutlined
+  CloudOutlined,
 } from "@ant-design/icons";
 import type { Dayjs } from "dayjs";
 
@@ -382,7 +382,6 @@ export default function Evaluation() {
               strength > 70 ? "#52c41a" : strength > 40 ? "#faad14" : "#f5222d"
             }
           />
-          <span>{strength}%</span>
         </div>
       ),
     },

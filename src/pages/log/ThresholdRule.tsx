@@ -1,9 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
-import z from "zod";
+import z from "zod/v4";
 import { getFieldSelectList } from "@/request/control";
 import {
   addThresholdRule,
@@ -15,7 +15,7 @@ import { getBindPropertyList } from "@/request/property";
 import { Badge } from "@/shadcn/ui/badge";
 import { Table, Button, Modal, Input, Select, Form, Card } from "antd";
 
-import type { PaginationType } from "@/types";
+import type { PaginationType, ThresholdRule } from "@/types";
 
 export default function ThresholdRule() {
   const columns = [
@@ -151,13 +151,13 @@ export default function ThresholdRule() {
   const { mutate: getThresholdRuleDetailsMutate } = useMutation({
     mutationFn: getThresholdRuleDetails,
   });
-  function handleOpenEditDialog(record: any) {
+  function handleOpenEditDialog(record: ThresholdRule) {
     setAddOrUpdate("edit");
-    thresholdRuleForm.reset(); // 先重置表单，避免显示之前的数据
+    thresholdRuleForm.reset();
     setDialogOpen(true);
     getThresholdRuleDetailsMutate(record.rule_id, {
-      onSuccess: (data) => {
-        thresholdRuleForm.reset(data);
+      onSuccess: (res) => {
+        thresholdRuleForm.reset(res.data);
       },
     });
   }
@@ -171,7 +171,9 @@ export default function ThresholdRule() {
     is_used: z.string().min(1, "状态不能为空"),
   });
   const thresholdRuleForm = useForm<z.infer<typeof thresholdRuleFormSchema>>({
-    resolver: zodResolver(thresholdRuleFormSchema),
+    resolver: zodResolver(thresholdRuleFormSchema) as Resolver<
+      z.infer<typeof thresholdRuleFormSchema>
+    >,
     defaultValues: {
       rule_id: "",
       sensor_property_id: "",
@@ -224,17 +226,20 @@ export default function ThresholdRule() {
         },
       });
     } else {
-      updateThresholdRuleMutate(data, {
-        onSuccess: () => {
-          toast.success("编辑成功");
-          thresholdRuleForm.reset();
-          setDialogOpen(false);
-          refetch();
-        },
-        onError: (error: any) => {
-          toast.error(error.message);
-        },
-      });
+      updateThresholdRuleMutate(
+        { ...data, rule_id: data.rule_id! },
+        {
+          onSuccess: () => {
+            toast.success("编辑成功");
+            thresholdRuleForm.reset();
+            setDialogOpen(false);
+            refetch();
+          },
+          onError: (error: any) => {
+            toast.error(error.message);
+          },
+        }
+      );
     }
   }
 

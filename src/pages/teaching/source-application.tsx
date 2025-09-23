@@ -214,7 +214,6 @@ export default function SourceApplicationPage() {
     <div className="">
       <div className="">
         <Card
-          title="搜索条件"
           className="w-full"
           style={{ borderColor: "#f0f0f0" }}
 

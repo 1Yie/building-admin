@@ -4,14 +4,14 @@ import { Pagination } from "antd";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import z from "zod";
+import z from "zod/v4";
 import {
   getBindPropertyList,
   getSensorKindList,
   getSensorTypeList,
 } from "@/request/property";
 import { getOutlineInfo, getSensorList } from "@/request/realtime";
-import { Button, Select, Input, ConfigProvider, Form, Card } from "antd";
+import { Button, Select, ConfigProvider, Form, Card } from "antd";
 
 import zhCN from "antd/locale/zh_CN";
 import "dayjs/locale/zh-cn";
@@ -146,7 +146,10 @@ export default function RealtimePage() {
   const [spaceSelectOption, setSpaceSelectOption] = useState<
     { property_id: string; name: string }[]
   >([]);
-  function onPropertyBuildingIdChange(value: string, field) {
+  function onPropertyBuildingIdChange(
+    value: string,
+    field: { onChange: (value: string) => void }
+  ) {
     field.onChange(value);
     setPropertyId(value);
     getSelectOptionMutate(
@@ -168,7 +171,10 @@ export default function RealtimePage() {
   const [terminalSelectOption, setTerminalSelectOption] = useState<
     { property_id: string; name: string }[]
   >([]);
-  function onPropertySpaceIdChange(value: string, field) {
+  function onPropertySpaceIdChange(
+    value: string,
+    field: { onChange: (value: string) => void }
+  ) {
     field.onChange(value);
     setPropertyId(value);
     getSelectOptionMutate(
@@ -190,7 +196,10 @@ export default function RealtimePage() {
   const [sensorSelectOption, setSensorSelectOption] = useState<
     { property_id: string; name: string }[]
   >([]);
-  function onPropertyTerminalIdChange(value: string, field) {
+  function onPropertyTerminalIdChange(
+    value: string,
+    field: { onChange: (value: string) => void }
+  ) {
     field.onChange(value);
     setPropertyId(value);
     getSelectOptionMutate(
@@ -209,7 +218,10 @@ export default function RealtimePage() {
     );
   }
 
-  function onPropertySensorIdChange(value: string, field) {
+  function onPropertySensorIdChange(
+    value: string,
+    field: { onChange: (value: string) => void }
+  ) {
     field.onChange(value);
     setPropertyId(value);
   }
@@ -302,10 +314,10 @@ export default function RealtimePage() {
         </Card>
       </div>
       <div className="mt-5">
-        <Card 
-          title="数据筛选" 
-          className="w-full" 
-          style={{ borderColor: '#f0f0f0' }}
+        <Card
+          title="数据筛选"
+          className="w-full"
+          style={{ borderColor: "#f0f0f0" }}
         >
           <Form layout="inline" className="flex flex-wrap gap-4">
             <Controller
@@ -419,7 +431,8 @@ export default function RealtimePage() {
                     placeholder="请选择传感器大类"
                     options={sensorKindSelectOption?.map((item) => ({
                       Key: item.kind,
-                      value: item.name,
+                      value: item.kind,
+                      label: item.name,
                     }))}
                   />
                 </Form.Item>
@@ -436,11 +449,13 @@ export default function RealtimePage() {
                     onChange={field.onChange}
                     value={field.value || undefined}
                     placeholder="请选择传感器小类"
-                    options={sensorTypeSelectOption?.map((item) => ({
-                      Key: item.type,
-                      value: item.name,
-                    }))}
-                  />
+                  >
+                    {sensorTypeSelectOption?.map((item) => (
+                      <Select.Option key={item.type} value={item.type}>
+                        {item.name}
+                      </Select.Option>
+                    ))}
+                  </Select>
                 </Form.Item>
               )}
             />

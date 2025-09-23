@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import z, { check } from "zod";
+import z, { check } from "zod/v4";
 import type { AccountTableListResponse } from "@/request/account";
 import {
   accountCreate,
@@ -27,6 +27,7 @@ import type { TreeDataNode } from "antd";
 import type { PaginationType } from "@/types";
 import type { PermissionResponse } from "@/components/permission-tree";
 import { PlusOutlined } from "@ant-design/icons";
+import type { ColumnType } from "antd/es/table";
 
 export default function AccountPage() {
   // 转换权限数据格式为Tree组件所需格式
@@ -257,7 +258,7 @@ export default function AccountPage() {
       path: ["password-new-confirm"],
     });
   const passwordForm = useForm<z.infer<typeof passwordFormSchema>>({
-    resolver: zodResolver(passwordFormSchema),
+    resolver: zodResolver(passwordFormSchema as any),
     defaultValues: {
       username: "",
       "password-new": "",
@@ -304,12 +305,14 @@ export default function AccountPage() {
     password: z.string().min(6, "密码至少需要6个字"),
     phone: z.string().optional(),
     auditUser: z.string().optional(),
-    role: z.array(z.string()).default([]),
-    department: z.string().default(""),
-    buildingPermissions: z.object({
-      checkedKeys: z.array(z.string()).default([]),
-      checkedActions: z.record(z.string(), z.array(z.string())).default({}),
-    }),
+    role: z.array(z.string()).optional(),
+    department: z.string().optional(),
+    buildingPermissions: z
+      .object({
+        checkedKeys: z.array(z.string()),
+        checkedActions: z.record(z.string(), z.array(z.string())),
+      })
+      .optional(),
   });
   const accountForm = useForm<z.infer<typeof accountFormSchema>>({
     resolver: zodResolver(accountFormSchema),
@@ -333,12 +336,14 @@ export default function AccountPage() {
     remarkName: z.string().min(1, "账号别名不能为空"),
     phone: z.string().optional(),
     auditUser: z.string().optional(),
-    role: z.array(z.string()).default([]),
-    department: z.string().default(""),
-    buildingPermissions: z.object({
-      checkedKeys: z.array(z.string()).default([]),
-      checkedActions: z.record(z.string(), z.array(z.string())).default({}),
-    }),
+    role: z.array(z.string()).optional(),
+    department: z.string().optional(),
+    buildingPermissions: z
+      .object({
+        checkedKeys: z.array(z.string()),
+        checkedActions: z.record(z.string(), z.array(z.string())),
+      })
+      .optional(),
   });
   const editAccountForm = useForm<z.infer<typeof editAccountFormSchema>>({
     resolver: zodResolver(editAccountFormSchema),
@@ -591,7 +596,15 @@ export default function AccountPage() {
       >
         <Table
           dataSource={tableData?.userInfoList}
-          columns={columns}
+          columns={
+            columns as ColumnType<{
+              username: string;
+              remarkName: string;
+              phone: string;
+              role?: string;
+              auditUser?: string;
+            }>[]
+          }
           loading={tablePending}
           onChange={(pagination) =>
             onPageChange(pagination.current || 1, pagination.pageSize || 10)
@@ -745,7 +758,6 @@ export default function AccountPage() {
                   </Form.Item>
                 )}
               />
-
               <Controller
                 control={accountForm.control}
                 name="remarkName"
@@ -760,7 +772,6 @@ export default function AccountPage() {
                   </Form.Item>
                 )}
               />
-
               <Controller
                 control={accountForm.control}
                 name="password"
@@ -775,7 +786,6 @@ export default function AccountPage() {
                   </Form.Item>
                 )}
               />
-
               <Controller
                 control={accountForm.control}
                 name="phone"
@@ -791,7 +801,6 @@ export default function AccountPage() {
                   </Form.Item>
                 )}
               />
-
               <Controller
                 control={accountForm.control}
                 name="role"
@@ -821,7 +830,6 @@ export default function AccountPage() {
                   </Form.Item>
                 )}
               />
-
               <Controller
                 control={accountForm.control}
                 name="auditUser"
@@ -831,10 +839,9 @@ export default function AccountPage() {
                   </Form.Item>
                 )}
               />
-
               <Controller
                 control={accountForm.control}
-                name=""
+                name="buildingPermissions.checkedKeys"
                 render={({ field }) => (
                   <>
                     <Form.Item label="“教学科研-虚拟教学空间”模块管理权限">
@@ -846,36 +853,40 @@ export default function AccountPage() {
                     </p>
                   </>
                 )}
-              />
-
+              />{" "}
               <Controller
                 control={accountForm.control}
                 name="buildingPermissions"
                 render={({ field }) => (
-                  <Form.Item label="楼宇权限">
-                    <Spin spinning={permissionLoading}>
-                      <PermissionTree
-                        checkable
-                        checkedKeys={field.value?.checkedKeys || []}
-                        checkedActions={field.value?.checkedActions || {}}
-                        onChange={(value) => {
-                          // 合并之前的 checkedActions 和当前返回的 checkedActions
-                          const mergedActions = {
-                            ...field.value?.checkedActions,
-                            ...value.checkedActions,
-                          };
+                  <>
+                    <p className="text-sm text-gray-600 m-0">
+                      点击对应名称可展开管理权限面板
+                    </p>
+                    <Form.Item label="楼宇权限">
+                      <Spin spinning={permissionLoading}>
+                        <PermissionTree
+                          checkable
+                          checkedKeys={field.value?.checkedKeys || []}
+                          checkedActions={field.value?.checkedActions || {}}
+                          onChange={(value) => {
+                            // 合并之前的 checkedActions 和当前返回的 checkedActions
+                            const mergedActions = {
+                              ...field.value?.checkedActions,
+                              ...value.checkedActions,
+                            };
 
-                          field.onChange({
-                            ...field.value,
-                            checkedKeys: value.checkedKeys,
-                            checkedActions: mergedActions,
-                          });
-                        }}
-                        treeData={permissionData}
-                        expand={false}
-                      />
-                    </Spin>
-                  </Form.Item>
+                            field.onChange({
+                              ...field.value,
+                              checkedKeys: value.checkedKeys,
+                              checkedActions: mergedActions,
+                            });
+                          }}
+                          treeData={permissionData}
+                          expand={false}
+                        />
+                      </Spin>
+                    </Form.Item>
+                  </>
                 )}
               />
             </Form>
@@ -970,7 +981,7 @@ export default function AccountPage() {
 
               <Controller
                 control={editAccountForm.control}
-                name=""
+                name="buildingPermissions.checkedKeys"
                 render={({ field }) => (
                   <>
                     <Form.Item label="“教学科研-虚拟教学空间”模块管理权限">
@@ -987,30 +998,35 @@ export default function AccountPage() {
                 control={editAccountForm.control}
                 name="buildingPermissions"
                 render={({ field }) => (
-                  <Form.Item label="楼宇权限">
-                    <Spin spinning={permissionLoading}>
-                      <PermissionTree
-                        checkable
-                        checkedKeys={field.value?.checkedKeys || []}
-                        checkedActions={field.value?.checkedActions || {}}
-                        onChange={(value) => {
-                          // 合并之前的 checkedActions 和当前返回的 checkedActions
-                          const mergedActions = {
-                            ...field.value?.checkedActions,
-                            ...value.checkedActions,
-                          };
+                  <>
+                    <p className="text-sm text-gray-600 m-0">
+                      点击对应名称可展开管理权限面板
+                    </p>
+                    <Form.Item label="楼宇权限">
+                      <Spin spinning={permissionLoading}>
+                        <PermissionTree
+                          checkable
+                          checkedKeys={field.value?.checkedKeys || []}
+                          checkedActions={field.value?.checkedActions || {}}
+                          onChange={(value) => {
+                            // 合并之前的 checkedActions 和当前返回的 checkedActions
+                            const mergedActions = {
+                              ...field.value?.checkedActions,
+                              ...value.checkedActions,
+                            };
 
-                          field.onChange({
-                            ...field.value,
-                            checkedKeys: value.checkedKeys,
-                            checkedActions: mergedActions,
-                          });
-                        }}
-                        treeData={permissionData}
-                        expand={false}
-                      />
-                    </Spin>
-                  </Form.Item>
+                            field.onChange({
+                              ...field.value,
+                              checkedKeys: value.checkedKeys,
+                              checkedActions: mergedActions,
+                            });
+                          }}
+                          treeData={permissionData}
+                          expand={false}
+                        />
+                      </Spin>
+                    </Form.Item>
+                  </>
                 )}
               />
             </Form>
