@@ -1,4 +1,4 @@
-import { Tabs } from "antd";
+import { Tabs, type TabsProps } from "antd";
 import { TeachingSpacePage } from "./teaching-space";
 import SourceApplicationPage from "./source-application";
 import SourceReviewPage from "./source-review";
@@ -29,7 +29,7 @@ export default function TeachingPage() {
 
   return (
     <div className="p-5">
-      <Tabs items={tabItems} />
+      <Tabs items={tabItems as TabsProps['items']} />
     </div>
   );
 }

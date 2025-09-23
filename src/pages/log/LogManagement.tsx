@@ -1,7 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { useQuery } from "@tanstack/react-query";
-import { Table, Button, Select, DatePicker, ConfigProvider, Form } from "antd";
+import {
+  Table,
+  Button,
+  Select,
+  DatePicker,
+  ConfigProvider,
+  Form,
+  Card,
+} from "antd";
 import { format } from "date-fns";
 import zhCN from "antd/locale/zh_CN";
 import dayjs from "dayjs";
@@ -20,25 +28,25 @@ export default function LogManagement() {
       title: "时间",
       dataIndex: "time",
       key: "time",
-      align: "center",
+      align: "center" as const,
     },
     {
       title: "操作人",
       dataIndex: "operator",
       key: "operator",
-      align: "center",
+      align: "center" as const,
     },
     {
       title: "操作类型",
       dataIndex: "type",
       key: "type",
-      align: "center",
+      align: "center" as const,
     },
     {
       title: "操作内容",
       dataIndex: "content",
       key: "content",
-      align: "center",
+      align: "center" as const,
     },
   ];
 
@@ -84,7 +92,7 @@ export default function LogManagement() {
     log_type: z.string().optional(), // 日志类型
   });
   const searchForm = useForm<z.infer<typeof searchFormSchema>>({
-    resolver: zodResolver(searchFormSchema),
+    resolver: zodResolver(searchFormSchema) as any,
     defaultValues: {
       time: "",
       operator: "", // 操作人
@@ -112,8 +120,14 @@ export default function LogManagement() {
   }
 
   return (
-    <div className="p-5">
-      <div>
+    <div className="">
+      <Card
+        title="搜索条件"
+        style={{
+          borderColor: "#f0f0f0",
+          marginBottom: "20px",
+        }}
+      >
         <Form
           layout="inline"
           className="space-y-7"
@@ -154,8 +168,8 @@ export default function LogManagement() {
                 <div className="flex flex-col">
                   <Select
                     onChange={field.onChange}
-                    value={field.value}
-                    placeholder="日志类型"
+                    value={field.value || undefined}
+                    placeholder="请选择日志类型"
                     style={{ width: 180 }}
                   >
                     {logTypeSelectOption?.map((option) => (
@@ -177,8 +191,8 @@ export default function LogManagement() {
                 <div className="flex flex-col">
                   <Select
                     onChange={field.onChange}
-                    value={field.value}
-                    placeholder="操作人"
+                    value={field.value || undefined}
+                    placeholder="请选择操作人"
                     style={{ width: 180 }}
                   >
                     {operateSelectOption?.map((option) => (
@@ -206,8 +220,14 @@ export default function LogManagement() {
             </Button>
           </div>
         </Form>
-      </div>
-      <div className="mt-5">
+      </Card>
+
+      <Card
+        title="日志管理"
+        style={{
+          borderColor: "#f0f0f0",
+        }}
+      >
         <Table
           columns={columns}
           dataSource={logList?.log}
@@ -220,7 +240,7 @@ export default function LogManagement() {
           }}
           loading={isPending}
         />
-      </div>
+      </Card>
     </div>
   );
 }

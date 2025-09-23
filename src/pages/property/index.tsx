@@ -1,7 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Table } from "antd";
-import { X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -18,8 +17,9 @@ import {
   updateProperty,
 } from "@/request/property";
 import { Badge } from "@/shadcn/ui/badge";
-import { Button, Modal, Form, Input, Select } from "antd";
+import { Button, Modal, Form, Input, Select, Card } from "antd";
 import type { PaginationType } from "@/types";
+import { DownloadOutlined, PlusOutlined } from "@ant-design/icons";
 
 import { useLocation } from "react-router";
 
@@ -113,7 +113,6 @@ const buildingIsUsedSelectOptions = [
 
 export default function PropertyMain() {
   const location = useLocation();
-  
 
   // 路径跳转打开弹窗
   useEffect(() => {
@@ -704,170 +703,198 @@ export default function PropertyMain() {
 
   return (
     <div className="p-5">
-      <Form
-        layout="inline"
-        onFinish={searchForm.handleSubmit(onSearchFormSubmit)}
-		className="flex gap-2"
+      <Card
+        title="数据筛选"
+        style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}
       >
-        <Controller
-          control={searchForm.control}
-          name="property_id"
-          render={({ field }) => (
-            <Form.Item
-              label="资产编号"
-              validateStatus={
-                searchForm.formState.errors["property_id"]?.message
-                  ? "error"
-                  : ""
-              }
-              help={searchForm.formState.errors["property_id"]?.message}
-            >
-              <Input {...field} className="bg-white" />
-            </Form.Item>
-          )}
-        />
-
-        <Controller
-          control={searchForm.control}
-          name="is_used"
-          render={({ field }) => (
-            <Form.Item
-              label="资产使用状态"
-              validateStatus={
-                searchForm.formState.errors["is_used"]?.message ? "error" : ""
-              }
-              help={searchForm.formState.errors["is_used"]?.message}
-            >
-              <Select
-                onChange={field.onChange}
-                value={field.value}
-                options={propertyStatusSelectOptions}
-                style={{ width: 120 }}
-                defaultValue="请选择资产使用状态"
-              ></Select>
-            </Form.Item>
-          )}
-        />
-
-        <Controller
-          control={searchForm.control}
-          name="property_type"
-          render={({ field }) => (
-            <Form.Item
-              label="资产类型"
-              validateStatus={
-                searchForm.formState.errors["property_type"]?.message
-                  ? "error"
-                  : ""
-              }
-              help={searchForm.formState.errors["property_type"]?.message}
-            >
-              <Select
-                onChange={field.onChange}
-                options={propertyTypeSelectOptions}
-                value={field.value}
-                style={{ width: 120 }}
-              ></Select>
-            </Form.Item>
-          )}
-        />
-
-        <Controller
-          control={searchForm.control}
-          name="sensor_kind"
-          render={({ field }) => (
-            <Form.Item
-              label="传感器大类"
-              validateStatus={
-                searchForm.formState.errors["sensor_kind"]?.message
-                  ? "error"
-                  : ""
-              }
-              help={searchForm.formState.errors["sensor_kind"]?.message}
-            >
-              <Select
-                onChange={field.onChange}
-                options={
-                  sensorKindSelectOption?.map((option) => ({
-                    value: option.kind,
-                    label: option.name,
-                  })) || []
-                }
-                value={field.value}
-                style={{ width: 120 }}
-                placeholder="请选择传感器大类"
-              ></Select>
-            </Form.Item>
-          )}
-        />
-
-        <Controller
-          control={searchForm.control}
-          name="sensor_type"
-          render={({ field }) => (
-            <Form.Item
-              label="传感器小类"
-              validateStatus={
-                searchForm.formState.errors["sensor_type"]?.message
-                  ? "error"
-                  : ""	
-              }
-              help={searchForm.formState.errors["sensor_type"]?.message}
-            >
-              <Select
-                onChange={field.onChange}
-                options={
-                  sensorTypeSelectOption?.map((option) => ({
-                    value: option.type,
-                    label: option.name,
-                  })) || []
-                }
-                value={field.value}
-                style={{ width: 120 }}
-                placeholder="请选择传感器小类"
-              ></Select>
-            </Form.Item>
-          )}
-        />
-
-        <div className="flex gap-2">
-          <Button type="primary" htmlType="submit" className="cursor-pointer">
-            查询
-          </Button>
-          <Button
-            type="default"
-            htmlType="reset"
-            className="cursor-pointer"
-            onClick={() => searchForm.reset()}
-          >
-            清空
-          </Button>
-          <Button
-            type="default"
-            className="cursor-pointer"
-            onClick={exportProperty}
-          >
-            导出
-          </Button>
-        </div>
-      </Form>
-      <div className="mt-5">
-        <Button
-          type="primary"
-          className="cursor-pointer"
-          onClick={handleOpenAddDialog}
+        <Form
+          layout="inline"
+          onFinish={searchForm.handleSubmit(onSearchFormSubmit)}
+          className="flex gap-2 flex-wrap"
         >
-          新增
-        </Button>
-      </div>
-      <Table
-        dataSource={propertyData?.property ?? []}
-        columns={columns}
-        loading={isLoading}
-        pagination={pageParams}
-        onChange={handlePaginationChange}
-        className="mt-2"
-      />
+          <Controller
+            control={searchForm.control}
+            name="property_id"
+            render={({ field }) => (
+              <Form.Item
+                label="资产编号"
+                validateStatus={
+                  searchForm.formState.errors["property_id"]?.message
+                    ? "error"
+                    : ""
+                }
+                help={searchForm.formState.errors["property_id"]?.message}
+              >
+                <Input
+                  placeholder="请输入资产编号"
+                  {...field}
+                  className="bg-white"
+                />
+              </Form.Item>
+            )}
+          />
+
+          <Controller
+            control={searchForm.control}
+            name="is_used"
+            render={({ field }) => (
+              <Form.Item
+                label="资产使用状态"
+                validateStatus={
+                  searchForm.formState.errors["is_used"]?.message ? "error" : ""
+                }
+                help={searchForm.formState.errors["is_used"]?.message}
+              >
+                <Select
+                  onChange={field.onChange}
+                  value={field.value || undefined}
+                  options={propertyStatusSelectOptions}
+                  style={{ width: 120 }}
+                  placeholder="请选择资产使用状态"
+                ></Select>
+              </Form.Item>
+            )}
+          />
+
+          <Controller
+            control={searchForm.control}
+            name="property_type"
+            render={({ field }) => (
+              <Form.Item
+                label="资产类型"
+                validateStatus={
+                  searchForm.formState.errors["property_type"]?.message
+                    ? "error"
+                    : ""
+                }
+                help={searchForm.formState.errors["property_type"]?.message}
+              >
+                <Select
+                  onChange={field.onChange}
+                  options={propertyTypeSelectOptions}
+                  value={field.value || undefined}
+                  placeholder="请选择资产类型"
+                  style={{ width: 120 }}
+                ></Select>
+              </Form.Item>
+            )}
+          />
+
+          <Controller
+            control={searchForm.control}
+            name="sensor_kind"
+            render={({ field }) => (
+              <Form.Item
+                label="传感器大类"
+                validateStatus={
+                  searchForm.formState.errors["sensor_kind"]?.message
+                    ? "error"
+                    : ""
+                }
+                help={searchForm.formState.errors["sensor_kind"]?.message}
+              >
+                <Select
+                  onChange={(value) => {
+                    field.onChange(value);
+                    // 选择传感器大类时，自动设置资产类型为传感器
+                    if (value) {
+                      searchForm.setValue("property_type", "sensor");
+                    }
+                  }}
+                  options={
+                    sensorKindSelectOption?.map((option) => ({
+                      value: option.kind,
+                      label: option.name,
+                    })) || []
+                  }
+                  value={field.value || undefined}
+                  style={{ width: 120 }}
+                  placeholder="请选择传感器大类"
+                ></Select>
+              </Form.Item>
+            )}
+          />
+
+          <Controller
+            control={searchForm.control}
+            name="sensor_type"
+            render={({ field }) => (
+              <Form.Item
+                label="传感器小类"
+                validateStatus={
+                  searchForm.formState.errors["sensor_type"]?.message
+                    ? "error"
+                    : ""
+                }
+                help={searchForm.formState.errors["sensor_type"]?.message}
+              >
+                <Select
+                  onChange={(value) => {
+                    field.onChange(value);
+                    // 选择传感器小类时，自动设置资产类型为传感器
+                    if (value) {
+                      searchForm.setValue("property_type", "sensor");
+                    }
+                  }}
+                  options={
+                    sensorTypeSelectOption?.map((option) => ({
+                      value: option.type,
+                      label: option.name,
+                    })) || []
+                  }
+                  value={field.value || undefined}
+                  style={{ width: 120 }}
+                  placeholder="请选择传感器小类"
+                ></Select>
+              </Form.Item>
+            )}
+          />
+
+          <div className="flex gap-2">
+            <Button type="primary" htmlType="submit" className="cursor-pointer">
+              查询
+            </Button>
+            <Button
+              type="default"
+              htmlType="reset"
+              className="cursor-pointer"
+              onClick={() => searchForm.reset()}
+            >
+              清空
+            </Button>
+            <Button
+              type="default"
+              className="cursor-pointer"
+              onClick={exportProperty}
+              icon={<DownloadOutlined />}
+            >
+              导出
+            </Button>
+          </div>
+        </Form>
+      </Card>
+      <Card
+        title="资产列表"
+        style={{ borderColor: "#f0f0f0" }}
+        extra={
+          <Button
+            type="primary"
+            className="cursor-pointer"
+            onClick={handleOpenAddDialog}
+            icon={<PlusOutlined />}
+          >
+            新增
+          </Button>
+        }
+      >
+        <Table
+          dataSource={propertyData?.property ?? []}
+          columns={columns}
+          loading={isLoading}
+          pagination={pageParams}
+          onChange={handlePaginationChange}
+        />
+      </Card>
 
       <Modal
         open={propertyDialogOpen}

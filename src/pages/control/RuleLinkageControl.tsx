@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Table, Form, Button, Modal, Select, Input } from "antd";
+import { Table, Form, Button, Modal, Select, Input, Card } from "antd";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -24,6 +24,7 @@ import {
 } from "@/request/control";
 import { Badge } from "@/shadcn/ui/badge";
 import type { PaginationType } from "@/types";
+import { PlusOutlined } from "@ant-design/icons";
 
 const roleFormSchema = z.object({
   rule_id: z.string().optional(),
@@ -48,61 +49,61 @@ export default function RuleLinkageControl() {
       title: "规则编号",
       dataIndex: "rule_id",
       key: "rule_id",
-      align: "center",
+      align: "center" as const,
     },
     {
       title: "触发传感器资产编号",
       dataIndex: "t_sensor_property_id",
       key: "t_sensor_property_id",
-      align: "center",
+      align: "center" as const,
     },
     {
       title: "触发传感器大类",
       dataIndex: "t_kind",
       key: "t_kind",
-      align: "center",
+      align: "center" as const,
     },
     {
       title: "触发传感器小类",
       dataIndex: "t_type",
       key: "t_type",
-      align: "center",
+      align: "center" as const,
     },
     {
       title: "被控传感器资产编号",
       dataIndex: "c_sensor_property_id",
       key: "c_sensor_property_id",
-      align: "center",
+      align: "center" as const,
     },
     {
       title: "被控传感器大类",
       dataIndex: "c_kind",
       key: "c_kind",
-      align: "center",
+      align: "center" as const,
     },
     {
       title: "被控传感器小类",
       dataIndex: "c_type",
       key: "c_type",
-      align: "center",
+      align: "center" as const,
     },
     {
       title: "触发条件",
       dataIndex: "trigger",
       key: "trigger",
-      align: "center",
+      align: "center" as const,
     },
     {
       title: "控制操作",
       dataIndex: "control",
       key: "control",
-      align: "center",
+      align: "center" as const,
     },
     {
       title: "规则使用状态",
       dataIndex: "is_used",
       key: "is_used",
-      align: "center",
+      align: "center" as const,
       render: (is_used: boolean) => {
         return is_used ? (
           <Badge className="bg-green-500">在用</Badge>
@@ -115,8 +116,8 @@ export default function RuleLinkageControl() {
       title: "操作",
       dataIndex: "action",
       key: "action",
-      align: "center",
-      render: (_, record: any) => (
+      align: "center" as const,
+      render: (_: any, record: any) => (
         <Button
           type="default"
           className="text-blue-500 cursor-pointer"
@@ -134,8 +135,12 @@ export default function RuleLinkageControl() {
     pageSize: 5,
     showSizeChanger: false,
   });
-  function handlePaginationChange(pagination: PaginationType) {
-    setPageParams(pagination);
+  function handlePaginationChange(pagination: any) {
+    setPageParams({
+      current: pagination.current || 1,
+      pageSize: pagination.pageSize || 5,
+      showSizeChanger: false,
+    });
   }
 
   // 请求表格数据
@@ -173,7 +178,7 @@ export default function RuleLinkageControl() {
   const [addOrUpdate, setAddOrUpdate] = useState("add");
 
   // 表单
-  const { control, handleSubmit, reset, getValues, setValue } = useForm({
+  const { control, handleSubmit, reset, getValues, setValue } = useForm<any>({
     resolver: zodResolver(roleFormSchema),
     defaultValues: {
       rule_id: "",
@@ -354,24 +359,31 @@ export default function RuleLinkageControl() {
   }
 
   return (
-    <div>
-      <div>
-        <Button
-          type="primary"
-          className="cursor-pointer"
-          onClick={handleOpenAddDialog}
-        >
-          新增
-        </Button>
-      </div>
-      <Table
-        dataSource={ruleLinkageList?.regulation || []}
-        columns={columns}
-        pagination={pageParams}
-        onChange={handlePaginationChange}
-        loading={isLoading}
-        className="mt-2"
-      />
+    <div className="">
+      <Card
+        title="规则联动控制"
+        bordered={false}
+        style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}
+        extra={
+          <Button
+            type="primary"
+            className="cursor-pointer"
+            onClick={handleOpenAddDialog}
+            icon={<PlusOutlined />}
+          >
+            新增
+          </Button>
+        }
+      >
+        <Table
+          dataSource={ruleLinkageList?.regulation || []}
+          columns={columns}
+          pagination={pageParams}
+          onChange={handlePaginationChange}
+          loading={isLoading}
+          rowKey="rule_id"
+        />
+      </Card>
       <Modal
         open={dialogOpen}
         title={addOrUpdate === "add" ? "新增规则" : "更新规则"}

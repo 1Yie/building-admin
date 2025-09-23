@@ -11,13 +11,20 @@ import {
   getSensorTypeList,
 } from "@/request/property";
 import { getOutlineInfo, getSensorList } from "@/request/realtime";
-import { Button, Select, Input, ConfigProvider, Form } from "antd";
-import { Card, CardContent } from "@/shadcn/ui/card";
+import { Button, Select, Input, ConfigProvider, Form, Card } from "antd";
 
 import zhCN from "antd/locale/zh_CN";
 import "dayjs/locale/zh-cn";
 
-import { CircleX } from "lucide-react";
+import {
+  CircleX,
+  Building,
+  Home,
+  Router,
+  Cpu,
+  Wifi,
+  Activity,
+} from "lucide-react";
 import { Skeleton } from "@/shadcn/ui/skeleton";
 import type { PaginationType } from "@/types";
 import ChartLine from "./chart-line";
@@ -239,221 +246,225 @@ export default function RealtimePage() {
   }
 
   return (
-    <div className="p-5">
+    <div className="">
       <div className="gap-5 grid grid-cols-6">
-        <Card className="border-gray-100/50 w-full h-30">
-          <CardContent className="h-full">
-            <div className="flex flex-col justify-center items-center gap-2 h-full">
-              <div>{outlineInfo?.building_count}</div>
-              <div>楼宇数</div>
+        <Card className="w-full" style={{ borderColor: "#f0f0f0" }}>
+          <div className="flex flex-col justify-center items-center gap-2 h-full">
+            <Building className="w-8 h-8 text-blue-500" />
+            <div className="text-2xl font-bold">
+              {outlineInfo?.building_count}
             </div>
-          </CardContent>
+            <div className="text-gray-600">楼宇数</div>
+          </div>
         </Card>
-        <Card className="border-gray-100/50 w-full h-30">
-          <CardContent className="h-full">
-            <div className="flex flex-col justify-center items-center gap-2 h-full">
-              <div>{outlineInfo?.space_count}</div>
-              <div>空间数</div>
-            </div>
-          </CardContent>
+        <Card className="w-full" style={{ borderColor: "#f0f0f0" }}>
+          <div className="flex flex-col justify-center items-center gap-2 h-full">
+            <Home className="w-8 h-8 text-green-500" />
+            <div className="text-2xl font-bold">{outlineInfo?.space_count}</div>
+            <div className="text-gray-600">空间数</div>
+          </div>
         </Card>
-        <Card className="border-gray-100/50 w-full h-30">
-          <CardContent className="h-full">
-            <div className="flex flex-col justify-center items-center gap-2 h-full">
-              <div>{outlineInfo?.terminal_count}</div>
-              <div>终端数</div>
+        <Card className="w-full" style={{ borderColor: "#f0f0f0" }}>
+          <div className="flex flex-col justify-center items-center gap-2 h-full">
+            <Router className="w-8 h-8 text-purple-500" />
+            <div className="text-2xl font-bold">
+              {outlineInfo?.terminal_count}
             </div>
-          </CardContent>
+            <div className="text-gray-600">终端数</div>
+          </div>
         </Card>
-        <Card className="border-gray-100/50 w-full h-30">
-          <CardContent className="h-full">
-            <div className="flex flex-col justify-center items-center gap-2 h-full">
-              <div>{outlineInfo?.sensor_count}</div>
-              <div>设备数</div>
+        <Card className="w-full" style={{ borderColor: "#f0f0f0" }}>
+          <div className="flex flex-col justify-center items-center gap-2 h-full">
+            <Cpu className="w-8 h-8 text-orange-500" />
+            <div className="text-2xl font-bold">
+              {outlineInfo?.sensor_count}
             </div>
-          </CardContent>
+            <div className="text-gray-600">设备数</div>
+          </div>
         </Card>
-        <Card className="border-gray-100/50 w-full h-30">
-          <CardContent className="h-full">
-            <div className="flex flex-col justify-center items-center gap-2 h-full">
-              <div>{outlineInfo?.online_count}</div>
-              <div>在线设备</div>
+        <Card className="w-full" style={{ borderColor: "#f0f0f0" }}>
+          <div className="flex flex-col justify-center items-center gap-2 h-full">
+            <Wifi className="w-8 h-8 text-green-600" />
+            <div className="text-2xl font-bold">
+              {outlineInfo?.online_count}
             </div>
-          </CardContent>
+            <div className="text-gray-600">在线设备</div>
+          </div>
         </Card>
-        <Card className="border-gray-100/50 w-full h-30">
-          <CardContent className="h-full">
-            <div className="flex flex-col justify-center items-center gap-2 h-full">
-              <div>{outlineInfo?.liveness_count}</div>
-              <div>活跃设备</div>
+        <Card className="w-full" style={{ borderColor: "#f0f0f0" }}>
+          <div className="flex flex-col justify-center items-center gap-2 h-full">
+            <Activity className="w-8 h-8 text-red-500" />
+            <div className="text-2xl font-bold">
+              {outlineInfo?.liveness_count}
             </div>
-          </CardContent>
+            <div className="text-gray-600">活跃设备</div>
+          </div>
         </Card>
       </div>
-      <div className="mt-10">
-        <Form layout="inline" className="flex gap-2">
-          <Controller
-            control={searchForm.control}
-            name="time_unit"
-            render={({ field }) => (
-              <Form.Item label="统计范围">
-                <div className="flex flex-col">
+      <div className="mt-5">
+        <Card 
+          title="数据筛选" 
+          className="w-full" 
+          style={{ borderColor: '#f0f0f0' }}
+        >
+          <Form layout="inline" className="flex flex-wrap gap-4">
+            <Controller
+              control={searchForm.control}
+              name="time_unit"
+              render={({ field }) => (
+                <Form.Item label="统计范围" className="mb-4">
                   <Select
-                    style={{ width: 120 }}
+                    style={{ width: 140 }}
                     onChange={field.onChange}
-                    value={field.value}
+                    value={field.value || undefined}
+                    placeholder="请选择统计范围"
                     options={timeUnitSelectOption.map((item) => ({
+                      label: item.label,
                       value: item.value,
                     }))}
                   />
-                </div>
-              </Form.Item>
-            )}
-          />
+                </Form.Item>
+              )}
+            />
 
-          <Controller
-            control={searchForm.control}
-            name="property_building_id"
-            render={({ field }) => (
-              <Form.Item label="楼宇">
-                <div className="flex flex-col">
+            <Controller
+              control={searchForm.control}
+              name="property_building_id"
+              render={({ field }) => (
+                <Form.Item label="楼宇" className="mb-4">
                   <Select
-                    style={{ width: 120 }}
+                    style={{ width: 140 }}
                     onChange={(value) =>
                       onPropertyBuildingIdChange(value, field)
                     }
-                    value={field.value}
+                    value={field.value || undefined}
+                    placeholder="请选择楼宇"
                     options={buildingSelectOption?.map((item) => ({
                       Key: item.property_id,
                       value: item.property_id,
                     }))}
                   />
-                </div>
-              </Form.Item>
-            )}
-          />
+                </Form.Item>
+              )}
+            />
 
-          <Controller
-            control={searchForm.control}
-            name="property_space_id"
-            render={({ field }) => (
-              <Form.Item label="空间">
-                <div className="flex flex-col">
+            <Controller
+              control={searchForm.control}
+              name="property_space_id"
+              render={({ field }) => (
+                <Form.Item label="空间" className="mb-4">
                   <Select
-                    style={{ width: 120 }}
+                    style={{ width: 140 }}
                     onChange={(value) => onPropertySpaceIdChange(value, field)}
-                    value={field.value}
+                    value={field.value || undefined}
+                    placeholder="请选择空间"
                     options={spaceSelectOption?.map((item) => ({
                       Key: item.property_id,
                       value: item.property_id,
                     }))}
                   />
-                </div>
-              </Form.Item>
-            )}
-          />
+                </Form.Item>
+              )}
+            />
 
-          <Controller
-            control={searchForm.control}
-            name="property_terminal_id"
-            render={({ field }) => (
-              <Form.Item label="网关（智能箱）">
-                <div className="flex flex-col">
+            <Controller
+              control={searchForm.control}
+              name="property_terminal_id"
+              render={({ field }) => (
+                <Form.Item label="网关（智能箱）" className="mb-4">
                   <Select
-                    style={{ width: 120 }}
+                    style={{ width: 160 }}
                     onChange={(value) =>
                       onPropertyTerminalIdChange(value, field)
                     }
-                    value={field.value}
+                    value={field.value || undefined}
+                    placeholder="请选择网关（智能箱）"
                     options={terminalSelectOption?.map((item) => ({
                       Key: item.property_id,
                       value: item.property_id,
                     }))}
                   />
-                </div>
-              </Form.Item>
-            )}
-          />
+                </Form.Item>
+              )}
+            />
 
-          <Controller
-            control={searchForm.control}
-            name="property_sensor_id"
-            render={({ field }) => (
-              <Form.Item label="传感器">
-                <div className="flex flex-col">
+            <Controller
+              control={searchForm.control}
+              name="property_sensor_id"
+              render={({ field }) => (
+                <Form.Item label="传感器" className="mb-4">
                   <Select
-                    style={{ width: 120 }}
+                    style={{ width: 140 }}
                     onChange={(value) => onPropertySensorIdChange(value, field)}
-                    value={field.value}
+                    value={field.value || undefined}
+                    placeholder="请选择传感器"
                     options={sensorSelectOption?.map((item) => ({
                       Key: item.property_id,
                       value: item.property_id,
                     }))}
                   />
-                </div>
-              </Form.Item>
-            )}
-          />
+                </Form.Item>
+              )}
+            />
 
-          <Controller
-            control={searchForm.control}
-            name="sensor_kind"
-            render={({ field }) => (
-              <Form.Item label="传感器大类">
-                <div className="flex flex-col">
+            <Controller
+              control={searchForm.control}
+              name="sensor_kind"
+              render={({ field }) => (
+                <Form.Item label="传感器大类" className="mb-4">
                   <Select
-                    style={{ width: 120 }}
+                    style={{ width: 140 }}
                     onChange={field.onChange}
-                    value={field.value}
+                    value={field.value || undefined}
+                    placeholder="请选择传感器大类"
                     options={sensorKindSelectOption?.map((item) => ({
                       Key: item.kind,
-                      value: item.kind,
+                      value: item.name,
                     }))}
                   />
-                </div>
-              </Form.Item>
-            )}
-          />
+                </Form.Item>
+              )}
+            />
 
-          <Controller
-            control={searchForm.control}
-            name="sensor_type"
-            render={({ field }) => (
-              <Form.Item label="传感器小类">
-                <div className="flex flex-col">
+            <Controller
+              control={searchForm.control}
+              name="sensor_type"
+              render={({ field }) => (
+                <Form.Item label="传感器小类" className="mb-4">
                   <Select
-                    style={{ width: 120 }}
+                    style={{ width: 140 }}
                     onChange={field.onChange}
-                    value={field.value}
+                    value={field.value || undefined}
+                    placeholder="请选择传感器小类"
                     options={sensorTypeSelectOption?.map((item) => ({
                       Key: item.type,
-                      value: item.type,
+                      value: item.name,
                     }))}
                   />
-                </div>
-              </Form.Item>
-            )}
-          />
+                </Form.Item>
+              )}
+            />
 
-          <div className="flex gap-2">
-            <Button
-              type="primary"
-              htmlType="submit"
-              className="cursor-pointer"
-              onClick={searchForm.handleSubmit(onSearchFormSubmit)}
-            >
-              查询
-            </Button>
-            <Button
-              type="default"
-              htmlType="reset"
-              className="cursor-pointer"
-              onClick={resetForm}
-            >
-              清空
-            </Button>
-          </div>
-        </Form>
+            <div className="flex gap-3 mb-4">
+              <Button
+                type="primary"
+                htmlType="submit"
+                className="cursor-pointer px-6"
+                onClick={searchForm.handleSubmit(onSearchFormSubmit)}
+              >
+                查询
+              </Button>
+              <Button
+                type="default"
+                htmlType="reset"
+                className="cursor-pointer px-6"
+                onClick={resetForm}
+              >
+                清空
+              </Button>
+            </div>
+          </Form>
+        </Card>
       </div>
       <div className="mt-5">
         {isPending ? (

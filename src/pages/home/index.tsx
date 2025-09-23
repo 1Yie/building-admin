@@ -1,13 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Plus, CircleSlash, Ban } from "lucide-react";
-import { useState  } from "react";
+import { useState } from "react";
 import { Link, NavLink } from "react-router";
 import { getAlarmInfo, getOutLineInfo } from "@/request/home";
 import { getTaskInterVal } from "@/request/settings";
 
 import { Button } from "@/shadcn/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shadcn/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/shadcn/ui/tabs";
+import { Card, Tabs } from "antd";
+import { Tabs as ShadcnTabs, TabsList, TabsTrigger } from "@/shadcn/ui/tabs";
 import { ChartLine } from "./chart-line";
 import { ChartPie } from "./chart-pie";
 import { BuildingTable } from "./table";
@@ -74,8 +74,8 @@ export default function HomePage() {
 
       <div className="gap-5 grid grid-cols-3">
         {hasPermission("menu_building-实时数据") && device_unit && (
-          <Card className="border-gray-100/50 w-full h-35">
-            <CardContent className="space-y-5">
+          <Card className="w-full h-35" style={{ borderColor: '#f0f0f0' }}>
+            <div className="space-y-5">
               <div className="flex justify-between items-center">
                 <div className="text-gray-500 text-xl">在线设备</div>
                 <div
@@ -94,13 +94,13 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="font-semibold text-4xl">{device_unit.count}</div>
-            </CardContent>
+            </div>
           </Card>
         )}
 
         {hasParentPermission("日志管理") && alarm_unit && (
-          <Card className="border-gray-100/50 w-full h-35">
-            <CardContent>
+          <Card className="w-full h-35" style={{ borderColor: '#f0f0f0' }}>
+            <div className="">
               <div className="flex justify-between items-center">
                 <div className="text-gray-500 text-xl">预警数量</div>
                 <div
@@ -121,13 +121,13 @@ export default function HomePage() {
               <div className="mt-5 font-semibold text-4xl">
                 {alarm_unit.count}
               </div>
-            </CardContent>
+            </div>
           </Card>
         )}
 
         {hasPermission("menu_building-楼宇资产") && property_unit && (
-          <Card className="border-gray-100/50 w-full h-35">
-            <CardContent>
+          <Card className="w-full h-35" style={{ borderColor: '#f0f0f0' }}>
+            <div className="">
               <div className="flex justify-between items-center">
                 <div className="text-gray-500 text-xl">房间/空间总数</div>
                 <div className="text-gray-500 text-sm">
@@ -141,7 +141,7 @@ export default function HomePage() {
               <div className="mt-5 font-semibold text-4xl">
                 {building_property_unit?.[0]?.space_count ?? 0}
               </div>
-            </CardContent>
+            </div>
           </Card>
         )}
       </div>
@@ -149,70 +149,76 @@ export default function HomePage() {
       {/* 活跃设备趋势折线图 */}
       {hasPermission("menu_building-实时数据") && (
         <div className="gap-5 grid grid-cols-3 mt-5">
-          <Card className="col-span-2 border-gray-100/50">
-            <CardHeader className="flex flex-row justify-between items-center">
-              <CardTitle>
-                <span>活跃设备数量趋势（</span>
-                <span className="text-red-500">{taskInterVal}</span>
-                <span>秒内设备数据有变化视为活跃）</span>
-                <NavLink
-                  to="/settings"
-                  className="ml-2 font-normal text-blue-500 text-sm underline"
+          <Card 
+            className="col-span-2" 
+            style={{ borderColor: '#f0f0f0' }}
+            title={
+              <div className="flex flex-row justify-between items-center">
+                <div>
+                  <span>活跃设备数量趋势（</span>
+                  <span className="text-red-500">{taskInterVal}</span>
+                  <span>秒内设备数据有变化视为活跃）</span>
+                  <NavLink
+                    to="/settings"
+                    className="ml-2 font-normal text-blue-500 text-sm underline"
+                  >
+                    活跃规则
+                  </NavLink>
+                </div>
+                <ShadcnTabs
+                  defaultValue="daily"
+                  onValueChange={(value) =>
+                    setLineChartType(value as "daily" | "week" | "month")
+                  }
                 >
-                  活跃规则
-                </NavLink>
-              </CardTitle>
-              <Tabs
-                defaultValue="daily"
-                onValueChange={(value) =>
-                  setLineChartType(value as "daily" | "week" | "month")
-                }
-              >
-                <TabsList>
-                  <TabsTrigger value="daily">日</TabsTrigger>
-                  <TabsTrigger value="week">周</TabsTrigger>
-                  <TabsTrigger value="month">月</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </CardHeader>
-            <CardContent>
-              <ChartLine type={lineChartType} />
-            </CardContent>
+                  <TabsList>
+                    <TabsTrigger value="daily">日</TabsTrigger>
+                    <TabsTrigger value="week">周</TabsTrigger>
+                    <TabsTrigger value="month">月</TabsTrigger>
+                  </TabsList>
+                </ShadcnTabs>
+              </div>
+            }
+          >
+            <ChartLine type={lineChartType} />
           </Card>
 
           {hasParentPermission("日志管理") && (
-            <Card className="col-span-1 rounded-2xl h-full">
-              <CardHeader className="flex justify-between items-center">
-                <CardTitle>预警信息</CardTitle>
-                <Button variant="link" className="text-blue-500">
-                  <Link to="/log">查看全部</Link>
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col gap-2 max-h-80 overflow-y-auto rounded-lg">
-                  {alarmInfo?.slice(0, 8).map((item) => (
-                    <div
-                      key={item.content}
-                      className="bg-red-100 p-4 border-red-500 border-l-4 rounded-lg text-red-700"
-                      role="alert"
-                    >
-                      <p className="font-bold">{item.content}</p>
-                      <p>{item.description}</p>
-                    </div>
-                  ))}
-
-                  {alarmInfo?.length === 0 ? (
-                    <div className="flex flex-col items-center gap-1 px-2">
-                      <Ban className="text-gray-500"/>
-                      <p className="text-sm text-gray-500">暂无预警信息</p>
-                    </div>
-                  ) : (
-                    <div className="text-right px-2">
-                      <p className="text-sm text-gray-500">仅显示最近的预警信息</p>
-                    </div>
-                  )}
+            <Card 
+              className="col-span-1 rounded-2xl h-full" 
+              style={{ borderColor: '#f0f0f0' }}
+              title={
+                <div className="flex justify-between items-center">
+                  <span>预警信息</span>
+                  <Button variant="link" className="text-blue-500">
+                    <Link to="/log">查看全部</Link>
+                  </Button>
                 </div>
-              </CardContent>
+              }
+            >
+              <div className="flex flex-col gap-2 max-h-80 overflow-y-auto rounded-lg">
+                {alarmInfo?.slice(0, 8).map((item) => (
+                  <div
+                    key={item.content}
+                    className="bg-red-100 p-4 border-red-500 border-l-4 rounded-lg text-red-700"
+                    role="alert"
+                  >
+                    <p className="font-bold">{item.content}</p>
+                    <p>{item.description}</p>
+                  </div>
+                ))}
+
+                {alarmInfo?.length === 0 ? (
+                  <div className="flex flex-col items-center gap-1 px-2">
+                    <Ban className="text-gray-500"/>
+                    <p className="text-sm text-gray-500">暂无预警信息</p>
+                  </div>
+                ) : (
+                  <div className="text-right px-2">
+                    <p className="text-sm text-gray-500">仅显示最近的预警信息</p>
+                  </div>
+                )}
+              </div>
             </Card>
           )}
         </div>
@@ -221,10 +227,12 @@ export default function HomePage() {
       {/* 楼宇资产分布和设备类型统计 */}
       {hasPermission("menu_building-楼宇资产") && (
         <div className="gap-5 grid grid-cols-3 mt-5 h-100">
-          <Card className="col-span-2 border-gray-100/50 h-full">
-            <CardHeader>
+          <Card 
+            className="col-span-2 h-full" 
+            style={{ borderColor: '#f0f0f0' }}
+            title={
               <div className="flex justify-between items-center">
-                <CardTitle>楼宇资产分布</CardTitle>
+                <span>楼宇资产分布</span>
                 {hasPermission("menu_building-楼宇资产") && (
                   <Button variant="link" className="text-blue-500">
                     <Link to="/property?add=true" className="flex items-center">
@@ -234,20 +242,18 @@ export default function HomePage() {
                   </Button>
                 )}
               </div>
-            </CardHeader>
-            <CardContent>
-              <BuildingTable tableData={building_property_unit || []} />
-            </CardContent>
+            }
+          >
+            <BuildingTable tableData={building_property_unit || []} />
           </Card>
 
           {hasPermission("menu_building-楼宇资产") && (
-            <Card className="col-span-1 border-gray-100/50 h-full">
-              <CardHeader>
-                <CardTitle>设备类型统计</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ChartPie pieData={sensor_kind_unit || []} />
-              </CardContent>
+            <Card 
+              className="col-span-1 h-full" 
+              style={{ borderColor: '#f0f0f0' }}
+              title="设备类型统计"
+            >
+              <ChartPie pieData={sensor_kind_unit || []} />
             </Card>
           )}
         </div>
