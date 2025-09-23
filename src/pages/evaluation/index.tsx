@@ -553,7 +553,7 @@ export default function Evaluation() {
           </Row>
 
           {/* 实时数据图表 */}
-          <Row gutter={[16, 16]} className="mb-6">
+          <Row gutter={[16, 16]} className="mb-5">
             <Col xs={24} lg={16}>
               <Card
                 title="实时环境数据趋势"

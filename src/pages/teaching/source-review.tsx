@@ -275,7 +275,7 @@ export default function SourceReviewPage() {
               )}
             />
             <div className="flex gap-2">
-              <Button type="default" htmlType="submit">
+              <Button type="primary" htmlType="submit">
                 搜索
               </Button>
               <Button type="default" htmlType="button" onClick={onReset}>

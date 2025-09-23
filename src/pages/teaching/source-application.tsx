@@ -203,7 +203,7 @@ export default function SourceApplicationPage() {
             查看
           </Button>
           <Popconfirm title="确定删除吗？" okText="确定" cancelText="取消">
-            <Button type="default">删除</Button>
+            <Button type="default" danger>删除</Button>
           </Popconfirm>
         </div>
       ),
@@ -254,7 +254,7 @@ export default function SourceApplicationPage() {
               )}
             />
             <div className="flex gap-2">
-              <Button type="default" htmlType="submit">
+              <Button type="primary" htmlType="submit">
                 搜索
               </Button>
               <Button type="default" htmlType="button" onClick={onReset}>

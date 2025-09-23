@@ -105,7 +105,7 @@ export function TeachingSpacePage() {
             查看
           </Button>
           <Popconfirm title="确定删除吗？" okText="确定" cancelText="取消">
-            <Button type="default">删除</Button>
+            <Button type="default" danger>删除</Button>
           </Popconfirm>
         </div>
       ),
@@ -210,7 +210,7 @@ export function TeachingSpacePage() {
             )}
           />
           <div className="flex gap-2">
-            <Button type="default" htmlType="submit">
+            <Button type="primary" htmlType="submit">
               搜索
             </Button>
             <Button type="default" onClick={onReset}>

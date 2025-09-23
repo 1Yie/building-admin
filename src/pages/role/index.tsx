@@ -92,7 +92,7 @@ export default function RolePage() {
             okText="确定"
             cancelText="取消"
           >
-            <Button variant="link" className="cursor-pointer">
+            <Button variant="link" className="cursor-pointer" danger>
               删除
             </Button>
           </Popconfirm>
