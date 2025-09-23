@@ -78,7 +78,7 @@ export default function SettingsPage() {
               <Controller
                 control={settingsForm.control}
                 name="seconds"
-                render={({ field }) => <Input {...field} />}
+                render={({ field }) => <Input style={{ width: 80 }} {...field} />}
               />
             </Form>
             <span className="text-gray-700">
