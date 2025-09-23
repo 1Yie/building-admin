@@ -1,9 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Table } from "antd";
-import { X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
 import { getFieldSelectList } from "@/request/control";
@@ -15,16 +13,8 @@ import {
 } from "@/request/log";
 import { getBindPropertyList } from "@/request/property";
 import { Badge } from "@/shadcn/ui/badge";
-import { Button, Modal, Input, Select } from "antd";
+import { Table, Button, Modal, Input, Select, Form, Card } from "antd";
 
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/shadcn/ui/form";
 import type { PaginationType } from "@/types";
 
 export default function ThresholdRule() {
@@ -33,43 +23,43 @@ export default function ThresholdRule() {
       title: "规则编号",
       dataIndex: "rule_id",
       key: "rule_id",
-      align: "center",
+      align: "center" as const,
     },
     {
       title: "资产ID",
       dataIndex: "property_id",
       key: "property_id",
-      align: "center",
+      align: "center" as const,
     },
     {
       title: "传感器大类",
       dataIndex: "sensor_kind",
       key: "sensor_kind",
-      align: "center",
+      align: "center" as const,
     },
     {
       title: "传感器小类",
       dataIndex: "sensor_type",
       key: "sensor_type",
-      align: "center",
+      align: "center" as const,
     },
     {
       title: "最大值",
       dataIndex: "max",
       key: "max",
-      align: "center",
+      align: "center" as const,
     },
     {
       title: "最小值",
       dataIndex: "min",
       key: "min",
-      align: "center",
+      align: "center" as const,
     },
     {
       title: "使用状态",
       dataIndex: "is_used",
       key: "is_used",
-      align: "center",
+      align: "center" as const,
       render: (is_used: boolean) => {
         return is_used ? (
           <Badge className="bg-green-500">在用</Badge>
@@ -82,8 +72,8 @@ export default function ThresholdRule() {
       title: "操作",
       dataIndex: "operation",
       key: "operation",
-      align: "center",
-      render: (_, record: any) => (
+      align: "center" as const,
+      render: (_: any, record: any) => (
         <Button
           variant="link"
           type="default"
@@ -147,6 +137,14 @@ export default function ThresholdRule() {
 
   function handleOpenAddDialog() {
     setAddOrUpdate("add");
+    thresholdRuleForm.reset({
+      rule_id: "",
+      sensor_property_id: "",
+      field: "",
+      max: undefined,
+      min: undefined,
+      is_used: "",
+    });
     setDialogOpen(true);
   }
 
@@ -155,6 +153,7 @@ export default function ThresholdRule() {
   });
   function handleOpenEditDialog(record: any) {
     setAddOrUpdate("edit");
+    thresholdRuleForm.reset(); // 先重置表单，避免显示之前的数据
     setDialogOpen(true);
     getThresholdRuleDetailsMutate(record.rule_id, {
       onSuccess: (data) => {
@@ -177,8 +176,8 @@ export default function ThresholdRule() {
       rule_id: "",
       sensor_property_id: "",
       field: "",
-      max: "",
-      min: "",
+      max: undefined,
+      min: undefined,
       is_used: "",
     },
   });
@@ -187,6 +186,8 @@ export default function ThresholdRule() {
     queryKey: ["getSensorPropertySelectOption"],
     queryFn: () => getBindPropertyList({ property_type: "CGQ" }),
   });
+
+  console.log("sensorPropertySelectOption", sensorPropertySelectOption);
   const sensorPropertyId = thresholdRuleForm.watch("sensor_property_id");
   const { data: fieldSelectOption } = useQuery({
     queryKey: ["getFieldSelectList", sensorPropertyId],
@@ -214,6 +215,7 @@ export default function ThresholdRule() {
       addThresholdRuleMutate(data, {
         onSuccess: () => {
           toast.success("新增成功");
+          thresholdRuleForm.reset();
           setDialogOpen(false);
           refetch();
         },
@@ -225,6 +227,7 @@ export default function ThresholdRule() {
       updateThresholdRuleMutate(data, {
         onSuccess: () => {
           toast.success("编辑成功");
+          thresholdRuleForm.reset();
           setDialogOpen(false);
           refetch();
         },
@@ -236,37 +239,54 @@ export default function ThresholdRule() {
   }
 
   return (
-    <div className="p-5">
-      <div>
-        <Button
-          type="primary"
-          className="cursor-pointer"
-          onClick={handleOpenAddDialog}
-        >
-          新增
-        </Button>
-      </div>
-      <div className="mt-5">
+    <div className="">
+      <Card
+        title="阈值规则管理"
+        extra={
+          <Button type="primary" onClick={handleOpenAddDialog}>
+            新增
+          </Button>
+        }
+        style={{
+          borderColor: "#f0f0f0",
+          marginBottom: "20px",
+        }}
+      >
         <Table
           columns={columns}
+          pagination={pageParams}
+          onChange={(pagination) =>
+            onPageChange(pagination.current || 1, pagination.pageSize || 10)
+          }
           dataSource={thresholdRuleList?.thresholed}
-          pagination={{
-            current: pageParams.current,
-            pageSize: pageParams.pageSize,
-            total: pageParams.total,
-            onChange: onPageChange,
-          }}
           loading={isPending}
+          rowKey="rule_id"
         />
-      </div>
+      </Card>
 
       <Modal
         open={dialogOpen}
         title={addOrUpdate === "add" ? "新增规则" : "更新规则"}
-        onCancel={() => setDialogOpen(false)}
+        onCancel={() => {
+          thresholdRuleForm.reset({
+            rule_id: "",
+            sensor_property_id: "",
+            field: "",
+            max: undefined,
+            min: undefined,
+            is_used: "",
+          });
+          setDialogOpen(false);
+        }}
         footer={
           <div className="flex justify-end gap-4">
-            <Button type="default" onClick={() => setDialogOpen(false)}>
+            <Button
+              type="default"
+              onClick={() => {
+                thresholdRuleForm.reset();
+                setDialogOpen(false);
+              }}
+            >
               取消
             </Button>
             <Button type="primary" onClick={handleOK}>
@@ -276,133 +296,128 @@ export default function ThresholdRule() {
         }
         width={720}
         centered
+        destroyOnClose
+        maskClosable={false}
       >
         <div className="mt-5">
-          <Form {...thresholdRuleForm}>
-            <form className="space-y-7">
-              {addOrUpdate === "edit" && (
-                <FormField
-                  control={thresholdRuleForm.control}
-                  name="rule_id"
-                  render={({ field }) => (
-                    <FormItem className="relative flex items-center gap-5">
-                      <FormLabel>规则ID</FormLabel>
-                      <div className="flex flex-col">
-                        <FormControl>
-                          <Input {...field} className="w-80 h-8" disabled />
-                        </FormControl>
-                        <FormMessage className="bottom-0 absolute translate-y-full" />
-                      </div>
-                    </FormItem>
-                  )}
-                />
+          <Form
+            layout="horizontal"
+            className="space-y-7"
+            style={{ marginTop: "20px" }}
+          >
+            {addOrUpdate === "edit" && (
+              <Controller
+                control={thresholdRuleForm.control}
+                name="rule_id"
+                render={({ field }) => (
+                  <Form.Item label="规则ID">
+                    <Input style={{ width: 320 }} {...field} disabled />
+                  </Form.Item>
+                )}
+              />
+            )}
+            <Controller
+              control={thresholdRuleForm.control}
+              name="sensor_property_id"
+              render={({ field }) => (
+                <Form.Item label="传感器ID">
+                  <Select
+                    style={{ width: "100%" }}
+                    onChange={field.onChange}
+                    value={field.value || undefined}
+                    placeholder="请选择传感器ID"
+                    showSearch
+                    optionFilterProp="children" // 按显示文字搜索
+                    filterOption={(input, option) =>
+                      (option?.children as unknown as string)
+                        .toLowerCase()
+                        .includes(input.toLowerCase())
+                    }
+                  >
+                    {sensorPropertySelectOption?.map((item, index) => (
+                      <Select.Option
+                        key={`${item.property_id}-${index}`}
+                        value={item.property_id}
+                      >
+                        {item.name}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
               )}
-              <FormField
-                control={thresholdRuleForm.control}
-                name="sensor_property_id"
-                render={({ field }) => (
-                  <FormItem className="relative flex items-center gap-5">
-                    <FormLabel>传感器ID</FormLabel>
-                    <div className="flex flex-col">
-                      <Select
-                        onChange={field.onChange}
-                        value={field.value}
-                        placeholder="传感器ID"
-                        style={{ width: 200 }}
-                      >
-                        {sensorPropertySelectOption?.map((option) => (
-                          <Select.Option
-                            key={option.property_id}
-                            value={option.property_id}
-                          >
-                            {option.name}
-                          </Select.Option>
-                        ))}
-                      </Select>
-                    </div>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={thresholdRuleForm.control}
-                name="field"
-                render={({ field }) => (
-                  <FormItem className="relative flex items-center gap-5">
-                    <FormLabel>传感器字段</FormLabel>
-                    <div className="flex flex-col">
-                      <Select
-                        onChange={field.onChange}
-                        value={field.value}
-                        placeholder="传感器字段"
-                        style={{ width: 200 }}
-                      >
-                        {fieldSelectOption?.map((option) => (
-                          <Select.Option key={option.type} value={option.type}>
-                            {option.name}
-                          </Select.Option>
-                        ))}
-                      </Select>
-                    </div>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={thresholdRuleForm.control}
-                name="is_used"
-                render={({ field }) => (
-                  <FormItem className="relative flex items-center gap-5">
-                    <FormLabel>使用状态</FormLabel>
-                    <div className="flex flex-col">
-                      <Select
-                        onChange={field.onChange}
-                        value={field.value}
-                        placeholder="使用状态"
-                        style={{ width: 200 }}
-                      >
-                        {isUsedSelectOption?.map((option) => (
-                          <Select.Option
-                            key={option.value}
-                            value={option.value}
-                          >
-                            {option.label}
-                          </Select.Option>
-                        ))}
-                      </Select>
-                    </div>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={thresholdRuleForm.control}
-                name="max"
-                render={({ field }) => (
-                  <FormItem className="relative flex items-center gap-5">
-                    <FormLabel>触发上线</FormLabel>
-                    <div className="flex flex-col">
-                      <FormControl>
-                        <Input {...field} type="number" className="w-80 h-8" />
-                      </FormControl>
-                      <FormMessage className="bottom-0 absolute translate-y-full" />
-                    </div>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={thresholdRuleForm.control}
-                name="min"
-                render={({ field }) => (
-                  <FormItem className="relative flex items-center gap-5">
-                    <FormLabel>触发下线</FormLabel>
-                    <div className="flex flex-col">
-                      <FormControl>
-                        <Input {...field} type="number" className="w-80 h-8" />
-                      </FormControl>
-                      <FormMessage className="bottom-0 absolute translate-y-full" />
-                    </div>
-                  </FormItem>
-                )}
-              />
-            </form>
+            />
+
+            <Controller
+              control={thresholdRuleForm.control}
+              name="field"
+              render={({ field }) => (
+                <Form.Item label="传感器字段">
+                  <Select
+                    {...field}
+                    value={field.value || undefined}
+                    style={{ width: 320 }}
+                    onChange={field.onChange}
+                    placeholder="请选择传感器字段"
+                  >
+                    {fieldSelectOption?.map((item) => (
+                      <Select.Option key={item.type} value={item.name}>
+                        {item.name}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              )}
+            />
+
+            <Controller
+              control={thresholdRuleForm.control}
+              name="is_used"
+              render={({ field }) => (
+                <Form.Item label="使用状态">
+                  <Select
+                    {...field}
+                    value={field.value || undefined}
+                    onChange={field.onChange}
+                    placeholder="使用状态"
+                    style={{ width: 200 }}
+                  >
+                    {isUsedSelectOption.map((item) => (
+                      <Select.Option key={item.value} value={item.value}>
+                        {item.label}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              )}
+            />
+
+            <Controller
+              control={thresholdRuleForm.control}
+              name="max"
+              render={({ field }) => (
+                <Form.Item label="触发上线">
+                  <Input
+                    style={{ width: 320 }}
+                    {...field}
+                    placeholder="请输入触发上线"
+                  />
+                </Form.Item>
+              )}
+            />
+
+            <Controller
+              control={thresholdRuleForm.control}
+              name="min"
+              render={({ field }) => (
+                <Form.Item label="触发下线">
+                  <Input
+                    style={{ width: 320 }}
+                    {...field}
+                    placeholder="请输入触发下线"
+                  />
+                </Form.Item>
+              )}
+            />
           </Form>
         </div>
       </Modal>

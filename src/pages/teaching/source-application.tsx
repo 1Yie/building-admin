@@ -7,6 +7,7 @@ import {
   Select,
   Modal,
   Popconfirm,
+  Card,
 } from "antd";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -60,11 +61,29 @@ export default function SourceApplicationPage() {
     },
   ]);
 
+  // 分页参数
+  const [pageParams, setPageParams] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  });
+
+  // 分页处理函数
+  const onPageChange = (current: number, pageSize: number) => {
+    setPageParams({
+      current,
+      pageSize,
+      total: pageParams.total,
+    });
+  };
+
   // 控制新增申请弹窗
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [addForm] = Form.useForm();
   const [modalMode, setModalMode] = useState<"add" | "view">("add");
-  const [selectedRecord, setSelectedRecord] = useState<Application | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<Application | null>(
+    null
+  );
 
   // 搜索处理
   const onSearch = (values: any) => {
@@ -192,81 +211,110 @@ export default function SourceApplicationPage() {
   ];
 
   return (
-    <div className="p-5">
-      <Form
-        layout="inline"
-        onFinish={handleSubmit(onSearch)}
-        className="flex gap-2 mb-4"
-      >
-        <Controller
-          name="applicationNumber"
-          control={control}
-          render={({ field }) => (
-            <Form.Item label="申请编号">
-              <Input {...field} placeholder="请输入申请编号" />
-            </Form.Item>
-          )}
-        />
-        <Controller
-          name="status"
-          control={control}
-          render={({ field }) => (
-            <Form.Item label="状态">
-              <Select
-                placeholder="请选择状态"
-                {...field}
-                value={field.value || undefined}
-                style={{ width: 120 }}
-                allowClear
-                options={[
-                  { label: "待审核", value: "待审核" },
-                  { label: "通过", value: "通过" },
-                  { label: "驳回", value: "驳回" },
-                ]}
-              />
-            </Form.Item>
-          )}
-        />
-        <div className="flex gap-2">
-          <Button type="default" htmlType="submit">
-            搜索
-          </Button>
-          <Button type="default" htmlType="button" onClick={onReset}>
-            重置
-          </Button>
-          <Button
-            type="primary"
-            htmlType="button"
-            onClick={() => {
-              setModalMode("add");
-              setIsModalOpen(true);
-            }}
-          >
-            提交申请
-          </Button>
-        </div>
-      </Form>
+    <div className="">
+      <div className="">
+        <Card
+          title="搜索条件"
+          className="w-full"
+          style={{ borderColor: "#f0f0f0" }}
 
-      <Table className="mt-2" dataSource={data} columns={columns} />
+        >
+          <Form
+            layout="inline"
+            onFinish={handleSubmit(onSearch)}
+            className="flex gap-2"
+          >
+            <Controller
+              name="applicationNumber"
+              control={control}
+              render={({ field }) => (
+                <Form.Item label="申请编号">
+                  <Input {...field} placeholder="请输入申请编号" />
+                </Form.Item>
+              )}
+            />
+            <Controller
+              name="status"
+              control={control}
+              render={({ field }) => (
+                <Form.Item label="状态">
+                  <Select
+                    placeholder="请选择状态"
+                    {...field}
+                    value={field.value || undefined}
+                    style={{ width: 120 }}
+                    allowClear
+                    options={[
+                      { label: "待审核", value: "待审核" },
+                      { label: "通过", value: "通过" },
+                      { label: "驳回", value: "驳回" },
+                    ]}
+                  />
+                </Form.Item>
+              )}
+            />
+            <div className="flex gap-2">
+              <Button type="default" htmlType="submit">
+                搜索
+              </Button>
+              <Button type="default" htmlType="button" onClick={onReset}>
+                重置
+              </Button>
+            </div>
+          </Form>
+        </Card>
+      </div>
+
+      <div className="mt-5">
+        <Card
+          title="资源申请管理"
+          extra={
+            <Button
+              type="primary"
+              htmlType="button"
+              onClick={() => {
+                setModalMode("add");
+                setIsModalOpen(true);
+              }}
+            >
+              提交申请
+            </Button>
+          }
+          className="w-full"
+          style={{ borderColor: "#f0f0f0" }}
+        >
+          <Table
+            dataSource={data}
+            columns={columns}
+            onChange={(pagination) =>
+              onPageChange(pagination.current || 1, pagination.pageSize || 10)
+            }
+          />
+        </Card>
+      </div>
 
       <Modal
-        title={modalMode === 'add' ? '提交新申请' : '查看申请详情'}
+        title={modalMode === "add" ? "提交新申请" : "查看申请详情"}
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
-        footer={modalMode === 'add' ? [
-          <Button key="cancel" onClick={() => setIsModalOpen(false)}>
-            取消
-          </Button>,
-          <Button key="submit" type="primary" onClick={handleAdd}>
-            提交
-          </Button>,
-        ] : [
-          <Button key="close" onClick={() => setIsModalOpen(false)}>
-            关闭
-          </Button>,
-        ]}
+        footer={
+          modalMode === "add"
+            ? [
+                <Button key="cancel" onClick={() => setIsModalOpen(false)}>
+                  取消
+                </Button>,
+                <Button key="submit" type="primary" onClick={handleAdd}>
+                  提交
+                </Button>,
+              ]
+            : [
+                <Button key="close" onClick={() => setIsModalOpen(false)}>
+                  关闭
+                </Button>,
+              ]
+        }
       >
-        {modalMode === 'add' ? (
+        {modalMode === "add" ? (
           <Form form={addForm} layout="horizontal" className="space-y-7">
             <Form.Item
               label="申请编号"

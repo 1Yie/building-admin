@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Tree, Spin, Button } from "antd";
+import { Tree, Spin, Button, Card } from "antd";
 import ReactECharts from "echarts-for-react";
 import { useQuery } from "@tanstack/react-query";
 import { permissionList } from "@/request/account";
@@ -9,7 +9,6 @@ import { getSensorDetail } from "@/request/realtime";
 import type { BuildingMap, RoomInfo } from "@/config/building-map";
 import { useAuth } from "@/hooks/use-auth";
 import { CountdownTimer } from "./countdown-timer";
-import BuildingMapChart from "./building-map-chart";
 
 interface PermissionNode extends TreeDataNode {
   key: string;
@@ -1370,92 +1369,112 @@ export default function PropertyVis() {
   ]);
 
   return (
-    <div className="flex min-h-screen">
-      {/* 左侧权限树 */}
-      <div className="w-[30%] pr-4  border-gray-300 overflow-y-auto">
-        <Spin spinning={permissionLoading}>
-          {permissionError ? (
-            <div className="p-4 text-center bg-white rounded-md">
-              <div className="text-red-500 mb-2">权限数据加载失败</div>
-              <div className="text-gray-500 text-sm mb-3">
-                {permissionError.message?.includes("timeout")
-                  ? "网络请求超时，请检查网络连接"
-                  : permissionError.message?.includes("Network Error")
-                  ? "网络连接失败，请检查网络设置"
-                  : "获取权限数据失败，请稍后重试"}
-              </div>
-              <Button
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                重新加载
-              </Button>
-            </div>
-          ) : (
-            <Tree
-              className="p-2! m-2!"
-              treeData={permissionData}
-              checkedKeys={checkedKeys}
-              onCheck={onCheck}
-              onSelect={onSelect}
-            />
-          )}
-        </Spin>
-      </div>
+    <div className="space-y-5">
+      <div className="flex gap-5">
+        {/* 左侧权限树 */}
+        <div className="w-[30%] min-h-screen">
+          <Card
+            title="权限树"
+            style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}
+          >
+            <Spin spinning={permissionLoading}>
+              {permissionError ? (
+                <div className="p-4 text-center">
+                  <div className="text-red-500 mb-2">权限数据加载失败</div>
+                  <div className="text-gray-500 text-sm mb-3">
+                    {permissionError.message?.includes("timeout")
+                      ? "网络请求超时，请检查网络连接"
+                      : permissionError.message?.includes("Network Error")
+                      ? "网络连接失败，请检查网络设置"
+                      : "获取权限数据失败，请稍后重试"}
+                  </div>
+                  <Button
+                    onClick={() => window.location.reload()}
+                    type="primary"
+                  >
+                    重新加载
+                  </Button>
+                </div>
+              ) : (
+                <Tree
+                  treeData={permissionData}
+                  checkedKeys={checkedKeys}
+                  onCheck={onCheck}
+                  onSelect={onSelect}
+                />
+              )}
+            </Spin>
+          </Card>
+        </div>
 
-      {/* 右侧显示 ECharts */}
-      <div className="w-[70%] pl-4">
-        <div
-          ref={chartContainerRef}
-          className="sticky top-4 rounded-md"
-          style={{
-            height: "calc(100vh - 2rem)",
-            border: "1px solid #ddd",
-            backgroundImage:
-              currentBuildingMap &&
-              currentFloor &&
-              floorBackgrounds[currentFloor]
-                ? `url(${floorBackgrounds[currentFloor]})`
-                : "none",
-            backgroundSize: "contain",
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "center",
-          }}
-        >
-          {isLoadingData && (
-            <div className="absolute inset-0 flex items-center justify-center  bg-opacity-50 z-10">
-              <Spin size="large" tip="正在加载传感器数据..." />
-            </div>
-          )}
-          <div className="absolute top-2 right-2 z-20 flex items-center gap-2">
-            <CountdownTimer
-              initialCountdown={REFRESH_INTERVAL}
-              onTick={() => setRefreshTicker((r) => r + 1)}
-            />
+        {/* 右侧显示 ECharts */}
+        <div className="w-[70%]">
+          <div className="sticky top-0" style={{ alignSelf: "flex-start" }}>
+            <Card
+              title="楼宇可视化"
+              style={{
+                borderColor: "#f0f0f0",
+                marginBottom: "20px",
+                maxHeight: "calc(100vh - 40px)",
+              }}
+              bodyStyle={{
+                padding: 0,
+                height: "calc(100vh - 120px)",
+                overflow: "hidden",
+              }}
+              extra={
+                <CountdownTimer
+                  initialCountdown={REFRESH_INTERVAL}
+                  onTick={() => setRefreshTicker((r) => r + 1)}
+                />
+              }
+            >
+              <div
+                ref={chartContainerRef}
+                className="relative w-full h-full rounded-md"
+                style={{
+                  backgroundImage:
+                    currentBuildingMap &&
+                    currentFloor &&
+                    floorBackgrounds[currentFloor]
+                      ? `url(${floorBackgrounds[currentFloor]})`
+                      : "none",
+                  backgroundSize: "contain",
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "center",
+                }}
+              >
+                {isLoadingData && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-50 z-10">
+                    <Spin size="large" tip="正在加载传感器数据..." />
+                  </div>
+                )}
+                <ReactECharts
+                  className="rounded-md"
+                  ref={chartRef}
+                  option={chartOption || {}}
+                  onEvents={{
+                    click: onChartClick,
+                  }}
+                  style={{
+                    height: "100%",
+                    width: "100%",
+                    minHeight: "400px",
+                    minWidth: "400px",
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    background: "transparent",
+                  }}
+                  opts={{
+                    renderer: "canvas",
+                    width: "auto",
+                    height: "auto",
+                  }}
+                />
+              </div>
+            </Card>
           </div>
-          <ReactECharts
-            className="rounded-md"
-            ref={chartRef}
-            option={chartOption || {}}
-            onEvents={{
-              click: onChartClick,
-            }}
-            style={{
-              height: "100%",
-              width: "100%",
-              minHeight: "400px",
-              minWidth: "400px",
-              position: "absolute",
-              top: 0,
-              left: 0,
-              background: "transparent",
-            }}
-            opts={{
-              renderer: "canvas",
-              width: "auto",
-              height: "auto",
-            }}
-          />
         </div>
       </div>
     </div>

@@ -1,8 +1,9 @@
-const importFloorPic = (floor: number) => {
+const importFloorPic = (floor: number): string => {
   const modules = import.meta.glob("@/assets/*楼.png", {
     eager: true,
-    as: "url",
-  });
+    query: "?url",
+    import: "default",
+  }) as Record<string, string>;
   return modules[`/src/assets/${floor}楼.png`];
 };
 

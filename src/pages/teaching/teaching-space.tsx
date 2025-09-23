@@ -1,4 +1,13 @@
-import { Button, Form, Input, Table, Modal, Popconfirm, Select } from "antd";
+import {
+  Button,
+  Form,
+  Input,
+  Table,
+  Modal,
+  Popconfirm,
+  Select,
+  Card,
+} from "antd";
 import { Controller, useForm } from "react-hook-form";
 import { useState } from "react";
 
@@ -34,18 +43,55 @@ export function TeachingSpacePage() {
     },
   ]);
 
+  // 分页参数
+  const [pageParams, setPageParams] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  });
+
+  // 分页处理函数
+  const onPageChange = (current: number, pageSize: number) => {
+    setPageParams({
+      current,
+      pageSize,
+      total: pageParams.total,
+    });
+  };
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "view">("add");
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
 
   const columns = [
-    { title: "空间编号", dataIndex: "teaching-space", key: "teaching-space" },
-    { title: "创建时间", dataIndex: "teaching-time", key: "teaching-time" },
-    { title: "空间名称", dataIndex: "teaching-name", key: "teaching-name" },
-    { title: "所属账号", dataIndex: "teaching-role", key: "teaching-role" },
+    {
+      title: "空间编号",
+      dataIndex: "teaching-space",
+      key: "teaching-space",
+      align: "center" as const,
+    },
+    {
+      title: "创建时间",
+      dataIndex: "teaching-time",
+      key: "teaching-time",
+      align: "center" as const,
+    },
+    {
+      title: "空间名称",
+      dataIndex: "teaching-name",
+      key: "teaching-name",
+      align: "center" as const,
+    },
+    {
+      title: "所属账号",
+      dataIndex: "teaching-role",
+      key: "teaching-role",
+      align: "center" as const,
+    },
     {
       title: "操作",
       key: "operation",
+      align: "center" as const,
       render: (_: any, record: any) => (
         <div className="flex gap-2">
           <Button
@@ -113,58 +159,71 @@ export function TeachingSpacePage() {
   };
 
   return (
-    <div className="p-5">
+    <div className="">
       {/* 搜索表单 */}
-      <Form
-        layout="inline"
-        className="flex gap-2 mb-4"
-        onFinish={handleSubmit(onSearch)}
+      <Card
+        title="搜索条件"
+        style={{
+          borderColor: "#f0f0f0",
+          marginBottom: "20px",
+        }}
       >
-        <Controller
-          control={control}
-          name="teaching-space"
-          render={({ field }) => (
-            <Form.Item label="空间编号">
-              <Input {...field} />
-            </Form.Item>
-          )}
-        />
-        <Controller
-          control={control}
-          name="teaching-time"
-          render={({ field }) => (
-            <Form.Item label="创建时间">
-              <Input {...field} />
-            </Form.Item>
-          )}
-        />
-        <Controller
-          control={control}
-          name="teaching-name"
-          render={({ field }) => (
-            <Form.Item label="空间名称">
-              <Input {...field} />
-            </Form.Item>
-          )}
-        />
-        <Controller
-          control={control}
-          name="teaching-role"
-          render={({ field }) => (
-            <Form.Item label="所属账号">
-              <Input {...field} />
-            </Form.Item>
-          )}
-        />
-        <div className="flex gap-2">
-          <Button type="default" htmlType="submit">
-            搜索
-          </Button>
-          <Button type="default" onClick={onReset}>
-            重置
-          </Button>
-        </div>
-        <div>
+        <Form
+          layout="inline"
+          className="flex gap-2"
+          onFinish={handleSubmit(onSearch)}
+        >
+          <Controller
+            control={control}
+            name="teaching-space"
+            render={({ field }) => (
+              <Form.Item label="空间编号">
+                <Input placeholder="请输入空间编号" {...field} />
+              </Form.Item>
+            )}
+          />
+          <Controller
+            control={control}
+            name="teaching-time"
+            render={({ field }) => (
+              <Form.Item label="创建时间">
+                <Input placeholder="请输入创建时间" {...field} />
+              </Form.Item>
+            )}
+          />
+          <Controller
+            control={control}
+            name="teaching-name"
+            render={({ field }) => (
+              <Form.Item label="空间名称">
+                <Input placeholder="请输入空间名称" {...field} />
+              </Form.Item>
+            )}
+          />
+          <Controller
+            control={control}
+            name="teaching-role"
+            render={({ field }) => (
+              <Form.Item label="所属账号">
+                <Input placeholder="请输入所属账号" {...field} />
+              </Form.Item>
+            )}
+          />
+          <div className="flex gap-2">
+            <Button type="default" htmlType="submit">
+              搜索
+            </Button>
+            <Button type="default" onClick={onReset}>
+              重置
+            </Button>
+          </div>
+        </Form>
+      </Card>
+
+      {/* 表格 */}
+      <Card
+        title="教学空间管理"
+        extra={
           <Button
             type="primary"
             onClick={() => {
@@ -174,11 +233,20 @@ export function TeachingSpacePage() {
           >
             创建
           </Button>
-        </div>
-      </Form>
-
-      {/* 表格 */}
-      <Table className="mt-2" columns={columns} dataSource={dataSource} />
+        }
+        style={{
+          borderColor: "#f0f0f0",
+          marginBottom: "20px",
+        }}
+      >
+        <Table
+          columns={columns}
+          dataSource={dataSource}
+          onChange={(pagination) => {
+            onPageChange(pagination.current || 1, pagination.pageSize || 10);
+          }}
+        />
+      </Card>
 
       {/* 新增/查看弹窗 */}
       <Modal
@@ -209,14 +277,14 @@ export function TeachingSpacePage() {
               name="teaching-space"
               rules={[{ required: true, message: "请输入空间编号" }]}
             >
-              <Input />
+              <Input placeholder="请输入空间编号" />
             </Form.Item>
             <Form.Item
               label="空间名称"
               name="teaching-name"
               rules={[{ required: true, message: "请输入空间名称" }]}
             >
-              <Input />
+              <Input placeholder="请输入空间名称" />
             </Form.Item>
             <Form.Item
               label="所属账号"
@@ -224,6 +292,7 @@ export function TeachingSpacePage() {
               rules={[{ required: true, message: "请输入所属账号" }]}
             >
               <Select
+                placeholder="请选择所属账号"
                 options={[
                   { label: "管理员", value: "管理员" },
                   { label: "老师", value: "老师" },
@@ -234,12 +303,26 @@ export function TeachingSpacePage() {
           </Form>
         ) : (
           selectedRecord && (
-            <div>
-              <p>空间编号: {selectedRecord["teaching-space"]}</p>
-              <p>创建时间: {selectedRecord["teaching-time"]}</p>
-              <p>空间名称: {selectedRecord["teaching-name"]}</p>
-              <p>所属账号: {selectedRecord["teaching-role"]}</p>
-              <div className="flex flex-row gap-2 mt-4">
+            <div className="mt-5">
+              <div className="space-y-3">
+                <div className="flex">
+                  <span className="font-medium w-20">空间编号:</span>
+                  <span>{selectedRecord["teaching-space"]}</span>
+                </div>
+                <div className="flex">
+                  <span className="font-medium w-20">创建时间:</span>
+                  <span>{selectedRecord["teaching-time"]}</span>
+                </div>
+                <div className="flex">
+                  <span className="font-medium w-20">空间名称:</span>
+                  <span>{selectedRecord["teaching-name"]}</span>
+                </div>
+                <div className="flex">
+                  <span className="font-medium w-20">所属账号:</span>
+                  <span>{selectedRecord["teaching-role"]}</span>
+                </div>
+              </div>
+              <div className="flex flex-row gap-2 mt-6">
                 <Button type="primary">日志管理</Button>
                 <Button type="primary">楼宇管控</Button>
                 <Button type="primary">实时数据</Button>

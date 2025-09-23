@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Popconfirm, Table, Modal } from "antd";
+import { Popconfirm, Table, Modal, Card } from "antd";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -172,6 +172,15 @@ export default function AccountPage() {
   function handlePaginationChange(pagination: PaginationType) {
     setPageParams(pagination);
   }
+
+  // 分页onChange处理函数
+  const onPageChange = (page: number, pageSize: number) => {
+    setPageParams({
+      ...pageParams,
+      current: page,
+      pageSize: pageSize,
+    });
+  };
 
   // 初始请求表格数据
   const {
@@ -564,24 +573,29 @@ export default function AccountPage() {
   };
 
   return (
-    <div className="p-5">
-      <div className="mt-5">
-        <Button
-          type="primary"
-          className="cursor-pointer"
-          onClick={handleOpenAddDialog}
-        >
-          新增
-        </Button>
-      </div>
-
-      <Table
-        dataSource={tableData?.userInfoList}
-        columns={columns}
-        loading={tablePending}
-        pagination={pageParams}
-        onChange={handlePaginationChange}
-      />
+    <div className="p-5 space-y-5">
+      <Card
+        title="账号管理"
+        style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}
+        extra={
+          <Button
+            type="primary"
+            className="cursor-pointer"
+            onClick={handleOpenAddDialog}
+          >
+            新增
+          </Button>
+        }
+      >
+        <Table
+          dataSource={tableData?.userInfoList}
+          columns={columns}
+          loading={tablePending}
+          onChange={(pagination) =>
+            onPageChange(pagination.current || 1, pagination.pageSize || 10)
+          }
+        />
+      </Card>
 
       <Modal
         open={passwordDialogOpen}
