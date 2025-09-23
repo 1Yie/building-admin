@@ -10,6 +10,7 @@ import {
 } from "antd";
 import { Controller, useForm } from "react-hook-form";
 import { useState } from "react";
+import { PlusOutlined } from "@ant-design/icons";
 
 export function TeachingSpacePage() {
   // 搜索表单
@@ -230,6 +231,7 @@ export function TeachingSpacePage() {
               setModalMode("add");
               setIsModalOpen(true);
             }}
+            icon={<PlusOutlined />}
           >
             创建
           </Button>

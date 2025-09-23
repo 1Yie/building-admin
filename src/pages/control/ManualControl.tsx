@@ -1,17 +1,12 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Table, Card, Button } from "antd";
+import { Table, Card, Button, Dropdown } from "antd";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { ManualOperateParams } from "@/request/control";
 import { getManualList, manualOperate } from "@/request/control";
 import { Badge } from "@/shadcn/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/shadcn/ui/dropdown-menu";
 import type { PaginationType } from "@/types";
+import { LockKeyholeOpen, LockKeyhole } from "lucide-react";
 
 export default function ManualControl() {
   // 表格列
@@ -79,37 +74,36 @@ export default function ManualControl() {
       align: "center" as const,
       render: (operate: { name: string; type: string }[], record: any) => {
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button type="link" className="text-blue-500 cursor-pointer">
-                操作
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              side="left"
-              sideOffset={-5}
-              align="start"
-              alignOffset={20}
-            >
-              {operate.map((item) => {
-                return (
-                  <DropdownMenuItem key={item.name}>
-                    <div
-                      className="w-full text-center cursor-pointer"
-                      onClick={() =>
-                        handleOperate({
-                          property_id: record.property_id,
-                          control: item.type,
-                        })
-                      }
-                    >
-                      {item.name}
-                    </div>
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Dropdown
+            menu={{
+              items: operate.map((item) => ({
+                key: item.name,
+                label: (
+                  <div
+                    className="w-full text-center flex items-center justify-center gap-2"
+                    onClick={() =>
+                      handleOperate({
+                        property_id: record.property_id,
+                        control: item.type,
+                      })
+                    }
+                  >
+                    {item.type === "open" ? (
+                      <LockKeyhole className="w-4 h-4" />
+                    ) : (
+                      <LockKeyholeOpen className="w-4 h-4" />
+                    )}
+                    {item.name}
+                  </div>
+                ),
+              })),
+            }}
+            placement="bottomLeft"
+          >
+            <Button type="link" className="text-blue-500">
+              操作
+            </Button>
+          </Dropdown>
         );
       },
     },

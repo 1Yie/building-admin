@@ -19,7 +19,7 @@ import {
 import { Badge } from "@/shadcn/ui/badge";
 import { Button, Modal, Form, Input, Select, Card } from "antd";
 import type { PaginationType } from "@/types";
-import { DownloadOutlined } from "@ant-design/icons";
+import { DownloadOutlined, PlusOutlined } from "@ant-design/icons";
 
 import { useLocation } from "react-router";
 
@@ -881,6 +881,7 @@ export default function PropertyMain() {
             type="primary"
             className="cursor-pointer"
             onClick={handleOpenAddDialog}
+            icon={<PlusOutlined />}
           >
             新增
           </Button>

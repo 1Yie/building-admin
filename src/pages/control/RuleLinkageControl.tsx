@@ -24,6 +24,7 @@ import {
 } from "@/request/control";
 import { Badge } from "@/shadcn/ui/badge";
 import type { PaginationType } from "@/types";
+import { PlusOutlined } from "@ant-design/icons";
 
 const roleFormSchema = z.object({
   rule_id: z.string().optional(),
@@ -368,6 +369,7 @@ export default function RuleLinkageControl() {
             type="primary"
             className="cursor-pointer"
             onClick={handleOpenAddDialog}
+            icon={<PlusOutlined />}
           >
             新增
           </Button>

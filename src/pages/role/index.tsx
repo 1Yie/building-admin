@@ -27,6 +27,7 @@ import {
   updateRolePermission,
 } from "@/request/role";
 import type { PaginationType } from "@/types";
+import { PlusOutlined } from "@ant-design/icons";
 
 const roleFormSchema = z.object({
   roleName: z.string().min(1, "不能为空"),
@@ -332,7 +333,7 @@ export default function RolePage() {
         title="角色管理"
         style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}
         extra={
-          <Button type="primary" onClick={handleOpenAddDialog}>
+          <Button type="primary" onClick={handleOpenAddDialog} icon={<PlusOutlined />}>
             新增
           </Button>
         }

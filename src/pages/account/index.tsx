@@ -26,6 +26,7 @@ import type { TreeDataNode } from "antd";
 
 import type { PaginationType } from "@/types";
 import type { PermissionResponse } from "@/components/permission-tree";
+import { PlusOutlined } from "@ant-design/icons";
 
 export default function AccountPage() {
   // 转换权限数据格式为Tree组件所需格式
@@ -582,6 +583,7 @@ export default function AccountPage() {
             type="primary"
             className="cursor-pointer"
             onClick={handleOpenAddDialog}
+            icon={<PlusOutlined />}
           >
             新增
           </Button>
