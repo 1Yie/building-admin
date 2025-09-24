@@ -4,6 +4,7 @@ import { urls } from "@/request/urls";
 export interface AlarmItem {
 	content: string;
 	description: string;
+	time: string;
 }
 
 export type OutLineInfoResponse = {

@@ -7,6 +7,7 @@ import { getManualList, manualOperate } from "@/request/control";
 import { Badge } from "@/shadcn/ui/badge";
 import type { PaginationType } from "@/types";
 import { LockKeyholeOpen, LockKeyhole } from "lucide-react";
+import { ControlFilled } from "@ant-design/icons";
 
 export default function ManualControl() {
   // 表格列
@@ -112,7 +113,7 @@ export default function ManualControl() {
   // 表格分页
   const [pageParams, setPageParams] = useState<PaginationType>({
     current: 1,
-    pageSize: 10,
+    pageSize: 5,
     showSizeChanger: false,
   });
   function handlePaginationChange(pagination: PaginationType) {
@@ -171,7 +172,14 @@ export default function ManualControl() {
   return (
     <div className="">
       <Card
-        title="手动控制"
+        title={
+          <div className="flex justify-between items-center">
+            <span>
+              <ControlFilled className="mr-1" />
+              手动控制
+            </span>
+          </div>
+        }
         style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}
       >
         <Table

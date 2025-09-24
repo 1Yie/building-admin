@@ -14,6 +14,7 @@ import {
 import { getBindPropertyList } from "@/request/property";
 import { Badge } from "@/shadcn/ui/badge";
 import { Table, Button, Modal, Input, Select, Form, Card } from "antd";
+import { ControlFilled } from "@ant-design/icons";
 
 import type { PaginationType, ThresholdRule } from "@/types";
 
@@ -250,7 +251,14 @@ export default function ThresholdRule() {
   return (
     <div className="">
       <Card
-        title="阈值规则管理"
+        title={
+          <div className="flex justify-between items-center">
+            <span>
+              <ControlFilled className="mr-1" />
+              阈值规则管理
+            </span>
+          </div>
+        }
         extra={
           <Button type="primary" onClick={handleOpenAddDialog}>
             新增

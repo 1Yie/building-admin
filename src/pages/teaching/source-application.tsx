@@ -11,6 +11,7 @@ import {
 } from "antd";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { ControlFilled } from "@ant-design/icons";
 
 interface Application {
   key: string;
@@ -203,7 +204,9 @@ export default function SourceApplicationPage() {
             查看
           </Button>
           <Popconfirm title="确定删除吗？" okText="确定" cancelText="取消">
-            <Button type="default" danger>删除</Button>
+            <Button type="default" danger>
+              删除
+            </Button>
           </Popconfirm>
         </div>
       ),
@@ -213,11 +216,7 @@ export default function SourceApplicationPage() {
   return (
     <div className="">
       <div className="">
-        <Card
-          className="w-full"
-          style={{ borderColor: "#f0f0f0" }}
-
-        >
+        <Card className="w-full" style={{ borderColor: "#f0f0f0" }}>
           <Form
             layout="inline"
             onFinish={handleSubmit(onSearch)}
@@ -266,7 +265,14 @@ export default function SourceApplicationPage() {
 
       <div className="mt-5">
         <Card
-          title="资源申请管理"
+          title={
+            <div className="flex justify-between items-center">
+              <span>
+                <ControlFilled className="mr-1" />
+                资源申请管理
+              </span>
+            </div>
+          }
           extra={
             <Button
               type="primary"

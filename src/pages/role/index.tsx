@@ -26,7 +26,7 @@ import {
   updateRolePermission,
 } from "@/request/role";
 import type { PaginationType } from "@/types";
-import { PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined, ContactsFilled } from "@ant-design/icons";
 
 const roleFormSchema = z.object({
   roleName: z.string().min(1, "不能为空"),
@@ -329,7 +329,14 @@ export default function RolePage() {
   return (
     <div className="p-5 space-y-5">
       <Card
-        title="角色管理"
+        title={
+          <div className="flex justify-between items-center">
+            <span>
+              <ContactsFilled className="mr-1" />
+              角色管理
+            </span>
+          </div>
+        }
         style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}
         extra={
           <Button

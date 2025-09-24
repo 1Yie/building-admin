@@ -24,7 +24,7 @@ import {
 } from "@/request/control";
 import { Badge } from "@/shadcn/ui/badge";
 import type { PaginationType } from "@/types";
-import { PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined, ControlFilled } from "@ant-design/icons";
 
 const roleFormSchema = z.object({
   rule_id: z.string().optional(),
@@ -404,7 +404,14 @@ export default function RuleLinkageControl() {
   return (
     <div className="">
       <Card
-        title="规则联动控制"
+        title={
+          <div className="flex justify-between items-center">
+            <span>
+              <ControlFilled className="mr-1" />
+              规则联动控制
+            </span>
+          </div>
+        }
         style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}
         extra={
           <Button

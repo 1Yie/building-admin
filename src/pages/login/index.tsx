@@ -76,7 +76,7 @@ export default function LoginPage() {
               <h1 className="text-3xl font-bold text-slate-800">智慧楼宇</h1>
             </div>
 
-            <p className="text-xl text-slate-600 mb-8">传感器监控管理系统</p>
+            <p className="text-xl text-slate-600 mb-8">能源管理系统</p>
 
             <div className="space-y-4">
               <div className="flex items-center text-slate-600">

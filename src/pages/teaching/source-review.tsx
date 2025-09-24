@@ -11,6 +11,7 @@ import {
 } from "antd";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { ControlFilled } from "@ant-design/icons";
 
 interface Application {
   key: string;
@@ -235,10 +236,7 @@ export default function SourceReviewPage() {
   return (
     <div className="">
       <div className="">
-        <Card
-          className="w-full"
-          style={{ borderColor: "#f0f0f0" }}
-        >
+        <Card className="w-full" style={{ borderColor: "#f0f0f0" }}>
           <Form
             layout="inline"
             onFinish={handleSubmit(onSearch)}
@@ -287,7 +285,14 @@ export default function SourceReviewPage() {
 
       <div className="mt-5">
         <Card
-          title="资源审核管理"
+          title={
+            <div className="flex justify-between items-center">
+              <span>
+                <ControlFilled className="mr-1" />
+                资源审核管理
+              </span>
+            </div>
+          }
           className="w-full"
           style={{ borderColor: "#f0f0f0" }}
         >

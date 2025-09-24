@@ -19,7 +19,11 @@ import {
 import { Badge } from "@/shadcn/ui/badge";
 import { Button, Modal, Form, Input, Select, Card } from "antd";
 import type { PaginationType, Property } from "@/types";
-import { DownloadOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  DownloadOutlined,
+  PlusOutlined,
+  ProfileFilled,
+} from "@ant-design/icons";
 
 import { useLocation } from "react-router";
 
@@ -878,7 +882,14 @@ export default function PropertyMain() {
         </Form>
       </Card>
       <Card
-        title="资产列表"
+        title={
+          <div className="flex justify-between items-center">
+            <span>
+              <ProfileFilled className="mr-1" />
+              资产列表
+            </span>
+          </div>
+        }
         style={{ borderColor: "#f0f0f0" }}
         extra={
           <Button
