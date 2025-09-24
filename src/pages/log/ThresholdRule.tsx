@@ -148,7 +148,11 @@ export default function ThresholdRule() {
     setDialogOpen(true);
   }
 
-  const { mutate: getThresholdRuleDetailsMutate } = useMutation({
+  const { mutate: getThresholdRuleDetailsMutate } = useMutation<
+    ThresholdRule,
+    any,
+    string
+  >({
     mutationFn: getThresholdRuleDetails,
   });
   function handleOpenEditDialog(record: ThresholdRule) {
@@ -156,8 +160,8 @@ export default function ThresholdRule() {
     thresholdRuleForm.reset();
     setDialogOpen(true);
     getThresholdRuleDetailsMutate(record.rule_id, {
-      onSuccess: (res) => {
-        thresholdRuleForm.reset(res.data);
+      onSuccess: (data) => {
+        thresholdRuleForm.reset(data);
       },
     });
   }

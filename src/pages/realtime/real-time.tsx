@@ -315,7 +315,6 @@ export default function RealtimePage() {
       </div>
       <div className="mt-5">
         <Card
-          title="数据筛选"
           className="w-full"
           style={{ borderColor: "#f0f0f0" }}
         >

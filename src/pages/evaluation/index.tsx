@@ -416,7 +416,6 @@ export default function Evaluation() {
       <div className="mb-6">
         {/* 筛选条件 */}
         <Card
-          title="筛选条件"
           className="w-full"
           style={{ borderColor: "#f0f0f0" }}
         >

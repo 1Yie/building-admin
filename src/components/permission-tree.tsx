@@ -80,7 +80,7 @@ export function PermissionTree({
         })
           ? actions
           : ["read", "update"]; // 非传感器只给 read+update
-
+        
         // 确保所有受影响的子节点都被添加到 checkedKeys 中
         if (!newCheckedKeys.includes(k)) {
           newCheckedKeys.push(k);
@@ -95,7 +95,7 @@ export function PermissionTree({
       affectedKeys.forEach((k) => {
         newCheckedActions[k] = [];
         // 从 checkedKeys 中移除所有受影响的子节点
-        newCheckedKeys = newCheckedKeys.filter((key) => key !== k);
+        newCheckedKeys = newCheckedKeys.filter(key => key !== k);
       });
     }
 
@@ -119,10 +119,7 @@ export function PermissionTree({
     }
 
     // 递归收集所有子节点的key
-    const collectChildKeys = (
-      nodes: TreeDataNode[],
-      parentKey: string
-    ): string[] => {
+    const collectChildKeys = (nodes: TreeDataNode[], parentKey: string): string[] => {
       let childKeys: string[] = [];
       for (const node of nodes) {
         if (node.key === parentKey && node.children) {
@@ -145,12 +142,12 @@ export function PermissionTree({
 
     allAffectedKeys.forEach((affectedKey) => {
       const currentActions = newCheckedActions[affectedKey] || [];
-
+      
       if (isChecked) {
         // 添加权限
         const updatedActions = [...new Set([...currentActions, action])];
         newCheckedActions[affectedKey] = updatedActions;
-
+        
         // 确保节点被选中
         if (!newCheckedKeys.includes(affectedKey)) {
           newCheckedKeys.push(affectedKey);
@@ -159,7 +156,7 @@ export function PermissionTree({
         // 移除权限
         const updatedActions = currentActions.filter((a) => a !== action);
         newCheckedActions[affectedKey] = updatedActions;
-
+        
         // 如果没有任何权限，从选中列表中移除
         if (updatedActions.length === 0) {
           const index = newCheckedKeys.indexOf(affectedKey);

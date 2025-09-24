@@ -18,7 +18,7 @@ import {
 } from "@/request/property";
 import { Badge } from "@/shadcn/ui/badge";
 import { Button, Modal, Form, Input, Select, Card } from "antd";
-import type { PaginationType } from "@/types";
+import type { PaginationType, Property } from "@/types";
 import { DownloadOutlined, PlusOutlined } from "@ant-design/icons";
 
 import { useLocation } from "react-router";
@@ -193,7 +193,7 @@ export default function PropertyMain() {
         dataIndex: "operation",
         key: "operation",
         align: "center" as const,
-        render: (record: BindPropertyListItem) => (
+        render: (_: any, record: any) => (
           <Button
             variant="link"
             className="text-blue-500 cursor-pointer"
@@ -316,18 +316,17 @@ export default function PropertyMain() {
   const spaceForm = useForm<z.infer<typeof spaceFormSchema>>({
     resolver: zodResolver(spaceFormSchema),
     defaultValues: {
-      property_id: "",
+      property_id: "KJ9999",
       property_bind_id: "",
       name: "",
       number: "",
-      floor: "",
+      floor: undefined,
       type: "",
       ampere: "",
       is_used: "",
       description: "",
     },
   });
-
   // 终端表单
   const terminalForm = useForm<z.infer<typeof terminalFormSchema>>({
     resolver: zodResolver(terminalFormSchema),
@@ -415,7 +414,11 @@ export default function PropertyMain() {
   }
 
   // 编辑资产弹窗
-  const { mutate: getPropertyDetailsMutate } = useMutation({
+  const { mutate: getPropertyDetailsMutate } = useMutation<
+    Property,
+    any,
+    string
+  >({
     mutationFn: getPropertyDetails,
   });
   function handleOpenEditDialog(record: any) {
@@ -424,8 +427,8 @@ export default function PropertyMain() {
     if (record.property_id.startsWith("LY")) {
       setAddPropertySelectValue("building");
       getPropertyDetailsMutate(record.property_id, {
-        onSuccess: (res) => {
-          buildingForm.reset(res.data);
+        onSuccess: (data) => {
+          buildingForm.reset(data);
         },
       });
     }
@@ -433,8 +436,8 @@ export default function PropertyMain() {
       setAddPropertySelectValue("space");
       onAddPropertySelectValueChange("space");
       getPropertyDetailsMutate(record.property_id, {
-        onSuccess: (res) => {
-          spaceForm.reset(res.data);
+        onSuccess: (data) => {
+          spaceForm.reset(data);
         },
       });
     }
@@ -442,8 +445,8 @@ export default function PropertyMain() {
       setAddPropertySelectValue("terminal");
       onAddPropertySelectValueChange("terminal");
       getPropertyDetailsMutate(record.property_id, {
-        onSuccess: (res) => {
-          terminalForm.reset(res.data);
+        onSuccess: (data) => {
+          terminalForm.reset(data);
         },
       });
     }
@@ -451,8 +454,8 @@ export default function PropertyMain() {
       setAddPropertySelectValue("sensor");
       onAddPropertySelectValueChange("sensor");
       getPropertyDetailsMutate(record.property_id, {
-        onSuccess: (res) => {
-          sensorForm.reset(res.data);
+        onSuccess: (data) => {
+          sensorForm.reset(data);
         },
       });
     }
@@ -473,7 +476,6 @@ export default function PropertyMain() {
       if (!isValid) {
         return;
       }
-
       // 转换 floor 为整数，如果为空或非数字则设为 undefined
       const transformedValues = {
         ...values,
@@ -898,8 +900,8 @@ export default function PropertyMain() {
             handlePaginationChange({
               current: pagination.current || 1,
               pageSize: pagination.pageSize || 10,
-              showSizeChanger: false,
               total: pagination.total,
+              showSizeChanger: false,
             })
           }
         />
