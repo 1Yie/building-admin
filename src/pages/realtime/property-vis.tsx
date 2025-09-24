@@ -1,6 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import { Tree, Spin, Button, Card, Input } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import {
+  SearchOutlined,
+  FunnelPlotFilled,
+  PushpinFilled,
+} from "@ant-design/icons";
 import ReactECharts from "echarts-for-react";
 import { useQuery } from "@tanstack/react-query";
 import { permissionList } from "@/request/account";
@@ -178,7 +182,10 @@ export default function PropertyVis() {
     const matchedPaths: string[][] = [];
 
     // 递归查找所有匹配的节点路径
-    const findMatchedPaths = (nodes: PermissionNode[], currentPath: string[] = []) => {
+    const findMatchedPaths = (
+      nodes: PermissionNode[],
+      currentPath: string[] = []
+    ) => {
       nodes.forEach((node) => {
         const newPath = [...currentPath, node.key];
         const title = node.title?.toString().toLowerCase() || "";
@@ -1480,7 +1487,14 @@ export default function PropertyVis() {
         {/* 左侧权限树 */}
         <div className="w-[30%] min-h-screen">
           <Card
-            title="选择资产"
+            title={
+              <div className="flex justify-between items-center">
+                <span>
+                  <FunnelPlotFilled className="mr-1" />
+                  选择资产
+                </span>
+              </div>
+            }
             style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}
           >
             {/* 搜索框 */}
@@ -1531,7 +1545,14 @@ export default function PropertyVis() {
         <div className="w-[70%]">
           <div className="sticky top-0" style={{ alignSelf: "flex-start" }}>
             <Card
-              title="资产可视化"
+              title={
+                <div className="flex justify-between items-center">
+                  <span>
+                    <PushpinFilled className="mr-1" />
+                    资产可视化
+                  </span>
+                </div>
+              }
               style={{
                 borderColor: "#f0f0f0",
                 marginBottom: "20px",

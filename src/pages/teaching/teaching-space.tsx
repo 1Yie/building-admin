@@ -10,7 +10,7 @@ import {
 } from "antd";
 import { Controller, useForm } from "react-hook-form";
 import { useState } from "react";
-import { PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined, ControlFilled } from "@ant-design/icons";
 
 export function TeachingSpacePage() {
   // 搜索表单
@@ -106,7 +106,9 @@ export function TeachingSpacePage() {
             查看
           </Button>
           <Popconfirm title="确定删除吗？" okText="确定" cancelText="取消">
-            <Button type="default" danger>删除</Button>
+            <Button type="default" danger>
+              删除
+            </Button>
           </Popconfirm>
         </div>
       ),
@@ -222,7 +224,14 @@ export function TeachingSpacePage() {
 
       {/* 表格 */}
       <Card
-        title="教学空间管理"
+        title={
+          <div className="flex justify-between items-center">
+            <span>
+              <ControlFilled className="mr-1" />
+              教学空间管理
+            </span>
+          </div>
+        }
         extra={
           <Button
             type="primary"

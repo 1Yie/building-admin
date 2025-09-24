@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import z from "zod/v4";
 import { getTaskInterVal, setTaskInterVal } from "@/request/settings";
 import { Button, Card, Input, Form } from "antd";
+import { SettingFilled } from "@ant-design/icons";
 
 export default function SettingsPage() {
   // 获取任务间隔
@@ -68,7 +69,14 @@ export default function SettingsPage() {
   return (
     <div className="p-5">
       <Card
-        title="任务间隔设置"
+        title={
+          <div className="flex justify-between items-center">
+            <span>
+              <SettingFilled className="mr-1" />
+              任务间隔设置
+            </span>
+          </div>
+        }
         style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}
       >
         <div className="space-y-6">

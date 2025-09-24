@@ -81,7 +81,10 @@ pnpm build
 2.  **运行 Docker 容器**:
 
     ```bash
-    docker run -d -p 80:80 --name building-admin-container building-admin
+    docker run -d -p 80:80 \
+  -e VITE_BASE_URL=\"http://your_base_url\" \
+  -e VITE_BASE_URL_HOME=\"http://your_base_url_home\" \
+  --name building-admin-container building-admin
     ```
 
     这将在后台启动一个容器，并将容器的 80 端口映射到主机的 80 端口。现在，您可以通过服务器的 IP 地址或域名访问该应用。

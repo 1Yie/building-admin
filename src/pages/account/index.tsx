@@ -26,7 +26,7 @@ import type { TreeDataNode } from "antd";
 
 import type { PaginationType } from "@/types";
 import type { PermissionResponse } from "@/components/permission-tree";
-import { PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined, IdcardFilled  } from "@ant-design/icons";
 import type { ColumnType } from "antd/es/table";
 
 export default function AccountPage() {
@@ -581,7 +581,14 @@ export default function AccountPage() {
   return (
     <div className="p-5 space-y-5">
       <Card
-        title="账号管理"
+        title={
+          <div className="flex justify-between items-center">
+            <span>
+              <IdcardFilled className="mr-1" />
+              账号管理
+            </span>
+          </div>
+        }
         style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}
         extra={
           <Button

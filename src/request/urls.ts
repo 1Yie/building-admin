@@ -1,6 +1,3 @@
-import type { start } from "repl";
-import { updateProperty } from "./property";
-
 function combineAuthorityUrl(url: string) {
   return `${import.meta.env.VITE_BASE_URL}${url}`;
 }

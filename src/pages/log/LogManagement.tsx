@@ -10,15 +10,14 @@ import {
   Form,
   Card,
 } from "antd";
-import { format } from "date-fns";
 import zhCN from "antd/locale/zh_CN";
 import dayjs from "dayjs";
 import "dayjs/locale/zh-cn";
-import { CalendarIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod/v4";
 import { getLogList, getLogTypeList } from "@/request/log";
+import { ExclamationCircleFilled } from "@ant-design/icons";
 
 import type { PaginationType } from "@/types";
 
@@ -222,7 +221,14 @@ export default function LogManagement() {
       </Card>
 
       <Card
-        title="日志管理"
+        title={
+          <div className="flex justify-between items-center">
+            <span>
+              <ExclamationCircleFilled className="mr-1" />
+              日志管理
+            </span>
+          </div>
+        }
         style={{
           borderColor: "#f0f0f0",
         }}

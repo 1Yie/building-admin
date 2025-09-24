@@ -10,6 +10,7 @@ import z from "zod/v4";
 import { accountPasswordReset } from "@/request/account";
 import type { UserInfo } from "@/request/authority";
 import { logout } from "@/request/authority";
+import { SkinFilled } from "@ant-design/icons";
 
 const passwordFormSchema = z
   .object({
@@ -107,7 +108,14 @@ export default function PersonalPage() {
   return (
     <div className="p-5 space-y-5">
       <Card
-        title="个人信息"
+        title={
+          <div className="flex justify-between items-center">
+            <span>
+              <SkinFilled className="mr-1" />
+              个人信息
+            </span>
+          </div>
+        }
         style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}
       >
         <div className="space-y-4">
