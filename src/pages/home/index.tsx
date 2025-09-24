@@ -390,7 +390,7 @@ export default function HomePage() {
               }
             >
               <div className="flex flex-col gap-3 max-h-80 overflow-y-auto rounded-lg">
-                {alarmInfo?.slice(0, 8).map((item, index) => (
+                {alarmInfo?.slice(0, 15).map((item, index) => (
                   <div
                     key={item.content || index}
                     className="bg-red-50 p-4 border-l-4 border-red-500 rounded-lg"
