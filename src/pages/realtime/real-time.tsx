@@ -11,10 +11,7 @@ import {
   getSensorTypeList,
 } from "@/request/property";
 import { getOutlineInfo, getSensorList } from "@/request/realtime";
-import { Button, Select, ConfigProvider, Form, Card } from "antd";
-
-import zhCN from "antd/locale/zh_CN";
-import "dayjs/locale/zh-cn";
+import { Button, Select, Form, Card, Spin, Empty } from "antd";
 
 import {
   CircleX,
@@ -25,7 +22,6 @@ import {
   Wifi,
   Activity,
 } from "lucide-react";
-import { Skeleton } from "@/shadcn/ui/skeleton";
 import type { PaginationType } from "@/types";
 import ChartLine from "./chart-line";
 
@@ -314,10 +310,7 @@ export default function RealtimePage() {
         </Card>
       </div>
       <div className="mt-5">
-        <Card
-          className="w-full"
-          style={{ borderColor: "#f0f0f0" }}
-        >
+        <Card className="w-full" style={{ borderColor: "#f0f0f0" }}>
           <Form layout="inline" className="flex flex-wrap gap-4">
             <Controller
               control={searchForm.control}
@@ -482,8 +475,8 @@ export default function RealtimePage() {
       </div>
       <div className="mt-5">
         {isPending ? (
-          <div>
-            <Skeleton className="rounded-xl w-full h-40" />
+          <div className="flex h-40 w-full items-center justify-center">
+            <Spin size="large" />
           </div>
         ) : chartDataList.length > 0 ? (
           <div className="gap-5 grid grid-cols-2">
@@ -497,23 +490,21 @@ export default function RealtimePage() {
             ))}
           </div>
         ) : (
-          <>
-            <CircleX className="w-7 h-7 text-gray-700 mx-auto" />
-            <h1 className="text-center py-1 text-gray-700">暂无数据</h1>
-          </>
+          <div className="flex h-40 w-full items-center justify-center">
+            <Empty description="暂无数据" />
+          </div>
         )}
       </div>
       <div className="mt-5">
-        <ConfigProvider locale={zhCN}>
-          <Pagination
-            current={pageParams.current}
-            pageSize={pageParams.pageSize}
-            total={pageParams.total}
-            showSizeChanger={false}
-            onChange={onPageChange}
-            showQuickJumper={true}
-          />
-        </ConfigProvider>
+        <Pagination
+          align="end"
+          current={pageParams.current}
+          pageSize={pageParams.pageSize}
+          total={pageParams.total}
+          showSizeChanger={false}
+          onChange={onPageChange}
+          showQuickJumper={true}
+        />
       </div>
     </div>
   );

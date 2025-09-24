@@ -3,12 +3,10 @@ import { useNavigate } from "react-router";
 import { logout } from "@/request/authority";
 import { Button } from "antd";
 import { ShieldBan } from "lucide-react";
-import { Divider } from "antd";
 
 export default function Error403() {
   const navigate = useNavigate();
 
-  // 退出登录 - 复制AppSidebar中的逻辑
   const { mutate: logoutMutate, isPending } = useMutation({
     mutationFn: logout,
   });
@@ -21,7 +19,6 @@ export default function Error403() {
       },
       onError: (error) => {
         console.error("退出登录失败:", error);
-        // 即使API调用失败，也清除本地token并跳转到登录页
         localStorage.removeItem("token");
         navigate("/login");
       },

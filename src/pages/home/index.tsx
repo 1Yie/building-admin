@@ -1,19 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  ArrowDown,
-  ArrowUp,
-  Plus,
-  CircleSlash,
-  Ban,
-  LockKeyholeOpen,
-} from "lucide-react";
+import { ArrowUp, Plus, CircleSlash, Ban } from "lucide-react";
 import { useState } from "react";
 import { Link, NavLink } from "react-router";
 import { getAlarmInfo, getOutLineInfo } from "@/request/home";
 import { getTaskInterVal } from "@/request/settings";
 
 import { Button } from "@/shadcn/ui/button";
-import { Card, Tabs } from "antd";
+import { Card, Skeleton } from "antd";
 import { Tabs as ShadcnTabs, TabsList, TabsTrigger } from "@/shadcn/ui/tabs";
 import { ChartLine } from "./chart-line";
 import { ChartPie } from "./chart-pie";
@@ -141,7 +134,7 @@ export default function HomePage() {
       )}
 
       <div className="gap-5 grid grid-cols-3">
-        {hasPermission("menu_building-实时数据") && device_unit && (
+        {hasPermission("menu_building-实时数据") && device_unit ? (
           <Card className="w-full" style={{ borderColor: "#e5e7eb" }}>
             <div className="h-full flex flex-col">
               <div className="flex justify-between items-start flex-1">
@@ -153,11 +146,12 @@ export default function HomePage() {
                     {device_unit.count}
                   </div>
 
+                  {/* 在线率上升绿色 下降为红色 */}
                   <div
                     className={`flex items-center text-sm ${
                       device_unit.trend === "decrease"
-                        ? "text-green-500"
-                        : "text-red-500"
+                        ? "text-red-500"
+                        : "text-green-500"
                     }`}
                   >
                     {device_unit.trend === "decrease" ? (
@@ -173,8 +167,8 @@ export default function HomePage() {
                 </div>
 
                 {/* 右上角图标 */}
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <ThunderboltFilled className="text-green-500 text-lg" />
+                <div className="w-10 h-10 text-green-500 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <ThunderboltFilled className="text-lg" />
                 </div>
               </div>
 
@@ -194,24 +188,23 @@ export default function HomePage() {
                           : device_unit.count /
                             (1 - device_unit.trend_count / 100);
 
-                      // 以两日最大值作为基准
-                      const maxCount = Math.max(
-                        device_unit.count,
-                        yesterdayCount
-                      );
-                      return `${Math.min(
-                        100,
-                        (device_unit.count / maxCount) * 100
-                      )}%`;
+                      // 以昨日的值作为基准
+                      const width = (device_unit.count / yesterdayCount) * 100;
+                      // 限制在 0~100%
+                      return `${Math.min(100, Math.max(0, width))}%`;
                     })(),
                   }}
                 ></div>
               </div>
             </div>
           </Card>
+        ) : (
+          <Card className="w-full" style={{ borderColor: "#e5e7eb" }}>
+            <Skeleton className="h-full flex flex-col items-center justify-center gap-4" />
+          </Card>
         )}
 
-        {hasParentPermission("日志管理") && alarm_unit && (
+        {hasParentPermission("日志管理") && alarm_unit ? (
           <Card className="w-full" style={{ borderColor: "#e5e7eb" }}>
             <div className="h-full flex flex-col">
               <div className="flex justify-between items-start flex-1">
@@ -223,6 +216,7 @@ export default function HomePage() {
                     {alarm_unit.count}
                   </div>
 
+                  {/* 预警数量上升红色 下降为绿色 */}
                   <div
                     className={`flex items-center text-sm ${
                       alarm_unit.trend === "decrease"
@@ -243,8 +237,8 @@ export default function HomePage() {
                 </div>
 
                 {/* 右上角图标 */}
-                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <BellFilled className="text-red-500 text-lg" />
+                <div className="w-10 h-10 text-red-500 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <BellFilled className="text-lg" />
                 </div>
               </div>
 
@@ -279,9 +273,13 @@ export default function HomePage() {
               </div>
             </div>
           </Card>
+        ) : (
+          <Card className="w-full" style={{ borderColor: "#e5e7eb" }}>
+            <Skeleton className="h-full flex flex-col items-center justify-center gap-4" />
+          </Card>
         )}
 
-        {hasPermission("menu_building-楼宇资产") && property_unit && (
+        {hasPermission("menu_building-楼宇资产") && property_unit ? (
           <Card className="w-full" style={{ borderColor: "#e5e7eb" }}>
             <div className="h-full flex flex-col">
               <div className="flex justify-between items-start flex-1">
@@ -303,8 +301,8 @@ export default function HomePage() {
                 </div>
 
                 {/* 右上角图标 */}
-                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <LayoutFilled className="text-purple-500 text-lg" />
+                <div className="w-10 h-10 text-purple-500 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <LayoutFilled className="text-lg" />
                 </div>
               </div>
 
@@ -329,6 +327,10 @@ export default function HomePage() {
                 ></div>
               </div>
             </div>
+          </Card>
+        ) : (
+          <Card className="w-full" style={{ borderColor: "#e5e7eb" }}>
+            <Skeleton className="h-full flex flex-col items-center justify-center gap-4" />
           </Card>
         )}
       </div>
