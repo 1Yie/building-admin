@@ -7,13 +7,17 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // https://vite.dev/config/
 export default defineConfig({
-	server: {
-		host: true,
-	},
-	plugins: [react()],
-	resolve: {
-		alias: {
-			"@": path.resolve(__dirname, "src"),
-		},
-	},
+  server: {
+    host: true,
+  },
+  plugins: [react()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "src"),
+    },
+  },
+  // 生产环境下移除console和debugger
+  esbuild: {
+    drop: ["console", "debugger"],
+  },
 });

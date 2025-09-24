@@ -12,11 +12,10 @@ import {
   Tag,
   Tree,
 } from "antd";
-import { X } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import z from "zod";
+import z from "zod/v4";
 import type { RoleTableResponse, RoleUser } from "@/request/role";
 import {
   addRole,
@@ -41,19 +40,19 @@ export default function RolePage() {
       title: "角色名称",
       dataIndex: "roleName",
       key: "roleName",
-      align: "center",
+      align: "center" as const,
     },
     {
       title: "角色描述",
       dataIndex: "description",
       key: "description",
-      align: "center",
+      align: "center" as const,
     },
     {
       title: "角色权限",
       dataIndex: "permission",
       key: "permission",
-      align: "center",
+      align: "center" as const,
       width: 600,
       textWrap: "word-break",
       ellipsis: true,
@@ -77,7 +76,7 @@ export default function RolePage() {
     {
       title: "操作",
       key: "action",
-      align: "center",
+      align: "center" as const,
       render: (_: any, record: RoleUser) => (
         <div className="space-x-2">
           <Button
@@ -333,7 +332,11 @@ export default function RolePage() {
         title="角色管理"
         style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}
         extra={
-          <Button type="primary" onClick={handleOpenAddDialog} icon={<PlusOutlined />}>
+          <Button
+            type="primary"
+            onClick={handleOpenAddDialog}
+            icon={<PlusOutlined />}
+          >
             新增
           </Button>
         }
@@ -404,11 +407,19 @@ export default function RolePage() {
               <Tree
                 checkable
                 treeData={rolePermissionTreeData}
-                onExpand={onExpand}
+                onExpand={(expandedKeys) =>
+                  onExpand(expandedKeys.map((key) => key.toString()))
+                }
                 expandedKeys={expandedKeys}
                 autoExpandParent={autoExpandParent}
                 checkedKeys={checkedKeys}
-                onCheck={onCheck}
+                onCheck={(checkedKeys) => {
+                  if (Array.isArray(checkedKeys)) {
+                    onCheck(checkedKeys.map((key) => key.toString()));
+                  } else {
+                    onCheck(checkedKeys.checked.map((key) => key.toString()));
+                  }
+                }}
               />
             </div>
           </div>

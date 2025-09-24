@@ -66,6 +66,7 @@ export function PermissionTree({
     };
 
     const affectedKeys = collectKeys(info.node);
+    let newCheckedKeys = [...keys];
 
     if (keys.includes(info.node.key)) {
       // 勾选 > 父子节点权限全选
@@ -79,6 +80,11 @@ export function PermissionTree({
         })
           ? actions
           : ["read", "update"]; // 非传感器只给 read+update
+        
+        // 确保所有受影响的子节点都被添加到 checkedKeys 中
+        if (!newCheckedKeys.includes(k)) {
+          newCheckedKeys.push(k);
+        }
       });
 
       setExpandedKeys((prev) =>
@@ -88,11 +94,13 @@ export function PermissionTree({
       // 取消 > 删除父子节点权限
       affectedKeys.forEach((k) => {
         newCheckedActions[k] = [];
+        // 从 checkedKeys 中移除所有受影响的子节点
+        newCheckedKeys = newCheckedKeys.filter(key => key !== k);
       });
     }
 
     onChange({
-      checkedKeys: keys.map((key) => String(key)),
+      checkedKeys: newCheckedKeys.map((key) => String(key)),
       checkedActions: newCheckedActions,
     });
   };
@@ -110,25 +118,56 @@ export function PermissionTree({
       return; // 如果不是传感器，不允许更改 control 权限
     }
 
-    const currentActions = checkedActions[key] || [];
-    const updatedActions = isChecked
-      ? [...new Set([...currentActions, action])]
-      : currentActions.filter((a) => a !== action);
+    // 递归收集所有子节点的key
+    const collectChildKeys = (nodes: TreeDataNode[], parentKey: string): string[] => {
+      let childKeys: string[] = [];
+      for (const node of nodes) {
+        if (node.key === parentKey && node.children) {
+          for (const child of node.children) {
+            childKeys.push(child.key as string);
+            childKeys.push(...collectChildKeys(nodes, child.key as string));
+          }
+        } else if (node.children) {
+          childKeys.push(...collectChildKeys(node.children, parentKey));
+        }
+      }
+      return childKeys;
+    };
 
+    const childKeys = collectChildKeys(treeData, key);
+    const allAffectedKeys = [key, ...childKeys];
+
+    const newCheckedActions = { ...checkedActions };
     const newCheckedKeys = [...checkedKeys];
-    if (updatedActions.length > 0 && !newCheckedKeys.includes(key)) {
-      newCheckedKeys.push(key);
-    } else if (updatedActions.length === 0) {
-      const index = newCheckedKeys.indexOf(key);
-      if (index > -1) newCheckedKeys.splice(index, 1);
-    }
+
+    allAffectedKeys.forEach((affectedKey) => {
+      const currentActions = newCheckedActions[affectedKey] || [];
+      
+      if (isChecked) {
+        // 添加权限
+        const updatedActions = [...new Set([...currentActions, action])];
+        newCheckedActions[affectedKey] = updatedActions;
+        
+        // 确保节点被选中
+        if (!newCheckedKeys.includes(affectedKey)) {
+          newCheckedKeys.push(affectedKey);
+        }
+      } else {
+        // 移除权限
+        const updatedActions = currentActions.filter((a) => a !== action);
+        newCheckedActions[affectedKey] = updatedActions;
+        
+        // 如果没有任何权限，从选中列表中移除
+        if (updatedActions.length === 0) {
+          const index = newCheckedKeys.indexOf(affectedKey);
+          if (index > -1) newCheckedKeys.splice(index, 1);
+        }
+      }
+    });
 
     onChange({
       checkedKeys: newCheckedKeys,
-      checkedActions: {
-        ...checkedActions,
-        [key]: updatedActions,
-      },
+      checkedActions: newCheckedActions,
     });
   };
 

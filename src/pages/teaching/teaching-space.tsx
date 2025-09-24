@@ -163,7 +163,6 @@ export function TeachingSpacePage() {
     <div className="">
       {/* 搜索表单 */}
       <Card
-        title="搜索条件"
         style={{
           borderColor: "#f0f0f0",
           marginBottom: "20px",

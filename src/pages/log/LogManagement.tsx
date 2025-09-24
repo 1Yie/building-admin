@@ -17,7 +17,7 @@ import "dayjs/locale/zh-cn";
 import { CalendarIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import z from "zod";
+import z from "zod/v4";
 import { getLogList, getLogTypeList } from "@/request/log";
 
 import type { PaginationType } from "@/types";
@@ -92,7 +92,7 @@ export default function LogManagement() {
     log_type: z.string().optional(), // 日志类型
   });
   const searchForm = useForm<z.infer<typeof searchFormSchema>>({
-    resolver: zodResolver(searchFormSchema) as any,
+    resolver: zodResolver(searchFormSchema),
     defaultValues: {
       time: "",
       operator: "", // 操作人
@@ -122,7 +122,6 @@ export default function LogManagement() {
   return (
     <div className="">
       <Card
-        title="搜索条件"
         style={{
           borderColor: "#f0f0f0",
           marginBottom: "20px",

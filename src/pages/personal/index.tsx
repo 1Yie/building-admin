@@ -6,7 +6,7 @@ import { useEffect, useId, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
-import z from "zod";
+import z from "zod/v4";
 import { accountPasswordReset } from "@/request/account";
 import type { UserInfo } from "@/request/authority";
 import { logout } from "@/request/authority";

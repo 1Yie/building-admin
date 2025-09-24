@@ -1,4 +1,4 @@
-import { Tabs } from "antd";
+import { Tabs, type TabsProps } from "antd";
 import Realtime from "./real-time";
 import PropertyVis from "./property-vis";
 
@@ -25,7 +25,7 @@ export default function ControlPage() {
 
   return (
     <div className="p-5">
-      <Tabs items={tabItems} />
+      <Tabs items={tabItems as TabsProps['items']} />
     </div>
   );
 }

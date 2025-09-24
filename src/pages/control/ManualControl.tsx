@@ -112,7 +112,7 @@ export default function ManualControl() {
   // 表格分页
   const [pageParams, setPageParams] = useState<PaginationType>({
     current: 1,
-    pageSize: 5,
+    pageSize: 10,
     showSizeChanger: false,
   });
   function handlePaginationChange(pagination: PaginationType) {
@@ -172,7 +172,6 @@ export default function ManualControl() {
     <div className="">
       <Card
         title="手动控制"
-        bordered={false}
         style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}
       >
         <Table

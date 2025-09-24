@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { Tree, Spin, Button, Card } from "antd";
+import { Tree, Spin, Button, Card, Input } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 import ReactECharts from "echarts-for-react";
 import { useQuery } from "@tanstack/react-query";
 import { permissionList } from "@/request/account";
@@ -30,6 +31,11 @@ const transformTree = (arr: any[]): PermissionNode[] => {
 export default function PropertyVis() {
   const { userInfo, isLoggedIn } = useAuth();
   const [permissionData, setPermissionData] = useState<PermissionNode[]>([]);
+  const [filteredPermissionData, setFilteredPermissionData] = useState<
+    PermissionNode[]
+  >([]);
+  const [searchValue, setSearchValue] = useState<string>("");
+  const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
   const [checkedKeys, setCheckedKeys] = useState<string[]>([]);
   const [selectedNode, setSelectedNode] = useState<PermissionNode | null>(null);
   const [currentBuildingMap, setCurrentBuildingMap] =
@@ -118,11 +124,111 @@ export default function PropertyVis() {
 
     const transformedData = transformTree(rawData);
     setPermissionData(transformedData);
+    setFilteredPermissionData(transformedData); // 初始化过滤数据
 
     setCheckedKeys(rawData.check || []);
 
     fetchAllSensorFields(rawData);
   }, [permissionDataResponse]);
+
+  // 搜索过滤函数
+  const filterTreeData = (
+    data: PermissionNode[],
+    searchValue: string
+  ): PermissionNode[] => {
+    if (!searchValue) return data;
+
+    const filterNode = (node: PermissionNode): PermissionNode | null => {
+      const title = node.title?.toString().toLowerCase() || "";
+      const key = node.key?.toString().toLowerCase() || "";
+      const isMatch =
+        title.includes(searchValue.toLowerCase()) ||
+        key.includes(searchValue.toLowerCase());
+
+      // 递归过滤子节点
+      const filteredChildren =
+        (node.children
+          ?.map((child) => filterNode(child))
+          .filter(Boolean) as PermissionNode[]) || [];
+
+      // 如果当前节点匹配或有匹配的子节点，则保留该节点
+      if (isMatch || filteredChildren.length > 0) {
+        return {
+          ...node,
+          children: filteredChildren,
+        };
+      }
+
+      return null;
+    };
+
+    return data
+      .map((node) => filterNode(node))
+      .filter(Boolean) as PermissionNode[];
+  };
+
+  // 收集需要展开的节点keys - 优化版本，确保完整展开匹配项的路径
+  const getExpandedKeys = (
+    data: PermissionNode[],
+    searchValue: string
+  ): string[] => {
+    if (!searchValue) return [];
+
+    const expandedKeys: string[] = [];
+    const matchedPaths: string[][] = [];
+
+    // 递归查找所有匹配的节点路径
+    const findMatchedPaths = (nodes: PermissionNode[], currentPath: string[] = []) => {
+      nodes.forEach((node) => {
+        const newPath = [...currentPath, node.key];
+        const title = node.title?.toString().toLowerCase() || "";
+        const key = node.key?.toString().toLowerCase() || "";
+        const isMatch =
+          title.includes(searchValue.toLowerCase()) ||
+          key.includes(searchValue.toLowerCase());
+
+        if (isMatch) {
+          // 如果当前节点匹配，保存完整路径
+          matchedPaths.push(newPath);
+        }
+
+        // 继续递归搜索子节点
+        if (node.children && node.children.length > 0) {
+          findMatchedPaths(node.children, newPath);
+        }
+      });
+    };
+
+    // 查找所有匹配的路径
+    findMatchedPaths(data);
+
+    // 从所有匹配路径中提取需要展开的节点keys
+    matchedPaths.forEach((path) => {
+      // 展开路径中除了最后一个节点（叶子节点）之外的所有节点
+      for (let i = 0; i < path.length - 1; i++) {
+        if (!expandedKeys.includes(path[i])) {
+          expandedKeys.push(path[i]);
+        }
+      }
+    });
+
+    return expandedKeys;
+  };
+
+  // 处理搜索
+  useEffect(() => {
+    const filtered = filterTreeData(permissionData, searchValue);
+    setFilteredPermissionData(filtered);
+
+    // 自动展开匹配的节点
+    const keysToExpand = getExpandedKeys(permissionData, searchValue);
+    setExpandedKeys(keysToExpand);
+  }, [permissionData, searchValue]);
+
+  // 搜索输入处理
+  const handleSearch = (value: string) => {
+    setSearchValue(value);
+  };
 
   // 处理错误
   useEffect(() => {
@@ -1247,7 +1353,7 @@ export default function PropertyVis() {
             if (echartsInstance) {
               echartsInstance.resize();
             }
-          }, 150); // 增加延迟确保图片尺寸计算完成
+          }, 150);
         }
       }, 300); // 300ms防抖延迟
     };
@@ -1374,9 +1480,21 @@ export default function PropertyVis() {
         {/* 左侧权限树 */}
         <div className="w-[30%] min-h-screen">
           <Card
-            title="权限树"
+            title="选择资产"
             style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}
           >
+            {/* 搜索框 */}
+            <div className="mb-4">
+              <Input
+                placeholder="搜索楼层/房间/终端/传感器..."
+                prefix={<SearchOutlined />}
+                value={searchValue}
+                onChange={(e) => handleSearch(e.target.value)}
+                allowClear
+                style={{ width: "100%" }}
+              />
+            </div>
+
             <Spin spinning={permissionLoading}>
               {permissionError ? (
                 <div className="p-4 text-center">
@@ -1397,10 +1515,12 @@ export default function PropertyVis() {
                 </div>
               ) : (
                 <Tree
-                  treeData={permissionData}
+                  treeData={filteredPermissionData}
                   checkedKeys={checkedKeys}
+                  expandedKeys={expandedKeys}
                   onCheck={onCheck}
                   onSelect={onSelect}
+                  onExpand={(keys) => setExpandedKeys(keys as string[])}
                 />
               )}
             </Spin>
@@ -1411,7 +1531,7 @@ export default function PropertyVis() {
         <div className="w-[70%]">
           <div className="sticky top-0" style={{ alignSelf: "flex-start" }}>
             <Card
-              title="楼宇可视化"
+              title="资产可视化"
               style={{
                 borderColor: "#f0f0f0",
                 marginBottom: "20px",

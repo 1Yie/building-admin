@@ -4,7 +4,7 @@ import { Table } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import z from "zod";
+import z from "zod/v4";
 import type { BindPropertyListItem } from "@/request/property";
 import {
   addProperty,
@@ -18,7 +18,7 @@ import {
 } from "@/request/property";
 import { Badge } from "@/shadcn/ui/badge";
 import { Button, Modal, Form, Input, Select, Card } from "antd";
-import type { PaginationType } from "@/types";
+import type { PaginationType, Property } from "@/types";
 import { DownloadOutlined, PlusOutlined } from "@ant-design/icons";
 
 import { useLocation } from "react-router";
@@ -62,12 +62,6 @@ const spaceFormSchema = z.object({
     .optional()
     .refine((val) => val === undefined || val === "" || /^\d+$/.test(val), {
       message: "请输入整数",
-    })
-    .transform((val) =>
-      val === "" || val === undefined ? undefined : Number(val)
-    )
-    .refine((val) => val === undefined || val > 0, {
-      message: "请输入大于0的整数",
     }),
   type: z.string().optional(), // 房间用途
   ampere: z.string().optional(), // TODO
@@ -130,25 +124,25 @@ export default function PropertyMain() {
         title: "资产编号",
         dataIndex: "property_id",
         key: "property_id",
-        align: "center",
+        align: "center" as const,
       },
       {
         title: () => propertyTitle,
         dataIndex: "property_name",
         key: "property_name",
-        align: "center",
+        align: "center" as const,
       },
       {
         title: "资产类型",
         dataIndex: "property_type",
         key: "property_type",
-        align: "center",
+        align: "center" as const,
       },
       {
         title: "资产状态",
         dataIndex: "is_used",
         key: "is_used",
-        align: "center",
+        align: "center" as const,
         render: (is_used: boolean) => {
           return is_used ? (
             <Badge className="bg-green-500">在用</Badge>
@@ -161,7 +155,7 @@ export default function PropertyMain() {
         title: "活跃情况",
         dataIndex: "is_liveness",
         key: "is_liveness",
-        align: "center",
+        align: "center" as const,
         render: (is_liveness: boolean) => {
           return is_liveness ? (
             <Badge className="bg-green-500">在线</Badge>
@@ -174,32 +168,32 @@ export default function PropertyMain() {
         title: "楼宇信息",
         dataIndex: "building",
         key: "building",
-        align: "center",
+        align: "center" as const,
       },
       {
         title: "空间信息",
         dataIndex: "space",
         key: "space",
-        align: "center",
+        align: "center" as const,
       },
       {
         title: "网关（智能箱）信息",
         dataIndex: "terminal",
         key: "terminal",
-        align: "center",
+        align: "center" as const,
       },
       {
         title: "传感器信息",
         dataIndex: "sensor",
         key: "sensor",
-        align: "center",
+        align: "center" as const,
       },
       {
         title: "操作",
         dataIndex: "operation",
         key: "operation",
-        align: "center",
-        render: (_, record: any) => (
+        align: "center" as const,
+        render: (_: any, record: any) => (
           <Button
             variant="link"
             className="text-blue-500 cursor-pointer"
@@ -326,7 +320,7 @@ export default function PropertyMain() {
       property_bind_id: "",
       name: "",
       number: "",
-      floor: "",
+      floor: undefined,
       type: "",
       ampere: "",
       is_used: "",
@@ -420,7 +414,11 @@ export default function PropertyMain() {
   }
 
   // 编辑资产弹窗
-  const { mutate: getPropertyDetailsMutate } = useMutation({
+  const { mutate: getPropertyDetailsMutate } = useMutation<
+    Property,
+    any,
+    string
+  >({
     mutationFn: getPropertyDetails,
   });
   function handleOpenEditDialog(record: any) {
@@ -478,8 +476,17 @@ export default function PropertyMain() {
       if (!isValid) {
         return;
       }
+      // 转换 floor 为整数，如果为空或非数字则设为 undefined
+      const transformedValues = {
+        ...values,
+        floor:
+          values.floor && /^\d+$/.test(values.floor)
+            ? parseInt(values.floor, 10)
+            : undefined,
+      };
+
       if (addOrEdit === "add") {
-        addPropertyMutate(values, {
+        addPropertyMutate(transformedValues, {
           onSuccess: () => {
             setPropertyDialogOpen(false);
             toast.success("新增楼宇成功");
@@ -492,7 +499,7 @@ export default function PropertyMain() {
           },
         });
       } else {
-        updatePropertyMutate(values, {
+        updatePropertyMutate(transformedValues, {
           onSuccess: () => {
             setPropertyDialogOpen(false);
             toast.success("编辑楼宇成功");
@@ -703,10 +710,7 @@ export default function PropertyMain() {
 
   return (
     <div className="p-5">
-      <Card
-        title="数据筛选"
-        style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}
-      >
+      <Card style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}>
         <Form
           layout="inline"
           onFinish={searchForm.handleSubmit(onSearchFormSubmit)}
@@ -892,7 +896,14 @@ export default function PropertyMain() {
           columns={columns}
           loading={isLoading}
           pagination={pageParams}
-          onChange={handlePaginationChange}
+          onChange={(pagination) =>
+            handlePaginationChange({
+              current: pagination.current || 1,
+              pageSize: pagination.pageSize || 10,
+              total: pagination.total,
+              showSizeChanger: false,
+            })
+          }
         />
       </Card>
 
