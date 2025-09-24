@@ -9,8 +9,18 @@ import Role from "@/pages/role";
 import Settings from "@/pages/settings";
 import Teaching from "@/pages/teaching";
 import Evaluation from "@/pages/evaluation";
+import { DynamicIcon } from "lucide-react/dynamic";
 
-const sidebarItems = [
+interface SidebarItem {
+  title: string;
+  path: string;
+  icon: Parameters<typeof DynamicIcon>[0]["name"];
+  element?: React.ReactNode;
+  permission?: string;
+  children?: SidebarItem[];
+}
+
+const sidebarItems: SidebarItem[] = [
   {
     title: "首页",
     path: "/",
@@ -52,6 +62,22 @@ const sidebarItems = [
     icon: "graduation-cap",
     element: <Teaching />,
     permission: "menu_building-教学科研",
+    // children: [
+    //   {
+    //     title: "教学管理",
+    //     path: "/teaching",
+    //     icon: "graduation-cap",
+    //     element: <Teaching />,
+    //     permission: "menu_building-教学管理",
+    //   },
+    //   {
+    //     title: "教学管理",
+    //     path: "/teaching",
+    //     icon: "graduation-cap",
+    //     element: <Teaching />,
+    //     permission: "menu_building-教学管理",
+    //   },
+    // ],
   },
   {
     title: "智能评估",
@@ -74,12 +100,7 @@ const sidebarItems = [
     element: <Account />,
     permission: "menu_building-账号管理",
   },
-  {
-    title: "个人中心",
-    path: "/personal",
-    icon: "user",
-    element: <Personal />,
-  },
+  { title: "个人中心", path: "/personal", icon: "user", element: <Personal /> },
   {
     title: "系统设置",
     path: "/settings",
