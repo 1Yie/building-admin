@@ -127,15 +127,15 @@ const routes: RouteObject[] = [
     element: <Layout />,
     children: [...sidebarRoutes],
   },
-  {
-    path: "/virtual",
-    element: (
-      <VirtualAuthRoute>
-        <VirtualLayout />
-      </VirtualAuthRoute>
-    ),
-    children: [...virtualSidebarRoutes],
-  },
+  // {
+  //   path: "/virtual",
+  //   element: (
+  //     <VirtualAuthRoute>
+  //       <VirtualLayout />
+  //     </VirtualAuthRoute>
+  //   ),
+  //   children: [...virtualSidebarRoutes],
+  // },
   {
     path: "/403",
     element: <Error403 />,
