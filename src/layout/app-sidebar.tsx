@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { jwtDecode } from "jwt-decode";
-import { ChevronsUpDown, LogOut, User2 } from "lucide-react";
+import { ChevronsUpDown, LogOut, User2, ChevronDown } from "lucide-react";
 import { DynamicIcon } from "lucide-react/dynamic";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
@@ -35,6 +35,7 @@ export function AppSidebar() {
 
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
+  const [openMenus, setOpenMenus] = useState<string[]>([]);
 
   // 检查 token 是否有效
   const { mutate: tokenValidateMutate } = useMutation({
@@ -72,6 +73,16 @@ export function AppSidebar() {
     });
   }, []);
 
+  // 展开父菜单
+  useEffect(() => {
+    const activeParent = sidebarItems.find(
+      (item) => item.children && pathname.startsWith(item.path)
+    );
+    if (activeParent && !openMenus.includes(activeParent.path)) {
+      setOpenMenus((prev) => [...prev, activeParent.path]);
+    }
+  }, [pathname]);
+
   // 退出登录
   const { mutate: logoutMutate } = useMutation({ mutationFn: logout });
   function handleLogout() {
@@ -83,7 +94,6 @@ export function AppSidebar() {
     });
   }
 
-  // 根据权限过滤侧边栏
   // 根据父权限过滤侧边栏
   const filteredSidebarItems = sidebarItems.filter((item) => {
     if (!item.permission) return true;
@@ -120,20 +130,67 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {filteredSidebarItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    className="data-[active=true]:bg-blue-200/50 pl-5 h-10 data-[active=true]:text-blue-500"
-                    isActive={pathname === item.path}
-                  >
-                    <Link to={item.path}>
-                      <DynamicIcon name={item.icon} />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {filteredSidebarItems.map((item) => {
+                const hasChildren = !!item.children?.length;
+                const isOpen = openMenus.includes(item.path);
+                const isActive = hasChildren
+                  ? pathname.startsWith(item.path)
+                  : pathname === item.path;
+
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      className="cursor-pointer data-[active=true]:bg-blue-200/50 pl-5 h-10 data-[active=true]:text-blue-500 flex justify-between items-center"
+                      isActive={isActive}
+                      onClick={() => {
+                        // 如果父菜单有 element，则点击跳转
+                        if (item.element) {
+                          navigate(item.path);
+                        }
+                        // 如果有子菜单，则切换折叠状态
+                        if (hasChildren) {
+                          setOpenMenus(
+                            isOpen
+                              ? openMenus.filter((p) => p !== item.path)
+                              : [...openMenus, item.path]
+                          );
+                        }
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <DynamicIcon className="w-4 h-4" name={item.icon} />
+                        <span>{item.title}</span>
+                      </div>
+                      {hasChildren && (
+                        <ChevronDown
+                          className={cn("h-5 w-5 transition-transform", {
+                            "rotate-180": isOpen,
+                          })}
+                        />
+                      )}
+                    </SidebarMenuButton>
+
+                    {hasChildren && isOpen && (
+                      <SidebarGroupContent>
+                        {item.children?.map((sub) => (
+                          <SidebarMenuItem key={sub.title}>
+                            <SidebarMenuButton
+                              asChild
+                              className="pl-10 h-8 my-1 data-[active=true]:bg-blue-100/50 data-[active=true]:text-blue-500"
+                              isActive={pathname === sub.path}
+                            >
+                              <Link to={sub.path}>
+                                <DynamicIcon name={sub.icon} />
+                                <span>{sub.title}</span>
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        ))}
+                      </SidebarGroupContent>
+                    )}
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

@@ -129,6 +129,9 @@ export const urls = {
 
     teaching: {
       // 教学空间
+      addNew: combineUrl("/virtual/teaching/add_new"),
+      deleteTs: combineUrl("/virtual/teaching/delete_ts"),
+      searchInfo: combineUrl("/virtual/teaching/search_info"),
       // 开始/停止定时任务
       startTimedTask: combineUrl("/virtual/teaching/start_timed_task"),
       stopTimedTask: combineUrl("/virtual/teaching/stop_timed_task"),

@@ -1567,6 +1567,7 @@ export default function PropertyVis() {
                 <CountdownTimer
                   initialCountdown={REFRESH_INTERVAL}
                   onTick={() => setRefreshTicker((r) => r + 1)}
+                  isLoading={isLoadingData}
                 />
               }
             >

@@ -60,9 +60,7 @@ function AuthRoute({
 // 根据 sidebarItems 构建子路由
 const sidebarRoutes: RouteObject[] = sidebarItems.map((item) => ({
   path: item.path,
-  element: (
-    <AuthRoute element={item.element} permission={item.permission} />
-  ),
+  element: <AuthRoute element={item.element} permission={item.permission} />,
   handle: { title: item.title },
 }));
 

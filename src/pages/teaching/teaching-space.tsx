@@ -9,84 +9,135 @@ import {
   Card,
 } from "antd";
 import { Controller, useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlusOutlined, ControlFilled } from "@ant-design/icons";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  searchTeachingSpace,
+  createTeachingSpace,
+  deleteTeachingSpace,
+} from "@/request/teaching";
+import { z } from "zod/v4";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+
+const teachingSpaceSchema = z.object({
+  number: z.string().optional(),
+  name: z.string().min(1, "空间名称不能为空"),
+  count: z.string().min(1, "所属账号不能为空"),
+});
+
+type TeachingSpaceForm = z.infer<typeof teachingSpaceSchema>;
 
 export function TeachingSpacePage() {
-  // 搜索表单
+  const queryClient = useQueryClient();
+
+  // 搜索 form
   const { control, handleSubmit, reset } = useForm({
     defaultValues: {
-      "teaching-space": "",
-      "teaching-time": "",
-      "teaching-name": "",
-      "teaching-role": "",
+      number: "",
+      name: "",
+      count: "",
     },
   });
 
-  // 新增表单
-  const [addForm] = Form.useForm();
-
-  // 模拟表格数据
-  const [dataSource, setDataSource] = useState([
-    {
-      key: "1",
-      "teaching-space": "TS001",
-      "teaching-time": "2025-09-16",
-      "teaching-name": "一号教学空间",
-      "teaching-role": "管理员",
-    },
-    {
-      key: "2",
-      "teaching-space": "TS002",
-      "teaching-time": "2025-09-17",
-      "teaching-name": "二号教学空间",
-      "teaching-role": "老师",
-    },
-  ]);
-
-  // 分页参数
-  const [pageParams, setPageParams] = useState({
-    current: 1,
-    pageSize: 10,
-    total: 0,
+  // 编辑/新增 form
+  const {
+    control: addControl,
+    handleSubmit: handleAddSubmit,
+    reset: addReset,
+    formState: { errors: addErrors },
+  } = useForm<TeachingSpaceForm>({
+    resolver: zodResolver(teachingSpaceSchema),
+    defaultValues: { number: "" },
   });
 
-  // 分页处理函数
-  const onPageChange = (current: number, pageSize: number) => {
-    setPageParams({
-      current,
-      pageSize,
-      total: pageParams.total,
-    });
+  // 分页
+  const [searchParams, setSearchParams] = useState({
+    page: 1,
+    page_size: 10,
+    number: "",
+    name: "",
+    count: "",
+  });
+
+  const {
+    data: teachingData,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["teachingSpaces", searchParams],
+    queryFn: () => searchTeachingSpace(searchParams),
+  });
+
+  const dataSource = teachingData?.rooms || [];
+  console.log(dataSource);
+  const pagination = {
+    current: teachingData?.pageNum || 1,
+    pageSize: teachingData?.pageSize || 10,
+    total: teachingData?.totalSize || 0,
   };
+
+  const { mutate: createMutate, isPending: isCreating } = useMutation({
+    mutationFn: createTeachingSpace,
+    onSuccess: () => {
+      toast.success("新增成功");
+      queryClient.invalidateQueries({ queryKey: ["teachingSpaces"] });
+      setIsModalOpen(false);
+    },
+    onError: (err: any) => {
+      console.log(err);
+    },
+  });
+
+  const deleteMutate = useMutation({
+    mutationFn: deleteTeachingSpace,
+    onSuccess: () => {
+      toast.success("删除成功");
+      queryClient.invalidateQueries({ queryKey: ["teachingSpaces"] });
+      setDeletingKey(null); // 清除 loading
+    },
+    onError: (err: any) => {
+      console.error(err);
+      setDeletingKey(null); // 清除 loading
+    },
+  });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "view">("add");
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
+  const [deletingKey, setDeletingKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isModalOpen && modalMode === "add") {
+      addReset({ number: "", name: "", count: "" });
+    }
+  }, [isModalOpen, modalMode, addReset]);
 
   const columns = [
     {
       title: "空间编号",
-      dataIndex: "teaching-space",
-      key: "teaching-space",
+      dataIndex: "number",
+      key: "number",
       align: "center" as const,
     },
     {
       title: "创建时间",
-      dataIndex: "teaching-time",
-      key: "teaching-time",
+      dataIndex: "time",
+      key: "time",
       align: "center" as const,
     },
     {
       title: "空间名称",
-      dataIndex: "teaching-name",
-      key: "teaching-name",
+      dataIndex: "name",
+      key: "name",
       align: "center" as const,
     },
     {
       title: "所属账号",
-      dataIndex: "teaching-role",
-      key: "teaching-role",
+      dataIndex: "owning_count",
+      key: "count",
       align: "center" as const,
     },
     {
@@ -94,7 +145,7 @@ export function TeachingSpacePage() {
       key: "operation",
       align: "center" as const,
       render: (_: any, record: any) => (
-        <div className="flex gap-2">
+        <div className="flex justify-center gap-2">
           <Button
             type="default"
             onClick={() => {
@@ -105,8 +156,20 @@ export function TeachingSpacePage() {
           >
             查看
           </Button>
-          <Popconfirm title="确定删除吗？" okText="确定" cancelText="取消">
-            <Button type="default" danger>
+          <Popconfirm
+            title="确定删除吗？"
+            okText="确定"
+            cancelText="取消"
+            onConfirm={() => {
+              setDeletingKey(record.number); // 设置当前删除行 key
+              deleteMutate.mutate({ number: record.number });
+            }}
+          >
+            <Button
+              type="default"
+              danger
+              loading={deletingKey === record.number}
+            >
               删除
             </Button>
           </Popconfirm>
@@ -117,48 +180,27 @@ export function TeachingSpacePage() {
 
   // 搜索
   const onSearch = (values: any) => {
-    console.log("搜索条件:", values);
-    const filtered = dataSource.filter((item) =>
-      Object.keys(values).every(
-        (key) =>
-          !values[key] ||
-          (item as any)[key].toLowerCase().includes(values[key].toLowerCase())
-      )
-    );
-    setDataSource(filtered);
+    setSearchParams({ ...searchParams, ...values, page: 1 });
   };
 
   const onReset = () => {
     reset();
-    setDataSource([
-      {
-        key: "1",
-        "teaching-space": "TS001",
-        "teaching-time": "2025-09-16",
-        "teaching-name": "一号教学空间",
-        "teaching-role": "管理员",
-      },
-      {
-        key: "2",
-        "teaching-space": "TS002",
-        "teaching-time": "2025-09-17",
-        "teaching-name": "二号教学空间",
-        "teaching-role": "老师",
-      },
-    ]);
+    setSearchParams({
+      page: 1,
+      page_size: 10,
+      number: "",
+      name: "",
+      count: "",
+    });
+  };
+
+  const onPageChange = (current: number, pageSize: number) => {
+    setSearchParams({ ...searchParams, page: current, page_size: pageSize });
   };
 
   // 弹窗提交
-  const handleAdd = () => {
-    addForm.validateFields().then((values) => {
-      const newItem = {
-        key: (dataSource.length + 1).toString(),
-        ...values,
-      };
-      setDataSource([...dataSource, newItem]);
-      setIsModalOpen(false);
-      addForm.resetFields();
-    });
+  const handleAdd = (values: TeachingSpaceForm) => {
+    createMutate({ ...values, number: "" });
   };
 
   return (
@@ -172,12 +214,12 @@ export function TeachingSpacePage() {
       >
         <Form
           layout="inline"
-          className="flex gap-2"
+          className="flex flex-wrap gap-2"
           onFinish={handleSubmit(onSearch)}
         >
           <Controller
             control={control}
-            name="teaching-space"
+            name="number"
             render={({ field }) => (
               <Form.Item label="空间编号">
                 <Input placeholder="请输入空间编号" {...field} />
@@ -186,16 +228,7 @@ export function TeachingSpacePage() {
           />
           <Controller
             control={control}
-            name="teaching-time"
-            render={({ field }) => (
-              <Form.Item label="创建时间">
-                <Input placeholder="请输入创建时间" {...field} />
-              </Form.Item>
-            )}
-          />
-          <Controller
-            control={control}
-            name="teaching-name"
+            name="name"
             render={({ field }) => (
               <Form.Item label="空间名称">
                 <Input placeholder="请输入空间名称" {...field} />
@@ -204,7 +237,7 @@ export function TeachingSpacePage() {
           />
           <Controller
             control={control}
-            name="teaching-role"
+            name="count"
             render={({ field }) => (
               <Form.Item label="所属账号">
                 <Input placeholder="请输入所属账号" {...field} />
@@ -252,9 +285,12 @@ export function TeachingSpacePage() {
         <Table
           columns={columns}
           dataSource={dataSource}
-          onChange={(pagination) => {
-            onPageChange(pagination.current || 1, pagination.pageSize || 10);
+          loading={isLoading}
+          pagination={{
+            ...pagination,
+            onChange: onPageChange,
           }}
+          rowKey="number"
         />
       </Card>
 
@@ -269,7 +305,12 @@ export function TeachingSpacePage() {
                 <Button key="cancel" onClick={() => setIsModalOpen(false)}>
                   取消
                 </Button>,
-                <Button key="submit" type="primary" onClick={handleAdd}>
+                <Button
+                  key="submit"
+                  type="primary"
+                  loading={isCreating}
+                  onClick={handleAddSubmit(handleAdd)}
+                >
                   提交
                 </Button>,
               ]
@@ -281,55 +322,65 @@ export function TeachingSpacePage() {
         }
       >
         {modalMode === "add" ? (
-          <Form form={addForm} layout="horizontal" className="space-y-7">
-            <Form.Item
-              label="空间编号"
-              name="teaching-space"
-              rules={[{ required: true, message: "请输入空间编号" }]}
-            >
-              <Input placeholder="请输入空间编号" />
-            </Form.Item>
-            <Form.Item
-              label="空间名称"
-              name="teaching-name"
-              rules={[{ required: true, message: "请输入空间名称" }]}
-            >
-              <Input placeholder="请输入空间名称" />
-            </Form.Item>
-            <Form.Item
-              label="所属账号"
-              name="teaching-role"
-              rules={[{ required: true, message: "请输入所属账号" }]}
-            >
-              <Select
-                placeholder="请选择所属账号"
-                options={[
-                  { label: "管理员", value: "管理员" },
-                  { label: "老师", value: "老师" },
-                  { label: "学生", value: "学生" },
-                ]}
-              />
-            </Form.Item>
+          <Form
+            layout="horizontal"
+            className="space-y-7 mt-5"
+            onFinish={handleAddSubmit(handleAdd)}
+          >
+            <Controller
+              name="name"
+              control={addControl}
+              render={({ field }) => (
+                <Form.Item
+                  label="空间名称"
+                  validateStatus={addErrors.name ? "error" : ""}
+                  help={addErrors.name?.message}
+                >
+                  <Input {...field} placeholder="请输入空间名称" />
+                </Form.Item>
+              )}
+            />
+            <Controller
+              name="count"
+              control={addControl}
+              render={({ field }) => (
+                <Form.Item
+                  label="所属账号"
+                  validateStatus={addErrors.count ? "error" : ""}
+                  help={addErrors.count?.message}
+                >
+                  <Select
+                    {...field}
+                    placeholder="请选择所属账号"
+                    options={[
+                      { label: "管理员", value: "管理员" },
+                      { label: "老师", value: "老师" },
+                      { label: "学生", value: "学生" },
+                    ]}
+                  />
+                </Form.Item>
+              )}
+            />
           </Form>
         ) : (
           selectedRecord && (
             <div className="mt-5">
               <div className="space-y-3">
                 <div className="flex">
-                  <span className="font-medium w-20">空间编号:</span>
-                  <span>{selectedRecord["teaching-space"]}</span>
+                  <span className="font-medium w-24">空间编号:</span>
+                  <span>{selectedRecord.number}</span>
                 </div>
                 <div className="flex">
-                  <span className="font-medium w-20">创建时间:</span>
-                  <span>{selectedRecord["teaching-time"]}</span>
+                  <span className="font-medium w-24">创建时间:</span>
+                  <span>{selectedRecord.time}</span>
                 </div>
                 <div className="flex">
-                  <span className="font-medium w-20">空间名称:</span>
-                  <span>{selectedRecord["teaching-name"]}</span>
+                  <span className="font-medium w-24">空间名称:</span>
+                  <span>{selectedRecord.name}</span>
                 </div>
                 <div className="flex">
-                  <span className="font-medium w-20">所属账号:</span>
-                  <span>{selectedRecord["teaching-role"]}</span>
+                  <span className="font-medium w-24">所属账号:</span>
+                  <span>{selectedRecord.owning_count}</span>
                 </div>
               </div>
               <div className="flex flex-row gap-2 mt-6">

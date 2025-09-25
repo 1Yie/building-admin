@@ -113,7 +113,7 @@ export default function ManualControl() {
   // 表格分页
   const [pageParams, setPageParams] = useState<PaginationType>({
     current: 1,
-    pageSize: 5,
+    pageSize: 10,
     showSizeChanger: false,
   });
   function handlePaginationChange(pagination: PaginationType) {
