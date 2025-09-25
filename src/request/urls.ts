@@ -111,74 +111,84 @@ export const urls = {
   },
 
   virtual: {
-    // 进入/退出虚拟空间
-    enterVirtual: combineUrl("/virtual/enter"),
-    quitVirtual: combineUrl("/virtual/quit"),
+    /** ===================== 进入/退出虚拟空间 ===================== */
+    enter: combineUrl("/virtual/enter"),
+    quit: combineUrl("/virtual/quit"),
 
-    // 查询资产
-    getAssetsByBuilding: combineUrl("/virtual/propertypage/get_property"),
-    // 添加新资产
-    addProperty: combineUrl("/virtual/propertypage/add_property"),
-    // 设置资产的启用状态(v2)
-    setPropertyStatus: combineUrl("/virtual/propertypage/set_property_used"),
-    // 更新资产(v2)
-    updateProperty: combineUrl("/virtual/propertypage/update_property"),
-    // 查询分页资产总表(v2)
-    searchInfo: combineUrl("/virtual/propertypage/search_info"),
+    /** ===================== 资产管理 ===================== */
+    property: {
+      getAssetsByBuilding: combineUrl("/virtual/propertypage/get_property"),
+      add: combineUrl("/virtual/propertypage/add_property"),
+      setStatus: combineUrl("/virtual/propertypage/set_property_used"),
+      update: combineUrl("/virtual/propertypage/update_property"),
+      searchInfo: combineUrl("/virtual/propertypage/search_info"),
+      getList: combineUrl("/virtual/propertypage/search_info"),
+      getBindList: combineUrl("/virtual/property/get_binding_list"),
+      getKindList: combineUrl("/virtual/property/get_kind_list"),
+      getTypeList: combineUrl("/virtual/property/get_type_list"),
+      getDetails: combineUrl("/virtual/propertypage/get_property"),
+      getFieldList: combineUrl("/virtual/property/get_param_list"),
+    },
 
-    propertyList: combineUrl("/virtual/propertypage/search_info"),
-    getBindPropertyList: combineUrl("/virtual/property/get_binding_list"),
-    getSensorKindList: combineUrl("/virtual/property/get_kind_list"),
-    getSensorTypeList: combineUrl("/virtual/property/get_type_list"),
-    getPropertyDetails: combineUrl("/virtual/propertypage/get_property"),
+    /** ===================== 实时数据 ===================== */
+    rtd: {
+      getOutlineInfo: combineUrl("/virtual/rtdpage/get_outline_info"),
+      getSensorList: combineUrl("/virtual/rtdpage/search_info"),
+    },
 
-    // 查询虚拟绑定资产列表
+    /** ===================== 日志管理 ===================== */
+    log: {
+      getList: combineUrl("/virtual/logpage/search_info"),
+      getTypeList: combineUrl("/virtual/logpage/get_type_list"),
+    },
 
-    // 查询虚拟实时数据界面
-    getOutlineInfo: combineUrl("/virtual/rtdpage/get_outline_info"),
-    // 查询虚拟传感器列表
-    getSensorList: combineUrl("/virtual/rtdpage/search_info"),
+    /** ===================== 预警规则 ===================== */
+    threshold: {
+      add: combineUrl("/virtual/controlpage/threshold/add"),
+      update: combineUrl("/virtual/controlpage/threshold/update"),
+      getDetails: combineUrl("/virtual/controlpage/threshold/get"),
+      getList: combineUrl("/virtual/controlpage/threshold/search_info"),
+    },
 
+    /** ===================== 教学空间 ===================== */
     teaching: {
-      // 教学空间
+      // 基础管理
       addNew: combineUrl("/virtual/teaching/add_new"),
       deleteTs: combineUrl("/virtual/teaching/delete_ts"),
       searchInfo: combineUrl("/virtual/teaching/search_info"),
-      // 开始/停止定时任务
-      startTimedTask: combineUrl("/virtual/teaching/start_timed_task"),
-      stopTimedTask: combineUrl("/virtual/teaching/stop_timed_task"),
-
-      // 删除所有数据缓存
       clearCache: combineUrl("/virtual/teaching/delete_cache"),
 
-      // 查看终端在线情况
-      getTerminalOnlineList: combineUrl(
-        "/virtual/teaching/get_terminal_online"
-      ),
-      // 设置终端在线情况
-      setTerminalOnline: combineUrl("/virtual/teaching/set_terminal_online"),
-      // 设置传感器数量
-      setSensorCount: combineUrl("/virtual/teaching/set_sensor_count"),
-      // 获取传感器数量
-      getSensorCount: combineUrl("/virtual/teaching/get_sensor_count"),
-      // 设置传感器状态
-      setSensorStatus: combineUrl("/virtual/teaching/set_sensor_status"),
-      // 获取传感器状态
-      getSensorStatus: combineUrl("/virtual/teaching/get_sensor_status"),
-      // 获取最新传感器数据
-      getSensorData: combineUrl("/virtual/teaching/get_sensor_data"),
-      // 获取参数字段
-      getParamList: combineUrl("/virtual/teaching/get_sensor_field"),
-      // 设置字段下次生成的值
-      setParamNextValue: combineUrl("/virtual/teaching/set_sensor_field_value"),
+      // 定时任务
+      task: {
+        start: combineUrl("/virtual/teaching/start_timed_task"),
+        stop: combineUrl("/virtual/teaching/stop_timed_task"),
+      },
+
+      // 终端管理
+      terminal: {
+        getOnlineList: combineUrl("/virtual/teaching/get_terminal_online"),
+        setOnline: combineUrl("/virtual/teaching/set_terminal_online"),
+      },
+
+      // 传感器数量/状态
+      sensor: {
+        getCount: combineUrl("/virtual/teaching/get_sensor_count"),
+        setCount: combineUrl("/virtual/teaching/set_sensor_count"),
+        getStatus: combineUrl("/virtual/teaching/get_sensor_status"),
+        setStatus: combineUrl("/virtual/teaching/set_sensor_status"),
+        getData: combineUrl("/virtual/teaching/get_sensor_data"),
+        getParamList: combineUrl("/virtual/teaching/get_sensor_field"),
+        setParamNextValue: combineUrl(
+          "/virtual/teaching/set_sensor_field_value"
+        ),
+      },
     },
 
+    /** ===================== 下载 ===================== */
     download: {
-      // 下载源码
       code: combineUrl("/virtual/teaching/download_code"),
     },
   },
-
   // 系统设置
   settings: {
     getTaskInterVal: combineUrl("/setpage/get_liveness_task_interval"),

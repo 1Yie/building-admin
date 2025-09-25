@@ -1,3 +1,4 @@
+// AppSidebar.tsx
 import { useMutation } from "@tanstack/react-query";
 import { jwtDecode } from "jwt-decode";
 import { ChevronsUpDown, LogOut, User2, ChevronDown } from "lucide-react";
@@ -26,9 +27,20 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/shadcn/ui/sidebar";
-import sidebarItems from "./sidebar-items-data";
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  sidebarItems: typeof import("./sidebar-items-data").default;
+  headerTitle: React.ReactNode;
+  footerText?: string;
+  footerOnClick?: () => void;
+}
+
+export function AppSidebar({
+  sidebarItems,
+  headerTitle,
+  footerText,
+  footerOnClick,
+}: AppSidebarProps) {
   const { state } = useSidebar();
   const pathname = useLocation().pathname;
   const navigate = useNavigate();
@@ -58,12 +70,9 @@ export function AppSidebar() {
           setUserInfo(decoded);
           console.log("JWT解析: ", decoded);
 
-          // 设置用户权限
           const decodedMenuPermissions = (decodedMenu.menu_building || []).map(
             (p) => `menu_building-${p}`
           );
-
-          console.log(decodedMenuPermissions);
           setUserPermissions(decodedMenuPermissions);
         } else {
           navigate("/login");
@@ -81,7 +90,7 @@ export function AppSidebar() {
     if (activeParent && !openMenus.includes(activeParent.path)) {
       setOpenMenus((prev) => [...prev, activeParent.path]);
     }
-  }, [pathname]);
+  }, [pathname, sidebarItems]);
 
   // 退出登录
   const { mutate: logoutMutate } = useMutation({ mutationFn: logout });
@@ -94,17 +103,19 @@ export function AppSidebar() {
     });
   }
 
+  const basePath = pathname.split("/").slice(0, 2).join("/");
+
+  const finalFooterOnClick = footerOnClick || handleLogout;
+
   // 根据父权限过滤侧边栏
   const filteredSidebarItems = sidebarItems.filter((item) => {
     if (!item.permission) return true;
 
-    // 取父权限，例如 menu_building-楼宇管控-手动控制 -> menu_building-楼宇管控
     const itemParentPermission = item.permission
       .split("-")
       .slice(0, 2)
       .join("-");
 
-    // 用户权限的父权限集合
     const userParentPermissions = Array.from(
       new Set(userPermissions.map((p) => p.split("-").slice(0, 2).join("-")))
     );
@@ -114,6 +125,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
+      {/* header */}
       <SidebarHeader className="bg-white">
         <div className="flex justify-center items-center gap-5 h-10">
           <span
@@ -121,11 +133,12 @@ export function AppSidebar() {
               hidden: state === "collapsed",
             })}
           >
-            智慧楼宇能源管理系统
+            {headerTitle}
           </span>
         </div>
       </SidebarHeader>
 
+      {/* content */}
       <SidebarContent className="bg-white">
         <SidebarGroup>
           <SidebarGroupContent>
@@ -133,9 +146,13 @@ export function AppSidebar() {
               {filteredSidebarItems.map((item) => {
                 const hasChildren = !!item.children?.length;
                 const isOpen = openMenus.includes(item.path);
+                const fullPath = item.path
+                  ? `${basePath}/${item.path}`
+                  : basePath;
+
                 const isActive = hasChildren
-                  ? pathname.startsWith(item.path)
-                  : pathname === item.path;
+                  ? pathname.startsWith(fullPath) // 父菜单展开判断
+                  : pathname === fullPath; // 子菜单高亮判断
 
                 return (
                   <SidebarMenuItem key={item.title}>
@@ -143,11 +160,9 @@ export function AppSidebar() {
                       className="cursor-pointer data-[active=true]:bg-blue-200/50 pl-5 h-10 data-[active=true]:text-blue-500 flex justify-between items-center"
                       isActive={isActive}
                       onClick={() => {
-                        // 如果父菜单有 element，则点击跳转
                         if (item.element) {
                           navigate(item.path);
                         }
-                        // 如果有子菜单，则切换折叠状态
                         if (hasChildren) {
                           setOpenMenus(
                             isOpen
@@ -159,7 +174,9 @@ export function AppSidebar() {
                     >
                       <div className="flex items-center gap-2">
                         <DynamicIcon className="w-4 h-4" name={item.icon} />
-                        <span>{item.title}</span>
+                        <span className={state === "collapsed" ? "hidden" : ""}>
+                          {item.title}
+                        </span>
                       </div>
                       {hasChildren && (
                         <ChevronDown
@@ -196,6 +213,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
+      {/* footer */}
       <SidebarFooter className="bg-white">
         <SidebarMenu>
           <SidebarMenuItem>
@@ -222,8 +240,11 @@ export function AppSidebar() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <LogOut className="inline mr-2" />
-                  <div onClick={handleLogout} className="w-full cursor-pointer">
-                    退出登录
+                  <div
+                    onClick={footerOnClick || handleLogout} // 默认退出登录，可自定义
+                    className="w-full cursor-pointer"
+                  >
+                    {footerText || "退出登录"} {/* 默认文案 */}
                   </div>
                 </DropdownMenuItem>
               </DropdownMenuContent>

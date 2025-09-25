@@ -25,7 +25,7 @@ export default function ControlPage() {
 
   return (
     <div className="p-5">
-      <Tabs items={tabItems as TabsProps['items']} />
+      <Tabs items={tabItems as TabsProps["items"]} />
     </div>
   );
 }

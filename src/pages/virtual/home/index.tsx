@@ -8,9 +8,9 @@ import { getTaskInterVal } from "@/request/settings";
 import { Button } from "@/shadcn/ui/button";
 import { Card, Skeleton } from "antd";
 import { Tabs as ShadcnTabs, TabsList, TabsTrigger } from "@/shadcn/ui/tabs";
-import { ChartLine } from "./chart-line";
-import { ChartPie } from "./chart-pie";
-import { BuildingTable } from "./table";
+import { ChartLine } from "@/pages/home/chart-line";
+import { ChartPie } from "@/pages/home/chart-pie";
+import { BuildingTable } from "@/pages/home/table";
 import { useAuth } from "@/hooks/use-auth";
 import {
   ThunderboltFilled,

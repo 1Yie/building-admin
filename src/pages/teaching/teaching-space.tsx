@@ -20,7 +20,9 @@ import {
 import { z } from "zod/v4";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { enterVirtual } from "@/request/virtual";
+import { LoginOutlined } from "@ant-design/icons";
 
 const teachingSpaceSchema = z.object({
   number: z.string().optional(),
@@ -32,7 +34,7 @@ type TeachingSpaceForm = z.infer<typeof teachingSpaceSchema>;
 
 export function TeachingSpacePage() {
   const queryClient = useQueryClient();
-
+  const navigate = useNavigate();
   // 搜索 form
   const { control, handleSubmit, reset } = useForm({
     defaultValues: {
@@ -61,6 +63,19 @@ export function TeachingSpacePage() {
     name: "",
     count: "",
   });
+
+  async function enterVirtualSpaceHandle() {
+    try {
+      const res = await enterVirtual();
+      if (res.enter_flag === "true") {
+        localStorage.setItem("enter_virtual_flag", "true");
+        toast.success("进入虚拟空间成功");
+        navigate("/virtual");
+      }
+    } catch (error) {
+      toast.error("进入虚拟空间失败");
+    }
+  }
 
   const {
     data: teachingData,
@@ -385,15 +400,12 @@ export function TeachingSpacePage() {
                 </div>
               </div>
               <div className="flex flex-row gap-2 mt-6">
-                <Button type="primary">日志管理</Button>
-                <Button type="primary">楼宇管控</Button>
-                <Button type="primary">
-                  <Link
-                    to="/teaching/virtual/realtime"
-                    className="flex items-center"
-                  >
-                    实时数据
-                  </Link>
+                <Button
+                  type="primary"
+                  icon={<LoginOutlined />}
+                  onClick={enterVirtualSpaceHandle}
+                >
+                  进入虚拟空间
                 </Button>
               </div>
             </div>
