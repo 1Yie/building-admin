@@ -5,7 +5,6 @@ import { defineConfig } from "vite";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// https://vite.dev/config/
 export default defineConfig({
   base: "/",
   server: {
@@ -17,8 +16,13 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     },
   },
-  // 生产环境下移除console和debugger
   esbuild: {
     drop: ["console", "debugger"],
+  },
+  define: {
+    "import.meta.env.VITE_BASE_URL": JSON.stringify("__VITE_BASE_URL__"),
+    "import.meta.env.VITE_BASE_URL_HOME": JSON.stringify(
+      "__VITE_BASE_URL_HOME__"
+    ),
   },
 });
