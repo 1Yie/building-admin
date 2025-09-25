@@ -8,6 +8,7 @@ import Realtime from "@/pages/realtime";
 import Role from "@/pages/role";
 import Settings from "@/pages/settings";
 import Teaching from "@/pages/teaching";
+import VirtualRealtime from "@/pages/virtual/realtime";
 import Evaluation from "@/pages/evaluation";
 import { DynamicIcon } from "lucide-react/dynamic";
 
@@ -62,22 +63,6 @@ const sidebarItems: SidebarItem[] = [
   //   icon: "graduation-cap",
   //   element: <Teaching />,
   //   permission: "menu_building-教学科研",
-  //   // children: [
-  //   //   {
-  //   //     title: "教学管理",
-  //   //     path: "/teaching",
-  //   //     icon: "graduation-cap",
-  //   //     element: <Teaching />,
-  //   //     permission: "menu_building-教学管理",
-  //   //   },
-  //   //   {
-  //   //     title: "教学管理",
-  //   //     path: "/teaching",
-  //   //     icon: "graduation-cap",
-  //   //     element: <Teaching />,
-  //   //     permission: "menu_building-教学管理",
-  //   //   },
-  //   // ],
   // },
   // {
   //   title: "智能评估",

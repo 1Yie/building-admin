@@ -8,151 +8,103 @@ import {
   Modal,
   Popconfirm,
   Card,
+  message,
 } from "antd";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { ControlFilled } from "@ant-design/icons";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { application } from "@/request/virtual";
+import { useAuth } from "@/hooks/use-auth";
 
-interface Application {
+// ---------------- Zod 校验 ----------------
+const addApplicationSchema = z.object({
+  applicationNumber: z.string().min(1, "请输入申请编号"),
+  applicationContent: z.string().min(1, "请输入申请内容"),
+});
+
+// ---------------- TS 类型 ----------------
+type ApplicationItem = z.infer<typeof addApplicationSchema> & {
   key: string;
-  applicationNumber: string;
   applicationTime: string;
-  applicationContent: string;
   status: "待审核" | "通过" | "驳回";
   reviewer: string;
   reviewNote?: string;
+};
+
+interface SearchFormValues {
+  applicationNumber?: string;
+  status?: "待审核" | "通过" | "驳回";
 }
 
 export default function SourceApplicationPage() {
-  const { control, handleSubmit, reset } = useForm({
-    defaultValues: {
-      applicationNumber: "",
-      status: "",
-    },
+  const { userInfo } = useAuth();
+
+  // 搜索表单
+  const { control, handleSubmit, reset } = useForm<SearchFormValues>({
+    defaultValues: {},
   });
 
-  // 表格数据
-  const [data, setData] = useState<Application[]>([
-    {
-      key: "1",
-      applicationNumber: "SQ20250001",
-      applicationTime: "2025-09-16 09:00",
-      applicationContent: "申请使用楼宇资产 LY001",
-      status: "待审核",
-      reviewer: "张三",
-      reviewNote: "",
-    },
-    {
-      key: "2",
-      applicationNumber: "SQ20250002",
-      applicationTime: "2025-09-16 10:30",
-      applicationContent: "申请添加新空间 KJ002",
-      status: "通过",
-      reviewer: "李四",
-      reviewNote: "审核通过",
-    },
-    {
-      key: "3",
-      applicationNumber: "SQ20250003",
-      applicationTime: "2025-09-16 11:15",
-      applicationContent: "申请新增传感器 CGQ003",
-      status: "驳回",
-      reviewer: "王五",
-      reviewNote: "缺少说明",
-    },
-  ]);
-
-  // 分页参数
-  const [pageParams, setPageParams] = useState({
-    current: 1,
-    pageSize: 10,
-    total: 0,
-  });
-
-  // 分页处理函数
-  const onPageChange = (current: number, pageSize: number) => {
-    setPageParams({
-      current,
-      pageSize,
-      total: pageParams.total,
-    });
-  };
-
-  // 控制新增申请弹窗
+  // 新增申请 Modal 状态
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [addForm] = Form.useForm();
   const [modalMode, setModalMode] = useState<"add" | "view">("add");
-  const [selectedRecord, setSelectedRecord] = useState<Application | null>(
+  const [selectedRecord, setSelectedRecord] = useState<ApplicationItem | null>(
     null
   );
 
-  // 搜索处理
-  const onSearch = (values: any) => {
-    const { applicationNumber, status } = values;
-    let filtered = [...data];
-    if (applicationNumber) {
-      filtered = filtered.filter((item) =>
-        item.applicationNumber.includes(applicationNumber)
-      );
-    }
-    if (status) {
-      filtered = filtered.filter((item) => item.status === status);
-    }
-    setData(filtered);
-  };
+  // 新增申请表单
+  const addForm = useForm<{
+    applicationContent: string;
+  }>({
+    resolver: zodResolver(
+      z.object({
+        applicationContent: z.string().min(1, "请输入申请内容"),
+      })
+    ),
+    defaultValues: {
+      applicationContent: "",
+    },
+  });
 
-  const onReset = () => {
-    reset();
-    // 模拟恢复原始数据
-    setData([
-      {
-        key: "1",
-        applicationNumber: "SQ20250001",
-        applicationTime: "2025-09-16 09:00",
-        applicationContent: "申请使用楼宇资产 LY001",
-        status: "待审核",
-        reviewer: "张三",
-        reviewNote: "",
-      },
-      {
-        key: "2",
-        applicationNumber: "SQ20250002",
-        applicationTime: "2025-09-16 10:30",
-        applicationContent: "申请添加新空间 KJ002",
-        status: "通过",
-        reviewer: "李四",
-        reviewNote: "审核通过",
-      },
-      {
-        key: "3",
-        applicationNumber: "SQ20250003",
-        applicationTime: "2025-09-16 11:15",
-        applicationContent: "申请新增传感器 CGQ003",
-        status: "驳回",
-        reviewer: "王五",
-        reviewNote: "缺少说明",
-      },
-    ]);
-  };
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["applicationList"],
+    queryFn: () => application.getList({ page: 1, page_size: 100 }),
+    select: (res) =>
+      res.applications.map((item) => ({
+        key: item.caid,
+        applicationNumber: item.number,
+        applicationTime: item.time,
+        applicationContent: item.content,
+        status:
+          item.status === 0 ? "待审核" : item.status === 1 ? "通过" : "驳回",
+        reviewer: item.audit_username,
+        reviewNote: item.remarks,
+      })),
+  });
 
-  // 新增申请提交
-  const handleAdd = () => {
-    addForm.validateFields().then((values) => {
-      const newItem: Application = {
-        key: (data.length + 1).toString(),
-        applicationNumber: values.applicationNumber,
-        applicationTime: new Date()
-          .toISOString()
-          .slice(0, 16)
-          .replace("T", " "),
-        applicationContent: values.applicationContent,
-        status: "待审核",
-        reviewer: "-",
-        reviewNote: "",
-      };
-      setData([...data, newItem]);
+  const addMutation = useMutation({
+    mutationFn: application.addNew,
+    onSuccess: () => {
+      message.success("提交成功");
       setIsModalOpen(false);
-      addForm.resetFields();
+      addForm.reset();
+      refetch(); // 直接刷新列表
+    },
+    onError: () => {
+      message.error("提交失败，请重试");
+    },
+  });
+
+  const handleAdd = (values: { applicationContent: string }) => {
+    if (!userInfo) {
+      message.error("获取用户信息失败，请重新登录");
+      return;
+    }
+    addMutation.mutate({
+      content: values.applicationContent,
+      username: userInfo.username,
     });
   };
 
@@ -173,7 +125,7 @@ export default function SourceApplicationPage() {
       title: "状态",
       dataIndex: "status",
       key: "status",
-      render: (status: Application["status"]) => {
+      render: (status: ApplicationItem["status"]) => {
         let color = "default";
         if (status === "通过") color = "green";
         else if (status === "驳回") color = "red";
@@ -191,7 +143,7 @@ export default function SourceApplicationPage() {
     {
       title: "操作",
       key: "action",
-      render: (_: any, record: Application) => (
+      render: (_: any, record: ApplicationItem) => (
         <div className="flex gap-2">
           <Button
             type="default"
@@ -213,55 +165,62 @@ export default function SourceApplicationPage() {
     },
   ];
 
+  const onSearch = (values: SearchFormValues) => {
+    refetch(); // 可以根据需要加客户端过滤
+  };
+
+  const onReset = () => {
+    reset();
+    refetch();
+  };
+
   return (
-    <div className="">
-      <div className="">
-        <Card className="w-full" style={{ borderColor: "#f0f0f0" }}>
-          <Form
-            layout="inline"
-            onFinish={handleSubmit(onSearch)}
-            className="flex gap-2"
-          >
-            <Controller
-              name="applicationNumber"
-              control={control}
-              render={({ field }) => (
-                <Form.Item label="申请编号">
-                  <Input {...field} placeholder="请输入申请编号" />
-                </Form.Item>
-              )}
-            />
-            <Controller
-              name="status"
-              control={control}
-              render={({ field }) => (
-                <Form.Item label="状态">
-                  <Select
-                    placeholder="请选择状态"
-                    {...field}
-                    value={field.value || undefined}
-                    style={{ width: 120 }}
-                    allowClear
-                    options={[
-                      { label: "待审核", value: "待审核" },
-                      { label: "通过", value: "通过" },
-                      { label: "驳回", value: "驳回" },
-                    ]}
-                  />
-                </Form.Item>
-              )}
-            />
-            <div className="flex gap-2">
-              <Button type="primary" htmlType="submit">
-                搜索
-              </Button>
-              <Button type="default" htmlType="button" onClick={onReset}>
-                重置
-              </Button>
-            </div>
-          </Form>
-        </Card>
-      </div>
+    <div>
+      <Card className="w-full" style={{ borderColor: "#f0f0f0" }}>
+        <Form
+          layout="inline"
+          onFinish={handleSubmit(onSearch)}
+          className="flex gap-2"
+        >
+          <Controller
+            name="applicationNumber"
+            control={control}
+            render={({ field }) => (
+              <Form.Item label="申请编号">
+                <Input {...field} placeholder="请输入申请编号" />
+              </Form.Item>
+            )}
+          />
+          <Controller
+            name="status"
+            control={control}
+            render={({ field }) => (
+              <Form.Item label="状态">
+                <Select
+                  placeholder="请选择状态"
+                  {...field}
+                  value={field.value || undefined}
+                  style={{ width: 120 }}
+                  allowClear
+                  options={[
+                    { label: "待审核", value: "待审核" },
+                    { label: "通过", value: "通过" },
+                    { label: "驳回", value: "驳回" },
+                  ]}
+                />
+              </Form.Item>
+            )}
+          />
+          <div className="flex gap-2">
+            <Button type="primary" htmlType="submit">
+              搜索
+            </Button>
+            <Button type="default" htmlType="button" onClick={onReset}>
+              重置
+            </Button>
+          </div>
+        </Form>
+      </Card>
 
       <div className="mt-5">
         <Card
@@ -289,11 +248,10 @@ export default function SourceApplicationPage() {
           style={{ borderColor: "#f0f0f0" }}
         >
           <Table
-            dataSource={data}
+            dataSource={data as ApplicationItem[]}
             columns={columns}
-            onChange={(pagination) =>
-              onPageChange(pagination.current || 1, pagination.pageSize || 10)
-            }
+            loading={isLoading}
+            rowKey="key"
           />
         </Card>
       </div>
@@ -308,7 +266,11 @@ export default function SourceApplicationPage() {
                 <Button key="cancel" onClick={() => setIsModalOpen(false)}>
                   取消
                 </Button>,
-                <Button key="submit" type="primary" onClick={handleAdd}>
+                <Button
+                  key="submit"
+                  type="primary"
+                  onClick={addForm.handleSubmit(handleAdd)}
+                >
                   提交
                 </Button>,
               ]
@@ -320,21 +282,16 @@ export default function SourceApplicationPage() {
         }
       >
         {modalMode === "add" ? (
-          <Form form={addForm} layout="horizontal" className="space-y-7">
-            <Form.Item
-              label="申请编号"
-              name="applicationNumber"
-              rules={[{ required: true, message: "请输入申请编号" }]}
-            >
-              <Input />
-            </Form.Item>
-            <Form.Item
-              label="申请内容"
+          <Form layout="vertical" className="space-y-4">
+            <Controller
               name="applicationContent"
-              rules={[{ required: true, message: "请输入申请内容" }]}
-            >
-              <Input.TextArea rows={12} />
-            </Form.Item>
+              control={addForm.control}
+              render={({ field }) => (
+                <Form.Item label="申请内容">
+                  <Input.TextArea rows={12} {...field} />
+                </Form.Item>
+              )}
+            />
           </Form>
         ) : (
           selectedRecord && (
