@@ -28,8 +28,7 @@ jobs:
       - name: Set image name and tag
         id: vars
         run: |
-          IMAGE_NAME=${{ secrets.ACR_REGISTRY }}/${{ secrets.ACR_NAMESPACE }}/my-app
-
+          IMAGE_NAME=${{ secrets.ACR_REGISTRY }}/${{ secrets.ACR_NAMESPACE }}/building-admin
           if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
             # Git 标签发布
             VERSION=${GITHUB_REF_NAME#refs/tags/}
