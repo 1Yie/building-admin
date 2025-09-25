@@ -10,7 +10,7 @@ import type {
   AddRegulationParams,
   PropertyListItem,
   TriggerSelectListItem,
-} from "@/request/control";
+} from "@/request/virtual";
 import {
   addRegulation,
   getControlPropertyList,
@@ -21,7 +21,7 @@ import {
   getRegulationList,
   getTriggerSelectList,
   updateRegulation,
-} from "@/request/control";
+} from "@/request/virtual";
 import { Badge } from "@/shadcn/ui/badge";
 import type { PaginationType } from "@/types";
 import { PlusOutlined, ControlFilled } from "@ant-design/icons";

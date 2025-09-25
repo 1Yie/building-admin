@@ -85,7 +85,7 @@ export function getManualOperateList(
 }
 
 export function manualOperate({ property_id, control }: ManualOperateParams) {
-	return request.get(urls.control.manualOperate, {
+	return request.get(urls.virtual.control.manualOperate, {
 		params: {
 			property_id,
 			control,
@@ -99,11 +99,11 @@ export interface PropertyListItem {
 }
 
 export function getMonitorPropertyList(): Promise<PropertyListItem[]> {
-	return request.get(urls.control.getMonitorPropertyList);
+	return request.get(urls.virtual.control.getMonitorPropertyList);
 }
 
 export function getControlPropertyList(): Promise<PropertyListItem[]> {
-	return request.get(urls.control.getControlPropertyList);
+	return request.get(urls.virtual.control.getControlPropertyList);
 }
 
 export function getFieldSelectList(
@@ -122,7 +122,7 @@ export interface TriggerSelectListItem {
 }
 
 export function getTriggerSelectList(): Promise<TriggerSelectListItem[]> {
-	return request.get(urls.control.getTriggerSelectList);
+	return request.get(urls.virtual.control.getTriggerList);
 }
 
 export interface AddRegulationParams {

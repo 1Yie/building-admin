@@ -88,7 +88,7 @@ export const urls = {
     getRegulationDetails: combineUrl("/controlpage/regulation/get_regulation"),
 
     getManualList: combineUrl("/controlpage/manual/search_info"),
-    getManualOperateList: combineUrl("/property/get_operate_list"),
+    getManualOperateList: combineUrl("/property/get_operate_list"), // TODO
     manualOperate: combineUrl("/controlpage/manual/operate"),
   },
 
@@ -128,6 +128,24 @@ export const urls = {
       getTypeList: combineUrl("/virtual/property/get_type_list"),
       getDetails: combineUrl("/virtual/propertypage/get_property"),
       getFieldList: combineUrl("/virtual/property/get_param_list"),
+    },
+    /** ===================== 楼宇管控 ===================== */
+    control: {
+      getTriggerList: combineUrl("/virtual/regulation/get_trigger_list"),
+      getMonitorPropertyList: combineUrl("/virtual/regulation/get_monitor_property_list"),
+      getControlPropertyList: combineUrl("/virtual/regulation/get_control_property_list"),
+      getRegulationDetails: combineUrl("/virtual/regulation/get_regulation"),
+      addRegulation: combineUrl("/virtual/regulation/add"),
+      setRegulationStatus: combineUrl("/virtual/regulation/set_used"),
+      updateRegulation: combineUrl("/virtual/regulation/update"),
+      getRegulationList: combineUrl("/virtual/regulation/search_info"),
+      manualOperate: combineUrl("/virtual/manual/operate"),
+      getManualList: combineUrl("/virtual/manual/search_info"),
+    },
+    /** ===================== 源码申请 ===================== */
+    application: {
+      addNew: combineUrl("/virtual/application/add_new"),
+      getSensorParamList: combineUrl("/virtual/application/search_info"),
     },
 
     /** ===================== 实时数据 ===================== */
