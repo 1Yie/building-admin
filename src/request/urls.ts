@@ -21,8 +21,7 @@ export const urls = {
     accountCreate: combineAuthorityUrl("/authority/user/create"),
     accountDelete: combineAuthorityUrl("/authority/user/delete"),
     accountPasswordReset: combineAuthorityUrl("/authority/user/password/reset"),
-    
-    
+
     accountPermission: combineAuthorityUrl(
       "/authority/manager/permission/builder/list/task/all"
     ),
@@ -126,6 +125,19 @@ export const urls = {
     updateProperty: combineUrl("/virtual/propertypage/update_property"),
     // 查询分页资产总表(v2)
     searchInfo: combineUrl("/virtual/propertypage/search_info"),
+
+    propertyList: combineUrl("/virtual/propertypage/search_info"),
+    getBindPropertyList: combineUrl("/virtual/property/get_binding_list"),
+    getSensorKindList: combineUrl("/virtual/property/get_kind_list"),
+    getSensorTypeList: combineUrl("/virtual/property/get_type_list"),
+    getPropertyDetails: combineUrl("/virtual/propertypage/get_property"),
+
+    // 查询虚拟绑定资产列表
+
+    // 查询虚拟实时数据界面
+    getOutlineInfo: combineUrl("/virtual/rtdpage/get_outline_info"),
+    // 查询虚拟传感器列表
+    getSensorList: combineUrl("/virtual/rtdpage/search_info"),
 
     teaching: {
       // 教学空间

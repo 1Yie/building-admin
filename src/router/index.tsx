@@ -58,11 +58,28 @@ function AuthRoute({
 }
 
 // 根据 sidebarItems 构建子路由
-const sidebarRoutes: RouteObject[] = sidebarItems.map((item) => ({
-  path: item.path,
-  element: <AuthRoute element={item.element} permission={item.permission} />,
-  handle: { title: item.title },
-}));
+function buildRoutes(items: typeof sidebarItems): RouteObject[] {
+  return items.flatMap((item) => {
+    const route =
+      item.path && item.element
+        ? [
+            {
+              path: item.path,
+              element: (
+                <AuthRoute
+                  element={item.element}
+                  permission={item.permission}
+                />
+              ),
+              handle: { title: item.title },
+            },
+          ]
+        : [];
+    const childRoutes = item.children ? buildRoutes(item.children) : [];
+    return [...route, ...childRoutes];
+  });
+}
+const sidebarRoutes: RouteObject[] = buildRoutes(sidebarItems);
 
 // 完整路由
 const routes: RouteObject[] = [

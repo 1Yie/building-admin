@@ -20,6 +20,7 @@ import {
 import { z } from "zod/v4";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { Link } from "react-router";
 
 const teachingSpaceSchema = z.object({
   number: z.string().optional(),
@@ -386,7 +387,14 @@ export function TeachingSpacePage() {
               <div className="flex flex-row gap-2 mt-6">
                 <Button type="primary">日志管理</Button>
                 <Button type="primary">楼宇管控</Button>
-                <Button type="primary">实时数据</Button>
+                <Button type="primary">
+                  <Link
+                    to="/teaching/virtual/realtime"
+                    className="flex items-center"
+                  >
+                    实时数据
+                  </Link>
+                </Button>
               </div>
             </div>
           )
