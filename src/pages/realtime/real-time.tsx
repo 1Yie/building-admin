@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Pagination } from "antd";
+import { Pagination, Skeleton } from "antd";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -260,7 +260,9 @@ export default function RealtimePage() {
           <div className="flex flex-col justify-center items-center gap-2 h-full">
             <Building className="w-8 h-8 text-blue-500" />
             <div className="text-2xl font-bold">
-              {outlineInfo?.building_count}
+              {outlineInfo?.building_count ?? (
+                <Skeleton.Button active size="small" style={{ width: 10 }} />
+              )}
             </div>
             <div className="text-gray-600">楼宇数</div>
           </div>
@@ -268,7 +270,11 @@ export default function RealtimePage() {
         <Card className="w-full" style={{ borderColor: "#f0f0f0" }}>
           <div className="flex flex-col justify-center items-center gap-2 h-full">
             <Home className="w-8 h-8 text-green-500" />
-            <div className="text-2xl font-bold">{outlineInfo?.space_count}</div>
+            <div className="text-2xl font-bold">
+              {outlineInfo?.space_count ?? (
+                <Skeleton.Button active size="small" style={{ width: 10 }} />
+              )}
+            </div>
             <div className="text-gray-600">空间数</div>
           </div>
         </Card>
@@ -276,7 +282,9 @@ export default function RealtimePage() {
           <div className="flex flex-col justify-center items-center gap-2 h-full">
             <Router className="w-8 h-8 text-purple-500" />
             <div className="text-2xl font-bold">
-              {outlineInfo?.terminal_count}
+              {outlineInfo?.terminal_count ?? (
+                <Skeleton.Button active size="small" style={{ width: 10 }} />
+              )}
             </div>
             <div className="text-gray-600">终端数</div>
           </div>
@@ -285,7 +293,9 @@ export default function RealtimePage() {
           <div className="flex flex-col justify-center items-center gap-2 h-full">
             <Cpu className="w-8 h-8 text-orange-500" />
             <div className="text-2xl font-bold">
-              {outlineInfo?.sensor_count}
+              {outlineInfo?.sensor_count ?? (
+                <Skeleton.Button active size="small" style={{ width: 10 }} />
+              )}
             </div>
             <div className="text-gray-600">设备数</div>
           </div>
@@ -294,7 +304,9 @@ export default function RealtimePage() {
           <div className="flex flex-col justify-center items-center gap-2 h-full">
             <Wifi className="w-8 h-8 text-green-600" />
             <div className="text-2xl font-bold">
-              {outlineInfo?.online_count}
+              {outlineInfo?.online_count ?? (
+                <Skeleton.Button active size="small" style={{ width: 10 }} />
+              )}
             </div>
             <div className="text-gray-600">在线设备</div>
           </div>
@@ -303,7 +315,9 @@ export default function RealtimePage() {
           <div className="flex flex-col justify-center items-center gap-2 h-full">
             <Activity className="w-8 h-8 text-red-500" />
             <div className="text-2xl font-bold">
-              {outlineInfo?.liveness_count}
+              {outlineInfo?.liveness_count ?? (
+                <Skeleton.Button active size="small" style={{ width: 10 }} />
+              )}
             </div>
             <div className="text-gray-600">活跃设备</div>
           </div>
