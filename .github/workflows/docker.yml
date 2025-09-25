@@ -1,0 +1,60 @@
+name: Build and Push Docker Image
+
+on:
+  # 正式发布：推送标签触发
+  push:
+    tags:
+      - "v*" # 匹配 v1.2.3、v1.3.0 等正式版本
+    branches:
+      - dev # dev 分支 push 也触发（可选，用于测试）
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout 代码
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 登录阿里云 ACR
+      - name: Login to ACR
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.ACR_REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      # 设置镜像名称和版本
+      - name: Set image name and tag
+        id: vars
+        run: |
+          IMAGE_NAME=${{ secrets.ACR_REGISTRY }}/${{ secrets.ACR_NAMESPACE }}/building-admin
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            # Git 标签发布
+            VERSION=${GITHUB_REF_NAME#refs/tags/}
+            TAGS="$VERSION latest"
+          elif [[ "${GITHUB_REF_NAME}" == "dev" ]]; then
+            # dev 分支测试
+            VERSION="dev-$(date +%Y%m%d%H%M%S)"
+            TAGS="$VERSION dev-latest"
+          else
+            echo "Not a tag or dev branch, skip build"
+            exit 0
+          fi
+
+          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "TAGS=$TAGS" >> $GITHUB_ENV
+
+      # 构建 Docker 镜像
+      - name: Build Docker image
+        run: |
+          docker build -t $IMAGE_NAME:$VERSION .
+
+      # 打额外 tag 并推送镜像
+      - name: Tag and Push Docker image
+        run: |
+          for tag in $TAGS; do
+            docker tag $IMAGE_NAME:$VERSION $IMAGE_NAME:$tag
+            docker push $IMAGE_NAME:$tag
+          done
