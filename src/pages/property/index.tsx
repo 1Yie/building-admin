@@ -714,7 +714,7 @@ export default function PropertyMain() {
 
   return (
     <div className="p-5">
-      <Card style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}>
+      <Card className="flex" style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}>
         <Form
           layout="inline"
           onFinish={searchForm.handleSubmit(onSearchFormSubmit)}
@@ -787,76 +787,124 @@ export default function PropertyMain() {
               </Form.Item>
             )}
           />
+  
+          <div className="w-full flex gap-2 flex-wrap">
+            {propertyType === "building" && (
+              <>
+                <Controller
+                  control={searchForm.control}
+                  name="building_name"
+                  render={({ field }) => (
+                    <Form.Item label="楼宇名称">
+                      <Input {...field} placeholder="请输入楼宇名称"></Input>
+                    </Form.Item>
+                  )}
+                />
 
-          <Controller
-            control={searchForm.control}
-            name="sensor_kind"
-            render={({ field }) => (
-              <Form.Item
-                label="传感器大类"
-                validateStatus={
-                  searchForm.formState.errors["sensor_kind"]?.message
-                    ? "error"
-                    : ""
-                }
-                help={searchForm.formState.errors["sensor_kind"]?.message}
-              >
-                <Select
-                  onChange={(value) => {
-                    field.onChange(value);
-                    // 选择传感器大类时，自动设置资产类型为传感器
-                    if (value) {
-                      searchForm.setValue("property_type", "sensor");
-                    }
-                  }}
-                  options={
-                    sensorKindSelectOption?.map((option) => ({
-                      value: option.kind,
-                      label: option.name,
-                    })) || []
-                  }
-                  value={field.value || undefined}
-                  style={{ width: 120 }}
-                  placeholder="请选择传感器大类"
-                ></Select>
-              </Form.Item>
+                <Controller
+                  control={searchForm.control}
+                  name="building_number"
+                  render={({ field }) => (
+                    <Form.Item label="楼栋号">
+                      <Input {...field} placeholder="请输入楼栋号"></Input>
+                    </Form.Item>
+                  )}
+                />
+              </>
             )}
-          />
 
-          <Controller
-            control={searchForm.control}
-            name="sensor_type"
-            render={({ field }) => (
-              <Form.Item
-                label="传感器小类"
-                validateStatus={
-                  searchForm.formState.errors["sensor_type"]?.message
-                    ? "error"
-                    : ""
-                }
-                help={searchForm.formState.errors["sensor_type"]?.message}
-              >
-                <Select
-                  onChange={(value) => {
-                    field.onChange(value);
-                    // 选择传感器小类时，自动设置资产类型为传感器
-                    if (value) {
-                      searchForm.setValue("property_type", "sensor");
-                    }
-                  }}
-                  options={
-                    sensorTypeSelectOption?.map((option) => ({
-                      value: option.type,
-                      label: option.name,
-                    })) || []
-                  }
-                  value={field.value || undefined}
-                  style={{ width: 120 }}
-                  placeholder="请选择传感器小类"
-                ></Select>
-              </Form.Item>
+            {propertyType === "space" && (
+              <>
+                <Controller
+                  control={searchForm.control}
+                  name="space_name"
+                  render={({ field }) => (
+                    <Form.Item label="空间名称">
+                      <Input {...field} placeholder="请输入空间名称"></Input>
+                    </Form.Item>
+                  )}
+                />
+
+                <Controller
+                  control={searchForm.control}
+                  name="space_type"
+                  render={({ field }) => (
+                    <Form.Item label="房间用途">
+                      <Input {...field} placeholder="请输入空间用途"></Input>
+                    </Form.Item>
+                  )}
+                />
+              </>
             )}
-          />
+
+            {propertyType === "terminal" && (
+              <>
+                <Controller
+                  control={searchForm.control}
+                  name="terminal_number"
+                  render={({ field }) => (
+                    <Form.Item label="网关（智能箱）编号">
+                      <Input
+                        {...field}
+                        placeholder="请输入网关（智能箱）编号"
+                      ></Input>
+                    </Form.Item>
+                  )}
+                />
+                <Controller
+                  control={searchForm.control}
+                  name="terminal_type"
+                  render={({ field }) => (
+                    <Form.Item label="网关（智能箱）型号">
+                      <Input
+                        {...field}
+                        placeholder="请输入网关（智能箱）型号"
+                      ></Input>
+                    </Form.Item>
+                  )}
+                />
+              </>
+            )}
+
+            {propertyType === "sensor" && (
+              <>
+                <Controller
+                  control={searchForm.control}
+                  name="sensor_kind"
+                  render={({ field }) => (
+                    <Form.Item
+                      label="传感器大类"
+                      validateStatus={
+                        searchForm.formState.errors["sensor_kind"]?.message
+                          ? "error"
+                          : ""
+                      }
+                      help={searchForm.formState.errors["sensor_kind"]?.message}
+                    >
+                      <Select
+                        onChange={(value) => {
+                          field.onChange(value);
+                          // 选择传感器大类时，自动设置资产类型为传感器
+                          if (value) {
+                            searchForm.setValue("property_type", "sensor");
+                          }
+                        }}
+                        options={
+                          sensorKindSelectOption?.map((option) => ({
+                            value: option.kind,
+                            label: option.name,
+                          })) || []
+                        }
+                        value={field.value || undefined}
+                        style={{ width: 120 }}
+                        placeholder="请选择传感器大类"
+                      ></Select>
+                    </Form.Item>
+                  )}
+                />
+              </>
+            )}
+          </div>
 
           <div className="flex gap-2">
             <Button type="primary" htmlType="submit" className="cursor-pointer">

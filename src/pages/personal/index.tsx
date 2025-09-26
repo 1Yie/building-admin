@@ -139,7 +139,7 @@ export default function PersonalPage() {
         </div>
       </Card>
 
-      <Card style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}>
+      <Card className="inline-flex" style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}>
         <div className="flex gap-4">
           <Button type="primary" onClick={() => setDialogOpen(true)}>
             修改密码

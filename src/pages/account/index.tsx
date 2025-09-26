@@ -28,8 +28,10 @@ import type { PaginationType } from "@/types";
 import type { PermissionResponse } from "@/components/permission-tree";
 import { PlusOutlined, IdcardFilled  } from "@ant-design/icons";
 import type { ColumnType } from "antd/es/table";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function AccountPage() {
+  const { userInfo, logout } = useAuth();
   // 转换权限数据格式为Tree组件所需格式
   const transformPermissionData = (data: any): TreeDataNode[] => {
     if (!data) return [];
@@ -570,6 +572,17 @@ export default function AccountPage() {
 
       // 提示成功并关闭弹窗
       toast.success(isEdit ? "修改成功" : "新增成功");
+      if (isEdit && userInfo?.username === username) {
+        Modal.confirm({
+          title: "权限更新",
+          content: "您的账号权限已更新，请重新登录。",
+          okText: "重新登录",
+          cancelText: "取消",
+          onOk: () => {
+            logout();
+          },
+        });
+      }
       setDialogOpen(false);
       accountForm.reset();
     } catch (err) {
@@ -602,7 +615,9 @@ export default function AccountPage() {
         }
       >
         <Table
-          dataSource={tableData?.userInfoList}
+          dataSource={tableData?.userInfoList.filter(
+            (user) => user.username !== userInfo?.username
+          )}
           columns={
             columns as ColumnType<{
               username: string;
@@ -917,7 +932,7 @@ export default function AccountPage() {
                     validateStatus={fieldState.error ? "error" : ""}
                     help={fieldState.error?.message}
                   >
-                    <Input {...field} className="w-80 h-8" />
+                    <Input disabled {...field} className="w-80 h-8" />
                   </Form.Item>
                 )}
               />

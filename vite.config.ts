@@ -19,10 +19,4 @@ export default defineConfig({
   esbuild: {
     drop: ["console", "debugger"],
   },
-  define: {
-    "import.meta.env.VITE_BASE_URL": JSON.stringify("__VITE_BASE_URL__"),
-    "import.meta.env.VITE_BASE_URL_HOME": JSON.stringify(
-      "__VITE_BASE_URL_HOME__"
-    ),
-  },
 });

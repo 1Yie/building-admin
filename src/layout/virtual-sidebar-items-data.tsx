@@ -16,25 +16,25 @@ interface SidebarItem {
 const virtualSidebarItems: SidebarItem[] = [
   {
     title: "首页",
-    path: "",
+    path: "/virtual",
     icon: "house",
     element: <VirtualHome />,
   },
   {
     title: "楼宇管控",
-    path: "control",
+    path: "/virtual/control",
     icon: "building-2",
     element: <VirtualControlPage />,
   },
   {
     title: "实时数据",
-    path: "realtime",
+    path: "/virtual/realtime",
     icon: "chart-line",
     element: <VirtualRealtime />,
   },
   {
     title: "日志管理",
-    path: "log",
+    path: "/virtual/log",
     icon: "file-text",
     element: <VirtualLog />,
   },

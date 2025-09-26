@@ -689,6 +689,7 @@ export default function PropertyVis() {
                 terminalTitle: result.terminalTitle,
                 terminalKey: result.terminalKey,
                 field: prop.field,
+                isLiveness: prop.is_liveness,
               };
             } else {
               allSensorData[fieldKey] = {
@@ -700,6 +701,7 @@ export default function PropertyVis() {
                 terminalTitle: result.terminalTitle,
                 terminalKey: result.terminalKey,
                 field: prop.field,
+                isLiveness: prop.is_liveness,
               };
             }
           });
@@ -817,54 +819,25 @@ export default function PropertyVis() {
     console.log("selectedNode", selectedNode?.key);
     console.log("spaceNode", spaceNode?.key);
 
-    // 判断在线状态：根据传感器数据的最新时间判断
+    // 根据 isLiveness 字段判断
     let onlineStatus = "offline"; // 默认离线
-    let onlineCount = 0;
-    let totalSensors = 0;
+    const onlineSensorKeys = new Set<string>();
+    const totalSensorKeys = new Set<string>();
 
     if (sensorData && Object.keys(sensorData).length > 0) {
-      const currentTime = new Date().getTime();
-      const fiveMinutesAgo = currentTime - 10 * 60 * 1000;
-      console.log("currentTime", currentTime);
-      console.log("fiveMinutesAgo", fiveMinutesAgo);
-
       for (const field in sensorData) {
         const sensorInfo = sensorData[field];
-        totalSensors++;
-
-        console.log(
-          "raw sensorInfo.time:",
-          sensorInfo.time,
-          typeof sensorInfo.time
-        );
-
-        if (sensorInfo && sensorInfo.time) {
-          // 解析为今天的时间
-          const [hours, minutes] = sensorInfo.time.split(":").map(Number);
-          const sensorTime = new Date(
-            new Date().getFullYear(),
-            new Date().getMonth(),
-            new Date().getDate(),
-            hours,
-            minutes
-          ).getTime();
-
-          console.log("sensorTime", sensorTime);
-          console.log("fiveMinutesAgo", fiveMinutesAgo);
-
-          if (sensorTime > fiveMinutesAgo) {
-            console.log(
-              "sensorTime > fiveMinutesAgo",
-              sensorTime,
-              fiveMinutesAgo
-            );
-            onlineCount++;
+        if (sensorInfo && sensorInfo.sensorKey) {
+          totalSensorKeys.add(sensorInfo.sensorKey);
+          // 仅当传感器对象存在 isLiveness 字段且为 true 时才视为在线
+          if (sensorInfo.isLiveness === true) {
+            onlineSensorKeys.add(sensorInfo.sensorKey);
           }
         }
       }
 
-      console.log("onlineCount", onlineCount);
-      console.log("totalSensors", totalSensors);
+      const totalSensors = totalSensorKeys.size;
+      const onlineCount = onlineSensorKeys.size;
 
       if (onlineCount === totalSensors && totalSensors > 0) {
         onlineStatus = "online";
@@ -873,24 +846,41 @@ export default function PropertyVis() {
       } else {
         onlineStatus = "offline";
       }
-    }
 
-    seriesData.push({
-      name: roomConfig.title,
-      value: [
-        spaceCoords.x + spaceCoords.width / 2,
-        spaceCoords.y + spaceCoords.height / 2,
-      ],
-      type: "space",
-      spaceKey: spaceNode.key,
-      coords: spaceCoords,
-      roomConfig,
-      isSelected: shouldHighlight,
-      sensorData: sensorData || {}, // 添加传感器数据
-      online: onlineStatus, // 详细的在线状态信息
-      onlineCount, // 在线传感器数量
-      totalSensors, // 总传感器数量
-    });
+      seriesData.push({
+        name: roomConfig.title,
+        value: [
+          spaceCoords.x + spaceCoords.width / 2,
+          spaceCoords.y + spaceCoords.height / 2,
+        ],
+        type: "space",
+        spaceKey: spaceNode.key,
+        coords: spaceCoords,
+        roomConfig,
+        isSelected: shouldHighlight,
+        sensorData: sensorData || {}, // 添加传感器数据
+        online: onlineStatus, // 详细的在线状态信息
+        onlineCount, // 在线传感器数量
+        totalSensors, // 总传感器数量
+      });
+    } else {
+      seriesData.push({
+        name: roomConfig.title,
+        value: [
+          spaceCoords.x + spaceCoords.width / 2,
+          spaceCoords.y + spaceCoords.height / 2,
+        ],
+        type: "space",
+        spaceKey: spaceNode.key,
+        coords: spaceCoords,
+        roomConfig,
+        isSelected: shouldHighlight,
+        sensorData: {}, // 添加传感器数据
+        online: "offline", // 详细的在线状态信息
+        onlineCount: 0, // 在线传感器数量
+        totalSensors: 0, // 总传感器数量
+      });
+    }
   };
 
   // ECharts 配置
@@ -1076,9 +1066,9 @@ export default function PropertyVis() {
                   },
                   style: {
                     fill: (() => {
-                      if (data.isSelected) {
-                        return "rgba(24, 144, 255, 0.7)";
-                      }
+                      // if (data.isSelected) {
+                      //   return "rgba(24, 144, 255, 0.7)";
+                      // }
                       // 根据在线状态设置颜色
                       if (data.online === "online") {
                         return "rgba(82, 196, 26, 0.7)"; // 绿色 - 全部在线
