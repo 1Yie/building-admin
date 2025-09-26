@@ -146,13 +146,14 @@ export function AppSidebar({
               {filteredSidebarItems.map((item) => {
                 const hasChildren = !!item.children?.length;
                 const isOpen = openMenus.includes(item.path);
-                const fullPath = item.path
-                  ? `${basePath}/${item.path}`
-                  : basePath;
+                const isActiveParent =
+                  hasChildren &&
+                  item.children?.some((sub) => pathname.startsWith(sub.path));
 
-                const isActive = hasChildren
-                  ? pathname.startsWith(fullPath) // 父菜单展开判断
-                  : pathname === fullPath; // 子菜单高亮判断
+                // 判断子菜单是否高亮
+                const isActiveChild = !hasChildren && pathname === item.path;
+
+                const isActive = isActiveParent || isActiveChild;
 
                 return (
                   <SidebarMenuItem key={item.title}>
@@ -241,7 +242,7 @@ export function AppSidebar({
                 <DropdownMenuItem>
                   <LogOut className="inline mr-2" />
                   <div
-                    onClick={footerOnClick || handleLogout} // 默认退出登录，可自定义
+                    onClick={footerOnClick || handleLogout}
                     className="w-full cursor-pointer"
                   >
                     {footerText || "退出登录"} {/* 默认文案 */}

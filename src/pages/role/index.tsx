@@ -25,6 +25,7 @@ import {
   updateRole,
   updateRolePermission,
 } from "@/request/role";
+import { useAuth } from "@/hooks/use-auth";
 import type { PaginationType } from "@/types";
 import { PlusOutlined, ContactsFilled } from "@ant-design/icons";
 
@@ -34,6 +35,7 @@ const roleFormSchema = z.object({
 });
 
 export default function RolePage() {
+  const { userInfo, logout } = useAuth();
   // 定义表格列
   const columns = [
     {
@@ -308,6 +310,16 @@ export default function RolePage() {
       });
       setDialogOpen(false);
       toast.success("更新成功");
+      if (userInfo?.role_list?.includes(values.roleName)) {
+        Modal.warning({
+          title: "权限更新",
+          content: "您的角色权限已更新，请重新登录。",
+          okText: "重新登录",
+          onOk: () => {
+            logout();
+          },
+        });
+      }
       reset();
       refetch();
     }
@@ -350,7 +362,9 @@ export default function RolePage() {
       >
         <Table
           columns={columns}
-          dataSource={roleTableList?.roleList.records}
+          dataSource={roleTableList?.roleList.records.filter(
+            (role) => !userInfo?.role_list?.includes(role.roleName)
+          )}
           loading={isPending}
           onChange={(pagination) =>
             onPageChange(pagination.current || 1, pagination.pageSize || 10)
@@ -381,7 +395,7 @@ export default function RolePage() {
           >
             <Form.Item
               label="角色名称"
-              required
+              required={dialogFlag !== "edit"}
               validateStatus={errors.roleName ? "error" : ""}
               help={errors.roleName?.message}
             >
@@ -389,7 +403,11 @@ export default function RolePage() {
                 name="roleName"
                 control={control}
                 render={({ field }) => (
-                  <Input {...field} allowClear placeholder="请输入角色名称" />
+                  <Input
+                    {...field}
+                    disabled={dialogFlag === "edit"}
+                    placeholder="请输入角色名称"
+                  />
                 )}
               />
             </Form.Item>

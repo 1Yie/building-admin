@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Pagination, Skeleton } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod/v4";
@@ -132,87 +132,28 @@ export default function RealtimePage() {
   ];
 
   const { data: buildingSelectOption } = useQuery({
-    queryKey: ["getBindPropertyList"],
+    queryKey: ["getBindPropertyList", "LY"],
     queryFn: () => getBindPropertyList({ property_type: "LY" }),
   });
+
+  const { data: spaceSelectOption } = useQuery({
+    queryKey: ["getBindPropertyList", "KJ"],
+    queryFn: () => getBindPropertyList({ property_type: "KJ" }),
+  });
+
+  const { data: terminalSelectOption } = useQuery({
+    queryKey: ["getBindPropertyList", "ZD"],
+    queryFn: () => getBindPropertyList({ property_type: "ZD" }),
+  });
+
+  const { data: sensorSelectOption } = useQuery({
+    queryKey: ["getBindPropertyList", "CGQ"],
+    queryFn: () => getBindPropertyList({ property_type: "CGQ" }),
+  });
+
   const { mutate: getSelectOptionMutate } = useMutation({
     mutationFn: getBindPropertyList,
   });
-
-  const [spaceSelectOption, setSpaceSelectOption] = useState<
-    { property_id: string; name: string }[]
-  >([]);
-  function onPropertyBuildingIdChange(
-    value: string,
-    field: { onChange: (value: string) => void }
-  ) {
-    field.onChange(value);
-    setPropertyId(value);
-    getSelectOptionMutate(
-      {
-        property_id: value,
-        property_type: "KJ",
-      },
-      {
-        onSuccess: (data) => {
-          setSpaceSelectOption(data);
-        },
-        onError: (error) => {
-          toast.error(error.message);
-        },
-      }
-    );
-  }
-
-  const [terminalSelectOption, setTerminalSelectOption] = useState<
-    { property_id: string; name: string }[]
-  >([]);
-  function onPropertySpaceIdChange(
-    value: string,
-    field: { onChange: (value: string) => void }
-  ) {
-    field.onChange(value);
-    setPropertyId(value);
-    getSelectOptionMutate(
-      {
-        property_id: value,
-        property_type: "ZD",
-      },
-      {
-        onSuccess: (data) => {
-          setTerminalSelectOption(data);
-        },
-        onError: (error) => {
-          toast.error(error.message);
-        },
-      }
-    );
-  }
-
-  const [sensorSelectOption, setSensorSelectOption] = useState<
-    { property_id: string; name: string }[]
-  >([]);
-  function onPropertyTerminalIdChange(
-    value: string,
-    field: { onChange: (value: string) => void }
-  ) {
-    field.onChange(value);
-    setPropertyId(value);
-    getSelectOptionMutate(
-      {
-        property_id: value,
-        property_type: "CGQ",
-      },
-      {
-        onSuccess: (data) => {
-          setSensorSelectOption(data);
-        },
-        onError: (error) => {
-          toast.error(error.message);
-        },
-      }
-    );
-  }
 
   function onPropertySensorIdChange(
     value: string,
@@ -247,11 +188,16 @@ export default function RealtimePage() {
   // 重置表单
   function resetForm() {
     searchForm.reset();
-    setPropertyId("");
-    setSpaceSelectOption([]);
-    setTerminalSelectOption([]);
-    setSensorSelectOption([]);
+    setSearchValues({});
   }
+
+  const sensorOptions = useMemo(() => {
+    return sensorSelectOption?.map((item, index) => ({
+      key: `${item.property_id}-${index}`, // 唯一 key
+      value: item.property_id,
+      label: item.name,
+    }));
+  }, [sensorSelectOption]);
 
   return (
     <div className="">
@@ -352,14 +298,13 @@ export default function RealtimePage() {
                 <Form.Item label="楼宇" className="mb-4">
                   <Select
                     style={{ width: 140 }}
-                    onChange={(value) =>
-                      onPropertyBuildingIdChange(value, field)
-                    }
+                    onChange={field.onChange}
                     value={field.value || undefined}
                     placeholder="请选择楼宇"
                     options={buildingSelectOption?.map((item) => ({
                       Key: item.property_id,
                       value: item.property_id,
+                      label: item.name,
                     }))}
                   />
                 </Form.Item>
@@ -373,12 +318,13 @@ export default function RealtimePage() {
                 <Form.Item label="空间" className="mb-4">
                   <Select
                     style={{ width: 140 }}
-                    onChange={(value) => onPropertySpaceIdChange(value, field)}
+                    onChange={field.onChange}
                     value={field.value || undefined}
                     placeholder="请选择空间"
                     options={spaceSelectOption?.map((item) => ({
                       Key: item.property_id,
                       value: item.property_id,
+                      label: item.name,
                     }))}
                   />
                 </Form.Item>
@@ -392,14 +338,13 @@ export default function RealtimePage() {
                 <Form.Item label="网关（智能箱）" className="mb-4">
                   <Select
                     style={{ width: 160 }}
-                    onChange={(value) =>
-                      onPropertyTerminalIdChange(value, field)
-                    }
+                    onChange={field.onChange}
                     value={field.value || undefined}
                     placeholder="请选择网关（智能箱）"
                     options={terminalSelectOption?.map((item) => ({
                       Key: item.property_id,
                       value: item.property_id,
+                      label: item.name,
                     }))}
                   />
                 </Form.Item>
@@ -413,13 +358,10 @@ export default function RealtimePage() {
                 <Form.Item label="传感器" className="mb-4">
                   <Select
                     style={{ width: 140 }}
-                    onChange={(value) => onPropertySensorIdChange(value, field)}
+                    onChange={field.onChange}
                     value={field.value || undefined}
                     placeholder="请选择传感器"
-                    options={sensorSelectOption?.map((item) => ({
-                      Key: item.property_id,
-                      value: item.property_id,
-                    }))}
+                    options={sensorOptions}
                   />
                 </Form.Item>
               )}

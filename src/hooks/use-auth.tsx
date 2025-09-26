@@ -33,6 +33,7 @@ interface UseAuthResult {
   userInfo: UserInfo | null;
   permissions: string[];
   isLoggedIn: boolean;
+  logout: () => void;
   // 具体权限访问器
   buildingPermissions: {
     read: string[];
@@ -93,6 +94,14 @@ export function useAuth(): UseAuthResult {
       setIsLoggedIn(false);
     }
   }, []);
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    setUserInfo(null);
+    setPermissions([]);
+    setIsLoggedIn(false);
+    window.location.href = "/login";
+  };
 
 // 构建具体权限访问器
    const buildingPermissions = {
@@ -201,6 +210,7 @@ export function useAuth(): UseAuthResult {
     getAllSensorIds,
     getAllSpaceIds,
     getAllTerminalIds,
-    getAllBuildingIds
+    getAllBuildingIds,
+    logout,
   };
 }
