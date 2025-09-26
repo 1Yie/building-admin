@@ -9,10 +9,6 @@ export default defineConfig({
   base: "/",
   server: {
     host: true,
-<<<<<<< HEAD
-=======
-    port: 5174,
->>>>>>> dev
   },
   plugins: [react()],
   resolve: {
@@ -20,10 +16,6 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     },
   },
-<<<<<<< HEAD
-  // 生产环境下移除console和debugger
-=======
->>>>>>> dev
   esbuild: {
     drop: ["console", "debugger"],
   },
