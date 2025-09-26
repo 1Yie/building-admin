@@ -891,7 +891,6 @@ export default function AccountPage() {
                           checkedKeys={field.value?.checkedKeys || []}
                           checkedActions={field.value?.checkedActions || {}}
                           onChange={(value) => {
-                            // 合并之前的 checkedActions 和当前返回的 checkedActions
                             const mergedActions = {
                               ...field.value?.checkedActions,
                               ...value.checkedActions,

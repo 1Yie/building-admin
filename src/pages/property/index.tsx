@@ -38,6 +38,7 @@ const searchFormSchema = z.object({
   space_number: z.string().optional(), // 房间号
   space_name: z.string().optional(), // 房间名
   space_type: z.string().optional(), // 房间用途
+  floor: z.string().optional(), // 楼层
 
   terminal_number: z.string().optional(), // 终端编号
   terminal_type: z.string().optional(), // 终端型号
@@ -592,13 +593,15 @@ export default function PropertyMain() {
         addPropertyMutate(values, {
           onSuccess: () => {
             setPropertyDialogOpen(false);
-            toast.success("新增终端成功");
+            toast.success("新增传感器成功");
             sensorForm.reset();
             setAddPropertySelectValue("");
             refetch();
           },
-          onError: (error) => {
-            toast.error(error.message);
+          onError: (error: any) => {
+            const msg =
+              error.response?.data?.message || error.message || "请求失败";
+            toast.error(msg);
           },
         });
       } else {
@@ -714,7 +717,10 @@ export default function PropertyMain() {
 
   return (
     <div className="p-5">
-      <Card className="flex" style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}>
+      <Card
+        className="flex"
+        style={{ borderColor: "#f0f0f0", marginBottom: "20px" }}
+      >
         <Form
           layout="inline"
           onFinish={searchForm.handleSubmit(onSearchFormSubmit)}
@@ -787,7 +793,7 @@ export default function PropertyMain() {
               </Form.Item>
             )}
           />
-  
+
           <div className="w-full flex gap-2 flex-wrap">
             {propertyType === "building" && (
               <>
@@ -1107,7 +1113,7 @@ export default function PropertyMain() {
                   control={spaceForm.control}
                   name="floor"
                   render={({ field }) => (
-                    <Form.Item label="楼层">
+                    <Form.Item label="楼层" required>
                       <Input {...field} className="w-80 h-8" />
                     </Form.Item>
                   )}
@@ -1177,7 +1183,7 @@ export default function PropertyMain() {
                   control={terminalForm.control}
                   name="type"
                   render={({ field }) => (
-                    <Form.Item label="网关（智能箱）型号">
+                    <Form.Item label="网关（智能箱）型号" required>
                       <Input {...field} className="w-80 h-8" />
                     </Form.Item>
                   )}

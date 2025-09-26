@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Pagination, Skeleton } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod/v4";
@@ -191,6 +191,14 @@ export default function RealtimePage() {
     setSearchValues({});
   }
 
+  const sensorOptions = useMemo(() => {
+    return sensorSelectOption?.map((item, index) => ({
+      key: `${item.property_id}-${index}`, // 唯一 key
+      value: item.property_id,
+      label: item.name,
+    }));
+  }, [sensorSelectOption]);
+
   return (
     <div className="">
       <div className="gap-5 grid grid-cols-6">
@@ -353,11 +361,7 @@ export default function RealtimePage() {
                     onChange={field.onChange}
                     value={field.value || undefined}
                     placeholder="请选择传感器"
-                    options={sensorSelectOption?.map((item, index) => ({
-                      key: `${item.property_id}-${index}`, 
-                      value: item.property_id,
-                      label: item.name,
-                    }))}
+                    options={sensorOptions}
                   />
                 </Form.Item>
               )}
